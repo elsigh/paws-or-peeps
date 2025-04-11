@@ -4,6 +4,15 @@ import { detectImageContent, createAnimatedVersion, createOppositeVersion, saveI
 import { cookies } from "next/headers"
 import { nanoid } from "nanoid"
 
+// Update the export config to increase the body size limit
+export const config = {
+  api: {
+    bodyParser: {
+      sizeLimit: "4mb",
+    },
+  },
+}
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
@@ -11,6 +20,11 @@ export async function POST(request: NextRequest) {
 
     if (!file) {
       return NextResponse.json({ error: "No image file provided" }, { status: 400 })
+    }
+
+    // Add file size validation on the server side as well
+    if (file.size > 4 * 1024 * 1024) {
+      return NextResponse.json({ error: "Image size must be less than 4MB" }, { status: 400 })
     }
 
     // Set visitor ID cookie if it doesn't exist

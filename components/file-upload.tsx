@@ -6,11 +6,12 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, Upload, ImageIcon } from "lucide-react"
+import { AlertCircle, Upload, ImageIcon, FileWarning } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CatButton } from "@/components/cat-button"
 import { PawPrint } from "@/components/paw-print"
 import { RandomCat } from "@/components/random-cat"
+import { Progress } from "@/components/ui/progress"
 
 // Pet facts about similarities and differences between pets and humans
 const PET_FACTS = [
@@ -36,6 +37,9 @@ const PET_FACTS = [
   "Pets and humans both benefit from regular exercise and a healthy diet.",
 ]
 
+// Maximum file size in bytes (4MB)
+const MAX_FILE_SIZE = 4 * 1024 * 1024
+
 export default function FileUpload() {
   const router = useRouter()
   const [file, setFile] = useState<File | null>(null)
@@ -45,6 +49,7 @@ export default function FileUpload() {
   const [isDragging, setIsDragging] = useState(false)
   const [currentFactIndex, setCurrentFactIndex] = useState(0)
   const [currentCatIndex, setCurrentCatIndex] = useState(0)
+  const [fileSize, setFileSize] = useState<number>(0)
   const dropZoneRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -75,15 +80,35 @@ export default function FileUpload() {
     processFile(selectedFile)
   }
 
+  // Format file size for display
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return "0 Bytes"
+    const k = 1024
+    const sizes = ["Bytes", "KB", "MB", "GB"]
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
+  }
+
   // Process the file regardless of source (input, paste, or drop)
   const processFile = (selectedFile: File | null) => {
     setFile(selectedFile)
     setError(null)
 
     if (selectedFile) {
+      // Set file size for display
+      setFileSize(selectedFile.size)
+
       // Validate file type
       if (!selectedFile.type.startsWith("image/")) {
         setError("Please select an image file")
+        return
+      }
+
+      // Add file size validation (limit to 4MB)
+      if (selectedFile.size > MAX_FILE_SIZE) {
+        setError(
+          `Image size (${formatFileSize(selectedFile.size)}) exceeds the 4MB limit. Please select a smaller image.`,
+        )
         return
       }
 
@@ -94,6 +119,7 @@ export default function FileUpload() {
       reader.readAsDataURL(selectedFile)
     } else {
       setPreview(null)
+      setFileSize(0)
     }
   }
 
@@ -103,6 +129,12 @@ export default function FileUpload() {
 
     if (!file) {
       setError("Please select an image to upload")
+      return
+    }
+
+    // Double-check file size before submission
+    if (file.size > MAX_FILE_SIZE) {
+      setError(`Image size (${formatFileSize(file.size)}) exceeds the 4MB limit. Please select a smaller image.`)
       return
     }
 
@@ -120,6 +152,18 @@ export default function FileUpload() {
         method: "POST",
         body: formData,
       })
+
+      // Check if the response is JSON
+      const contentType = response.headers.get("content-type")
+      if (!contentType || !contentType.includes("application/json")) {
+        // Handle non-JSON responses
+        const text = await response.text()
+        if (text.includes("Request Entity Too Large")) {
+          throw new Error("Image is too large. Please use an image smaller than 4MB.")
+        } else {
+          throw new Error(`Server error: ${text.substring(0, 100)}...`)
+        }
+      }
 
       const data = await response.json()
 
@@ -192,6 +236,10 @@ export default function FileUpload() {
     }
   }
 
+  // Calculate file size percentage of max
+  const fileSizePercentage = file ? Math.min((file.size / MAX_FILE_SIZE) * 100, 100) : 0
+  const isFileTooLarge = file && file.size > MAX_FILE_SIZE
+
   return (
     <Card className="w-full max-w-md mx-auto relative border-rose-200">
       {/* Decorative paw prints on the card */}
@@ -239,6 +287,7 @@ export default function FileUpload() {
                 flex flex-col items-center justify-center
                 ${isDragging ? "border-rose-400 bg-rose-50" : "border-rose-200 hover:border-rose-400"}
                 ${loading ? "opacity-50 cursor-not-allowed" : ""}
+                ${isFileTooLarge ? "border-red-400 bg-red-50" : ""}
               `}
             >
               {/* Cat ears on the drop zone when empty */}
@@ -252,6 +301,17 @@ export default function FileUpload() {
               {preview ? (
                 <div className="relative aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg">
                   <img src={preview || "/placeholder.svg"} alt="Preview" className="object-cover w-full h-full" />
+
+                  {/* File size warning overlay for large files */}
+                  {isFileTooLarge && (
+                    <div className="absolute inset-0 bg-red-500/70 flex flex-col items-center justify-center text-white p-4 text-center">
+                      <FileWarning className="h-12 w-12 mb-2" />
+                      <p className="font-bold text-lg">File Too Large!</p>
+                      <p>Maximum size: 4MB</p>
+                      <p>Your file: {formatFileSize(file.size)}</p>
+                      <p className="mt-2 text-sm">Please select a smaller image</p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <>
@@ -262,24 +322,48 @@ export default function FileUpload() {
               )}
             </div>
 
+            {/* File size indicator */}
+            {file && (
+              <div className="space-y-1">
+                <div className="flex justify-between text-xs">
+                  <span>File size: {formatFileSize(file.size)}</span>
+                  <span className={isFileTooLarge ? "text-red-500 font-bold" : ""}>Max: 4MB</span>
+                </div>
+                <Progress
+                  value={fileSizePercentage}
+                  className="h-1 bg-gray-100"
+                  indicatorClassName={isFileTooLarge ? "bg-red-500" : "bg-green-500"}
+                />
+              </div>
+            )}
+
             <p className="text-sm text-gray-500">
               Upload a photo of a pet or a human. AI processing may take up to 30 seconds.
             </p>
           </div>
 
           {error && (
-            <Alert variant="destructive">
+            <Alert variant="destructive" className="animate-pulse">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
 
-          <CatButton type="submit" className="w-full bg-rose-500 hover:bg-rose-600" disabled={loading || !file}>
+          <CatButton
+            type="submit"
+            className="w-full bg-rose-500 hover:bg-rose-600"
+            disabled={loading || !file || isFileTooLarge}
+          >
             {loading ? (
               <span className="flex items-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 Transforming...
+              </span>
+            ) : isFileTooLarge ? (
+              <span className="flex items-center gap-2">
+                <FileWarning className="h-4 w-4" />
+                Image Too Large
               </span>
             ) : (
               <span className="flex items-center gap-2">
