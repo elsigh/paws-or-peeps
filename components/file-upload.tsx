@@ -57,6 +57,7 @@ export default function FileUpload() {
   const [systemStatus, setSystemStatus] = useState<"ok" | "warning" | "error" | "unknown">("unknown")
   const [statusChecked, setStatusChecked] = useState(false)
   const [systemStatusDetails, setSystemStatusDetails] = useState<any>(null)
+  const [hasRealError, setHasRealError] = useState(false)
   const dropZoneRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -74,6 +75,7 @@ export default function FileUpload() {
             message: `Health API returned status ${response.status}`,
             status: response.status,
           })
+          setHasRealError(true)
           setStatusChecked(true)
           return
         }
@@ -83,21 +85,37 @@ export default function FileUpload() {
 
         setSystemStatus(data.status)
 
-        // If there are database issues, show them in debug info
-        if (data.checks.database.status === "error") {
+        // Check if there's a real database error with a specific message
+        const hasDbError =
+          data.checks.database.status === "error" &&
+          data.checks.database.message &&
+          data.checks.database.message !== "Database error:" &&
+          !data.checks.database.message.includes("undefined")
+
+        if (hasDbError) {
           setSystemStatusDetails({
             database: data.checks.database,
             environment: data.environment,
             timestamp: data.timestamp,
           })
+          setHasRealError(true)
+        } else {
+          setHasRealError(false)
         }
       } catch (err) {
         console.error("Error checking system status:", err)
         setSystemStatus("error")
-        setSystemStatusDetails({
-          message: err instanceof Error ? err.message : String(err),
-          error: err,
-        })
+
+        const errorMessage = err instanceof Error ? err.message : String(err)
+        if (errorMessage && errorMessage !== "undefined" && errorMessage !== "[object Object]") {
+          setSystemStatusDetails({
+            message: errorMessage,
+            error: err,
+          })
+          setHasRealError(true)
+        } else {
+          setHasRealError(false)
+        }
       } finally {
         setStatusChecked(true)
       }
@@ -367,8 +385,8 @@ export default function FileUpload() {
       </div>
 
       <CardContent className="pt-6">
-        {/* System status warning */}
-        {statusChecked && systemStatus !== "ok" && (
+        {/* System status warning - only show if there's a real error with a message */}
+        {statusChecked && systemStatus !== "ok" && hasRealError && (
           <Alert variant={systemStatus === "error" ? "destructive" : "warning"} className="mb-4">
             <Info className="h-4 w-4" />
             <AlertTitle>System Status: {systemStatus.toUpperCase()}</AlertTitle>
@@ -388,7 +406,7 @@ export default function FileUpload() {
                         </p>
                       )}
 
-                      {systemStatusDetails.database && (
+                      {systemStatusDetails.database && systemStatusDetails.database.message && (
                         <div className="mt-1">
                           <strong>Database:</strong> {systemStatusDetails.database.message || "Unknown error"}
                           {systemStatusDetails.database.details && (

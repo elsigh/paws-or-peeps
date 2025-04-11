@@ -89,7 +89,9 @@ export default function Home() {
       </div>
 
       <div className="mt-8 text-center text-sm text-gray-500">
-        <p>PawsOrPeeps uses AI to detect pets and humans in your photos and transform them into their opposite.</p>
+        <p>
+          🐾 Paws or Peeps 💁 uses AI to detect pets and humans in your photos and transform them into their opposite.
+        </p>
       </div>
     </div>
   )

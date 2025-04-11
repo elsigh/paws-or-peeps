@@ -1,16 +1,17 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { AlertCircle, ThumbsUp, ImageIcon } from "lucide-react"
+import { AlertCircle, ThumbsUp, ImageIcon, Copy, Check } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CatButton } from "@/components/cat-button"
 import { PawPrint } from "@/components/paw-print"
 import { RandomCat } from "@/components/random-cat"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 interface ResultsDisplayProps {
   imageId: string
@@ -46,6 +47,8 @@ export default function ResultsDisplay({
   const [oppositeImageLoaded, setOppositeImageLoaded] = useState(false)
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const shareUrlRef = useRef<HTMLInputElement>(null)
 
   const handleVote = async (vote: "pet" | "human") => {
     setLoading(true)
@@ -81,6 +84,18 @@ export default function ResultsDisplay({
       setLoading(false)
     }
   }
+
+  const copyShareLink = () => {
+    if (shareUrlRef.current) {
+      shareUrlRef.current.select()
+      document.execCommand("copy")
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
+  const shareUrl =
+    typeof window !== "undefined" ? `${window.location.origin}/results/${imageId}` : `/results/${imageId}`
 
   return (
     <div className="space-y-8">
@@ -186,36 +201,6 @@ export default function ResultsDisplay({
           </CardContent>
         </Card>
       </div>
-
-      {/* Original image section - only visible to uploaders or after voting */}
-      {(isUploader || voted) && (
-        <Card className="border-rose-200 relative">
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold text-center mb-4 flex items-center justify-center gap-2">
-              <span>Original Image</span>
-              <span className="text-xl">{type === "pet" ? "🐾" : "👤"}</span>
-            </h3>
-            <div className="aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg relative">
-              {!originalImageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                </div>
-              )}
-              <img
-                src={originalUrl || "/placeholder.svg"}
-                alt="Original image"
-                className="object-cover w-full h-full"
-                onLoad={() => setOriginalImageLoaded(true)}
-                style={{ display: originalImageLoaded ? "block" : "none" }}
-              />
-              {/* Add a tiny cat in the corner of the original image */}
-              <div className="absolute right-2 bottom-2 z-10">
-                <RandomCat size="tiny" index={2} />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {error && (
         <Alert variant="destructive">
@@ -359,14 +344,49 @@ export default function ResultsDisplay({
           </CardContent>
         </Card>
       ) : (
-        /* For uploaders who can't vote, show a simple action card */
+        /* For uploaders who can't vote, show a share card */
         <Card className="border-rose-200 relative">
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
+              <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
+                <span>Share with Friends</span>
+                <span className="text-xl">🔗</span>
+              </h3>
+
               <p className="text-gray-600">
-                This is your upload! Others can vote on which image they think is the original.
+                This is your upload! Share this link with friends so they can vote on which image they think is the
+                original.
               </p>
-              <div className="flex justify-center gap-4">
+
+              <div className="flex items-center gap-2 mt-4">
+                <input
+                  ref={shareUrlRef}
+                  type="text"
+                  value={shareUrl}
+                  readOnly
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
+                  onClick={(e) => e.currentTarget.select()}
+                />
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={copyShareLink}
+                        className="border-rose-200 hover:bg-rose-50"
+                      >
+                        {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{copied ? "Copied!" : "Copy link"}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+
+              <div className="flex justify-center gap-4 mt-4">
                 <Link href="/">
                   <CatButton className="bg-rose-500 hover:bg-rose-600">
                     <span className="flex items-center gap-2">
@@ -381,6 +401,36 @@ export default function ResultsDisplay({
                     View Gallery
                   </Button>
                 </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Original image section - always visible to uploaders, visible to others after voting */}
+      {(isUploader || voted) && (
+        <Card className="border-rose-200 relative">
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold text-center mb-4 flex items-center justify-center gap-2">
+              <span>Original Image</span>
+              <span className="text-xl">{type === "pet" ? "🐾" : "👤"}</span>
+            </h3>
+            <div className="aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg relative">
+              {!originalImageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                </div>
+              )}
+              <img
+                src={originalUrl || "/placeholder.svg"}
+                alt="Original image"
+                className="object-cover w-full h-full"
+                onLoad={() => setOriginalImageLoaded(true)}
+                style={{ display: originalImageLoaded ? "block" : "none" }}
+              />
+              {/* Add a tiny cat in the corner of the original image */}
+              <div className="absolute right-2 bottom-2 z-10">
+                <RandomCat size="tiny" index={2} />
               </div>
             </div>
           </CardContent>

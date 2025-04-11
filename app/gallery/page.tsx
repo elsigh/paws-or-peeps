@@ -7,7 +7,7 @@ import { RandomCat } from "@/components/random-cat"
 import { GalleryCard } from "@/components/gallery-card"
 import { GalleryFilter } from "@/components/gallery-filter"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft } from "lucide-react"
 
 export const dynamic = "force-dynamic"
 export const revalidate = 0
