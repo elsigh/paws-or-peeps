@@ -46,6 +46,7 @@ export default function FileUpload() {
   const [preview, setPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [errorDetails, setErrorDetails] = useState<string | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [currentFactIndex, setCurrentFactIndex] = useState(0)
   const [currentCatIndex, setCurrentCatIndex] = useState(0)
@@ -93,6 +94,7 @@ export default function FileUpload() {
   const processFile = (selectedFile: File | null) => {
     setFile(selectedFile)
     setError(null)
+    setErrorDetails(null)
 
     if (selectedFile) {
       // Set file size for display
@@ -140,6 +142,7 @@ export default function FileUpload() {
 
     setLoading(true)
     setError(null)
+    setErrorDetails(null)
     // Reset to first fact when starting loading
     setCurrentFactIndex(0)
     setCurrentCatIndex(0)
@@ -173,6 +176,9 @@ export default function FileUpload() {
 
       if (data.error) {
         setError(data.error)
+        if (data.details) {
+          setErrorDetails(data.details)
+        }
         setLoading(false)
         return
       }
@@ -346,7 +352,17 @@ export default function FileUpload() {
             <Alert variant="destructive" className="animate-pulse">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
+              <AlertDescription>
+                {error}
+                {errorDetails && (
+                  <div className="mt-2 text-xs border-t border-red-200 pt-2">
+                    <details>
+                      <summary className="cursor-pointer">Technical Details</summary>
+                      <p className="mt-1 whitespace-pre-wrap">{errorDetails}</p>
+                    </details>
+                  </div>
+                )}
+              </AlertDescription>
             </Alert>
           )}
 

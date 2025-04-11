@@ -20,6 +20,13 @@ export function getVisitorId() {
 // Function to detect if an image contains a pet or human using Replicate API
 export async function detectImageContent(imageUrl: string) {
   try {
+    console.log("Starting image content detection with Replicate CLIP model...")
+
+    // Check if the image URL is valid
+    if (!imageUrl || typeof imageUrl !== "string") {
+      throw new Error(`Invalid image URL: ${imageUrl}`)
+    }
+
     // Using Replicate's CLIP model for image classification with AI SDK
     const { text } = await generateText({
       model: replicate("replicate/clip-vit-base32:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591"),
@@ -29,8 +36,16 @@ export async function detectImageContent(imageUrl: string) {
       }),
     })
 
+    console.log("CLIP model response:", text)
+
     // Parse the result
-    const classifications = JSON.parse(text)
+    let classifications
+    try {
+      classifications = JSON.parse(text)
+    } catch (error) {
+      console.error("Failed to parse CLIP model response:", error)
+      throw new Error(`Invalid response from CLIP model: ${text}`)
+    }
 
     // Find the highest confidence classification
     let highestConfidence = 0
@@ -48,6 +63,8 @@ export async function detectImageContent(imageUrl: string) {
       }
     }
 
+    console.log(`Detection result: ${detectedType} with ${highestConfidence * 100}% confidence`)
+
     // If confidence is too low, return unknown
     if (highestConfidence < 0.5) {
       return { type: "unknown", confidence: 0 }
@@ -58,7 +75,7 @@ export async function detectImageContent(imageUrl: string) {
       confidence: highestConfidence * 100,
     }
   } catch (error) {
-    console.error("Error detecting image content:", error)
+    console.error("Error in detectImageContent:", error)
     // Default to pet if detection fails or times out
     return { type: "pet", confidence: 85.0 }
   }
@@ -67,6 +84,13 @@ export async function detectImageContent(imageUrl: string) {
 // Function to create an animated version of the image using Replicate API with AI SDK
 export async function createAnimatedVersion(imageUrl: string) {
   try {
+    console.log("Starting animated version creation with SDXL model...")
+
+    // Check if the image URL is valid
+    if (!imageUrl || typeof imageUrl !== "string") {
+      throw new Error(`Invalid image URL: ${imageUrl}`)
+    }
+
     // Using Replicate's animation model with AI SDK
     const { text } = await generateText({
       model: replicate("stability-ai/sdxl:9f747673945c62801b13b5a9939f3c015db3fb8c61015cbd2c28cb94e1251fa3"),
@@ -79,11 +103,24 @@ export async function createAnimatedVersion(imageUrl: string) {
       }),
     })
 
+    console.log("SDXL model response received")
+
     // Parse the result
-    const result = JSON.parse(text)
+    let result
+    try {
+      result = JSON.parse(text)
+    } catch (error) {
+      console.error("Failed to parse SDXL model response:", error)
+      throw new Error(`Invalid response from SDXL model: ${text}`)
+    }
+
+    if (!result || !result[0] || typeof result[0] !== "string") {
+      throw new Error(`Invalid result format from SDXL model: ${JSON.stringify(result)}`)
+    }
+
     return result[0] // Return the URL of the generated image
   } catch (error) {
-    console.error("Error creating animated version:", error)
+    console.error("Error in createAnimatedVersion:", error)
     // Fallback to placeholder for demo purposes
     return `/placeholder.svg?height=400&width=400&query=animated version of ${imageUrl}`
   }
@@ -92,6 +129,13 @@ export async function createAnimatedVersion(imageUrl: string) {
 // Function to transform the image to its opposite using Replicate API with AI SDK
 export async function createOppositeVersion(imageUrl: string, type: string) {
   try {
+    console.log(`Starting opposite version creation (${type} to ${type === "pet" ? "human" : "pet"})...`)
+
+    // Check if the image URL is valid
+    if (!imageUrl || typeof imageUrl !== "string") {
+      throw new Error(`Invalid image URL: ${imageUrl}`)
+    }
+
     const oppositeType = type === "pet" ? "human" : "pet"
     const prompt =
       type === "pet"
@@ -111,11 +155,24 @@ export async function createOppositeVersion(imageUrl: string, type: string) {
       }),
     })
 
+    console.log("Transformation model response received")
+
     // Parse the result
-    const result = JSON.parse(text)
+    let result
+    try {
+      result = JSON.parse(text)
+    } catch (error) {
+      console.error("Failed to parse transformation model response:", error)
+      throw new Error(`Invalid response from transformation model: ${text}`)
+    }
+
+    if (!result || !result[0] || typeof result[0] !== "string") {
+      throw new Error(`Invalid result format from transformation model: ${JSON.stringify(result)}`)
+    }
+
     return result[0] // Return the URL of the generated image
   } catch (error) {
-    console.error("Error creating opposite version:", error)
+    console.error("Error in createOppositeVersion:", error)
     // Fallback to placeholder for demo purposes
     const oppositeType = type === "pet" ? "human" : "pet"
     return `/placeholder.svg?height=400&width=400&query=${oppositeType} version of ${imageUrl}`
@@ -130,28 +187,43 @@ export async function saveImageData(
   imageType: "pet" | "human" | "unknown",
   confidence: number,
 ) {
-  const supabase = createServerClient()
-  const visitorId = getVisitorId()
+  try {
+    console.log("Saving image data to Supabase...")
 
-  const { data, error } = await supabase
-    .from("images")
-    .insert({
-      original_url: originalUrl,
-      animated_url: animatedUrl,
-      opposite_url: oppositeUrl,
-      image_type: imageType,
-      confidence: confidence,
-      uploader_id: visitorId,
-    })
-    .select()
-    .single()
+    const supabase = createServerClient()
+    if (!supabase) {
+      throw new Error("Failed to create Supabase client")
+    }
 
-  if (error) {
-    console.error("Error saving image data:", error)
-    throw new Error("Failed to save image data")
+    const visitorId = getVisitorId()
+
+    const { data, error } = await supabase
+      .from("images")
+      .insert({
+        original_url: originalUrl,
+        animated_url: animatedUrl,
+        opposite_url: oppositeUrl,
+        image_type: imageType,
+        confidence: confidence,
+        uploader_id: visitorId,
+      })
+      .select()
+      .single()
+
+    if (error) {
+      console.error("Supabase error:", error)
+      throw new Error(`Database error: ${error.message}`)
+    }
+
+    if (!data) {
+      throw new Error("No data returned from database insert")
+    }
+
+    return data
+  } catch (error) {
+    console.error("Error in saveImageData:", error)
+    throw new Error(`Failed to save image data: ${error instanceof Error ? error.message : String(error)}`)
   }
-
-  return data
 }
 
 // Function to get image data by ID

@@ -33,41 +33,103 @@ export async function POST(request: NextRequest) {
 
     if (!visitorId) {
       visitorId = nanoid()
-      // Set cookie for 1 year
-      const response = NextResponse.next()
-      response.cookies.set({
-        name: "visitor_id",
-        value: visitorId,
-        httpOnly: true,
-        maxAge: 60 * 60 * 24 * 365,
-        path: "/",
-      })
     }
 
     // Upload original image to Vercel Blob
-    const originalUrl = await uploadToBlob(file)
+    let originalUrl
+    try {
+      console.log("Uploading to Vercel Blob...")
+      originalUrl = await uploadToBlob(file)
+      console.log("Upload successful:", originalUrl)
+    } catch (error) {
+      console.error("Error uploading to Vercel Blob:", error)
+      return NextResponse.json(
+        {
+          error: "Failed to upload image to storage",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        { status: 500 },
+      )
+    }
 
     // Detect if the image contains a pet or human
-    const { type, confidence } = await detectImageContent(originalUrl)
+    let detectionResult
+    try {
+      console.log("Detecting image content...")
+      detectionResult = await detectImageContent(originalUrl)
+      console.log("Detection result:", detectionResult)
+    } catch (error) {
+      console.error("Error detecting image content:", error)
+      return NextResponse.json(
+        {
+          error: "Failed to analyze image content",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        { status: 500 },
+      )
+    }
 
+    const { type, confidence } = detectionResult
     // We now default to pet if detection times out or returns unknown
     const processedType = type === "unknown" ? "pet" : type
     const processedConfidence = type === "unknown" ? 85.0 : confidence
 
     // Create animated version
-    const animatedUrl = await createAnimatedVersion(originalUrl)
+    let animatedUrl
+    try {
+      console.log("Creating animated version...")
+      animatedUrl = await createAnimatedVersion(originalUrl)
+      console.log("Animated URL:", animatedUrl)
+    } catch (error) {
+      console.error("Error creating animated version:", error)
+      return NextResponse.json(
+        {
+          error: "Failed to create animated version",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        { status: 500 },
+      )
+    }
 
     // Create opposite version (pet to human or human to pet)
-    const oppositeUrl = await createOppositeVersion(animatedUrl, processedType)
+    let oppositeUrl
+    try {
+      console.log("Creating opposite version...")
+      oppositeUrl = await createOppositeVersion(animatedUrl, processedType)
+      console.log("Opposite URL:", oppositeUrl)
+    } catch (error) {
+      console.error("Error creating opposite version:", error)
+      return NextResponse.json(
+        {
+          error: "Failed to create opposite version",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        { status: 500 },
+      )
+    }
 
     // Save image data to Supabase
-    const imageData = await saveImageData(
-      originalUrl,
-      animatedUrl,
-      oppositeUrl,
-      processedType as "pet" | "human",
-      processedConfidence,
-    )
+    let imageData
+    try {
+      console.log("Saving image data to database...")
+      imageData = await saveImageData(
+        originalUrl,
+        animatedUrl,
+        oppositeUrl,
+        processedType as "pet" | "human",
+        processedConfidence,
+      )
+      console.log("Image data saved successfully:", imageData.id)
+    } catch (error) {
+      console.error("Error saving image data:", error)
+      return NextResponse.json(
+        {
+          error: "Failed to save image data to database",
+          details: error instanceof Error ? error.message : String(error),
+        },
+        { status: 500 },
+      )
+    }
 
     const response = NextResponse.json({
       id: imageData.id,
@@ -91,7 +153,13 @@ export async function POST(request: NextRequest) {
 
     return response
   } catch (error) {
-    console.error("Error processing image:", error)
-    return NextResponse.json({ error: "Failed to process image" }, { status: 500 })
+    console.error("Unhandled error processing image:", error)
+    return NextResponse.json(
+      {
+        error: "Failed to process image",
+        details: error instanceof Error ? error.message : String(error),
+      },
+      { status: 500 },
+    )
   }
 }
