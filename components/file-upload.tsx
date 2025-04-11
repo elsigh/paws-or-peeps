@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, Upload, ImageIcon } from "lucide-react"
+import { AlertCircle, Upload, ImageIcon } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CatButton } from "@/components/cat-button"
 import { PawPrint } from "@/components/paw-print"

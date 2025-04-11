@@ -20,8 +20,8 @@ export function CatLogo({ className, size = "md" }: CatLogoProps) {
 
       {/* Logo text */}
       <span className="relative z-10">
-        <span className="text-black">Cat</span>
-        <span className="text-rose-500">Hoomin</span>
+        <span className="text-black">Paws</span>
+        <span className="text-rose-500">OrPeeps</span>
       </span>
     </div>
   )

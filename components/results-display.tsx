@@ -4,13 +4,12 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { AlertCircle, ThumbsUp } from "lucide-react"
+import { AlertCircle, ThumbsUp, ImageIcon } from 'lucide-react'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CatButton } from "@/components/cat-button"
 import { PawPrint } from "@/components/paw-print"
 import { RandomCat } from "@/components/random-cat"
 import Link from "next/link"
-import { ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface ResultsDisplayProps {
@@ -168,12 +167,12 @@ export default function ResultsDisplay({
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
                 {type === "cat" ? (
                   <>
-                    <span>Hoomin</span>
+                    <span>Peep</span>
                     <span className="text-xl">👤</span>
                   </>
                 ) : (
                   <>
-                    <span>Cat</span>
+                    <span>Paw</span>
                     <span className="text-xl">🐱</span>
                   </>
                 )}

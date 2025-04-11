@@ -4,7 +4,7 @@ import { PawPrint } from "@/components/paw-print"
 import { RandomCat } from "@/components/random-cat"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ImageIcon } from "lucide-react"
+import { ImageIcon } from 'lucide-react'
 
 export default function Home() {
   return (
@@ -83,7 +83,7 @@ export default function Home() {
       </div>
 
       <div className="mt-8 text-center text-sm text-gray-500">
-        <p>CatHoomin uses AI to detect cats and humans in your photos and transform them into their opposite.</p>
+        <p>PawsOrPeeps uses AI to detect cats and humans in your photos and transform them into their opposite.</p>
       </div>
     </div>
   )
