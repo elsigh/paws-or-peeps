@@ -4,7 +4,7 @@ import { PawPrint } from "@/components/paw-print"
 import { RandomCat } from "@/components/random-cat"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ImageIcon } from 'lucide-react'
+import { ImageIcon } from "lucide-react"
 
 export default function Home() {
   return (
@@ -42,7 +42,7 @@ export default function Home() {
             <RandomCat size="tiny" index={2} className="opacity-90" />
           </div>
         </div>
-        <p className="text-xl text-gray-600">Upload a photo of a cat or human and see the magical transformation!</p>
+        <p className="text-xl text-gray-600">Upload a photo of a pet or human and see the magical transformation!</p>
 
         {/* Gallery link */}
         <div className="mt-4">
@@ -75,15 +75,15 @@ export default function Home() {
         </h2>
         <ol className="list-decimal pl-6 space-y-2">
           <li>Upload an image by clicking, dragging & dropping, or pasting from clipboard</li>
-          <li>Our AI detects if it's a cat or human</li>
+          <li>Our AI detects if it's a pet or human</li>
           <li>We transform it into an animated version</li>
-          <li>Then we create its opposite (cat to human or human to cat)</li>
+          <li>Then we create its opposite (pet to human or human to pet)</li>
           <li>Vote on which one you think is the original!</li>
         </ol>
       </div>
 
       <div className="mt-8 text-center text-sm text-gray-500">
-        <p>PawsOrPeeps uses AI to detect cats and humans in your photos and transform them into their opposite.</p>
+        <p>PawsOrPeeps uses AI to detect pets and humans in your photos and transform them into their opposite.</p>
       </div>
     </div>
   )

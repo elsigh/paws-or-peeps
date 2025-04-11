@@ -68,6 +68,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             type={imageData.image_type}
             confidence={imageData.confidence}
             originalUrl={imageData.original_url}
+            isUploader={imageData.isUploader}
           />
         </div>
       </div>

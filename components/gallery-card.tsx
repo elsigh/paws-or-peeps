@@ -10,13 +10,13 @@ interface GalleryCardProps {
   id: string
   animatedUrl: string
   oppositeUrl: string
-  type: "cat" | "human"
+  type: "pet" | "human"
   confidence: number
   voteStats: {
-    catVotes: number
+    petVotes: number
     humanVotes: number
     totalVotes: number
-    catPercentage: number
+    petPercentage: number
     humanPercentage: number
   }
   createdAt: string
@@ -49,12 +49,12 @@ export function GalleryCard({
             className="object-cover w-full h-full transition-transform duration-500 hover:scale-110"
           />
 
-          {/* Type indicator with cat ears for cat images */}
+          {/* Type indicator with cat ears for pet images */}
           <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm rounded-full px-2 py-1 text-xs font-medium flex items-center gap-1">
-            {type === "cat" ? (
+            {type === "pet" ? (
               <>
-                <span>Cat</span>
-                <span className="text-sm">🐱</span>
+                <span>Pet</span>
+                <span className="text-sm">🐾</span>
               </>
             ) : (
               <>
@@ -66,7 +66,7 @@ export function GalleryCard({
 
           {/* Tiny cat in corner */}
           <div className="absolute bottom-2 right-2 z-10">
-            <RandomCat size="tiny" index={type === "cat" ? 0 : 2} />
+            <RandomCat size="tiny" index={type === "pet" ? 0 : 2} />
           </div>
 
           {/* Hover instruction */}
@@ -84,12 +84,12 @@ export function GalleryCard({
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="flex items-center gap-1">
-                  <span>Cat</span>
-                  <span>🐱</span>
+                  <span>Pet</span>
+                  <span>🐾</span>
                 </span>
-                <span>{voteStats.catPercentage.toFixed(0)}%</span>
+                <span>{voteStats.petPercentage.toFixed(0)}%</span>
               </div>
-              <Progress value={voteStats.catPercentage} className="h-1 bg-rose-100" indicatorClassName="bg-rose-500" />
+              <Progress value={voteStats.petPercentage} className="h-1 bg-rose-100" indicatorClassName="bg-rose-500" />
             </div>
           )}
         </CardContent>

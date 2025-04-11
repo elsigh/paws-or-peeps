@@ -1,8 +1,23 @@
 import { createServerClient } from "./supabase"
 import { generateText } from "ai"
 import { replicate } from "@ai-sdk/replicate"
+import { cookies } from "next/headers"
+import { nanoid } from "nanoid"
 
-// Function to detect if an image contains a cat or human using Replicate API
+// Function to get or create a visitor ID
+export function getVisitorId() {
+  const cookieStore = cookies()
+  let visitorId = cookieStore.get("visitor_id")?.value
+
+  if (!visitorId) {
+    visitorId = nanoid()
+    // Note: In a real app, we would set this cookie server-side
+  }
+
+  return visitorId
+}
+
+// Function to detect if an image contains a pet or human using Replicate API
 export async function detectImageContent(imageUrl: string) {
   try {
     // Using Replicate's CLIP model for image classification with AI SDK
@@ -10,7 +25,7 @@ export async function detectImageContent(imageUrl: string) {
       model: replicate("replicate/clip-vit-base32:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591"),
       prompt: JSON.stringify({
         image: imageUrl,
-        candidates: ["a photo of a cat", "a photo of a human face", "something else"],
+        candidates: ["a photo of a pet animal", "a photo of a human", "something else"],
       }),
     })
 
@@ -25,8 +40,8 @@ export async function detectImageContent(imageUrl: string) {
       if (typeof confidence === "number" && confidence > highestConfidence) {
         highestConfidence = confidence
 
-        if (label.includes("cat")) {
-          detectedType = "cat"
+        if (label.includes("pet")) {
+          detectedType = "pet"
         } else if (label.includes("human")) {
           detectedType = "human"
         }
@@ -44,8 +59,8 @@ export async function detectImageContent(imageUrl: string) {
     }
   } catch (error) {
     console.error("Error detecting image content:", error)
-    // Default to cat if detection fails or times out
-    return { type: "cat", confidence: 85.0 }
+    // Default to pet if detection fails or times out
+    return { type: "pet", confidence: 85.0 }
   }
 }
 
@@ -77,11 +92,11 @@ export async function createAnimatedVersion(imageUrl: string) {
 // Function to transform the image to its opposite using Replicate API with AI SDK
 export async function createOppositeVersion(imageUrl: string, type: string) {
   try {
-    const oppositeType = type === "cat" ? "human" : "cat"
+    const oppositeType = type === "pet" ? "human" : "pet"
     const prompt =
-      type === "cat"
-        ? "Transform this cat into a human character, maintain the personality and features, cartoon style"
-        : "Transform this human into a cat character, maintain the personality and features, cartoon style"
+      type === "pet"
+        ? "Transform this pet into a human character, maintain the personality and features, cartoon style"
+        : "Transform this human into a pet character (preferably cat-like), maintain the personality and features, cartoon style"
 
     // Using Replicate's Stable Diffusion model for image transformation with AI SDK
     const { text } = await generateText({
@@ -102,7 +117,7 @@ export async function createOppositeVersion(imageUrl: string, type: string) {
   } catch (error) {
     console.error("Error creating opposite version:", error)
     // Fallback to placeholder for demo purposes
-    const oppositeType = type === "cat" ? "human" : "cat"
+    const oppositeType = type === "pet" ? "human" : "pet"
     return `/placeholder.svg?height=400&width=400&query=${oppositeType} version of ${imageUrl}`
   }
 }
@@ -112,10 +127,11 @@ export async function saveImageData(
   originalUrl: string,
   animatedUrl: string,
   oppositeUrl: string,
-  imageType: "cat" | "human" | "unknown",
+  imageType: "pet" | "human" | "unknown",
   confidence: number,
 ) {
   const supabase = createServerClient()
+  const visitorId = getVisitorId()
 
   const { data, error } = await supabase
     .from("images")
@@ -125,6 +141,7 @@ export async function saveImageData(
       opposite_url: oppositeUrl,
       image_type: imageType,
       confidence: confidence,
+      uploader_id: visitorId,
     })
     .select()
     .single()
@@ -140,6 +157,7 @@ export async function saveImageData(
 // Function to get image data by ID
 export async function getImageById(id: string) {
   const supabase = createServerClient()
+  const visitorId = getVisitorId()
 
   const { data, error } = await supabase.from("images").select("*").eq("id", id).single()
 
@@ -148,16 +166,24 @@ export async function getImageById(id: string) {
     throw new Error("Failed to get image data")
   }
 
-  return data
+  // Check if the current user is the uploader
+  const isUploader = data.uploader_id === visitorId
+
+  return {
+    ...data,
+    isUploader,
+  }
 }
 
 // Function to save a vote
-export async function saveVote(imageId: string, vote: "cat" | "human") {
+export async function saveVote(imageId: string, vote: "pet" | "human") {
   const supabase = createServerClient()
+  const visitorId = getVisitorId()
 
   const { error } = await supabase.from("votes").insert({
     image_id: imageId,
     vote: vote,
+    voter_id: visitorId,
   })
 
   if (error) {
@@ -179,15 +205,15 @@ export async function getVoteStats(imageId: string) {
     throw new Error("Failed to get vote stats")
   }
 
-  const catVotes = data.filter((vote) => vote.vote === "cat").length
+  const petVotes = data.filter((vote) => vote.vote === "pet").length
   const humanVotes = data.filter((vote) => vote.vote === "human").length
   const totalVotes = data.length
 
   return {
-    catVotes,
+    petVotes,
     humanVotes,
     totalVotes,
-    catPercentage: totalVotes > 0 ? (catVotes / totalVotes) * 100 : 0,
+    petPercentage: totalVotes > 0 ? (petVotes / totalVotes) * 100 : 0,
     humanPercentage: totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0,
   }
 }
@@ -220,8 +246,8 @@ export async function getRecentTransformations(limit = 12) {
 
   // Process the data to include vote counts
   const processedData = data.map((item) => {
-    const votes = (item.votes as { vote: "cat" | "human" }[]) || []
-    const catVotes = votes.filter((v) => v.vote === "cat").length
+    const votes = (item.votes as { vote: "pet" | "human" }[]) || []
+    const petVotes = votes.filter((v) => v.vote === "pet").length
     const humanVotes = votes.filter((v) => v.vote === "human").length
     const totalVotes = votes.length
 
@@ -229,10 +255,10 @@ export async function getRecentTransformations(limit = 12) {
       ...item,
       votes: undefined, // Remove the raw votes array
       voteStats: {
-        catVotes,
+        petVotes,
         humanVotes,
         totalVotes,
-        catPercentage: totalVotes > 0 ? (catVotes / totalVotes) * 100 : 0,
+        petPercentage: totalVotes > 0 ? (petVotes / totalVotes) * 100 : 0,
         humanPercentage: totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0,
       },
     }

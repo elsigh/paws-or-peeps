@@ -52,12 +52,12 @@ export function GalleryFilter() {
                     <Label htmlFor="all">All Transformations</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="cat" id="cat" />
-                    <Label htmlFor="cat">Cat to Human</Label>
+                    <RadioGroupItem value="pet" id="pet" />
+                    <Label htmlFor="pet">Pet to Human</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="human" id="human" />
-                    <Label htmlFor="human">Human to Cat</Label>
+                    <Label htmlFor="human">Human to Pet</Label>
                   </div>
                 </RadioGroup>
               </div>

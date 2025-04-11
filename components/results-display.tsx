@@ -4,7 +4,7 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { AlertCircle, ThumbsUp, ImageIcon } from 'lucide-react'
+import { AlertCircle, ThumbsUp, ImageIcon } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CatButton } from "@/components/cat-button"
 import { PawPrint } from "@/components/paw-print"
@@ -16,9 +16,10 @@ interface ResultsDisplayProps {
   imageId: string
   animatedUrl: string
   oppositeUrl: string
-  type: "cat" | "human"
+  type: "pet" | "human"
   confidence: number
   originalUrl: string
+  isUploader: boolean
 }
 
 export default function ResultsDisplay({
@@ -28,23 +29,25 @@ export default function ResultsDisplay({
   type,
   confidence,
   originalUrl,
+  isUploader,
 }: ResultsDisplayProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [voted, setVoted] = useState(false)
   const [voteStats, setVoteStats] = useState<{
-    catVotes: number
+    petVotes: number
     humanVotes: number
-    catPercentage: number
+    petPercentage: number
     humanPercentage: number
   } | null>(null)
   const [originalType, setOriginalType] = useState<string | null>(null)
   const [animatedImageLoaded, setAnimatedImageLoaded] = useState(false)
   const [oppositeImageLoaded, setOppositeImageLoaded] = useState(false)
+  const [originalImageLoaded, setOriginalImageLoaded] = useState(false)
   const [showCelebration, setShowCelebration] = useState(false)
 
-  const handleVote = async (vote: "cat" | "human") => {
+  const handleVote = async (vote: "pet" | "human") => {
     setLoading(true)
     setError(null)
 
@@ -83,8 +86,8 @@ export default function ResultsDisplay({
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card className="relative border-rose-200 overflow-hidden">
-          {/* Cat ears for cat image */}
-          {type === "cat" && (
+          {/* Cat ears for pet image */}
+          {type === "pet" && (
             <>
               <div className="absolute -top-3 left-1/4 h-6 w-6 rotate-45 rounded-t-full bg-rose-200 z-10"></div>
               <div className="absolute -top-3 right-1/4 h-6 w-6 -rotate-45 rounded-t-full bg-rose-200 z-10"></div>
@@ -92,7 +95,7 @@ export default function ResultsDisplay({
           )}
 
           {/* Tiny cat peeking from corner */}
-          {type === "cat" && (
+          {type === "pet" && (
             <div className="absolute -left-2 -top-2 z-10 transform -rotate-12">
               <RandomCat size="tiny" index={0} />
             </div>
@@ -115,10 +118,10 @@ export default function ResultsDisplay({
             </div>
             <div className="mt-4 text-center">
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
-                {type === "cat" ? (
+                {type === "pet" ? (
                   <>
-                    <span>Cat</span>
-                    <span className="text-xl">🐱</span>
+                    <span>Pet</span>
+                    <span className="text-xl">🐾</span>
                   </>
                 ) : (
                   <>
@@ -127,13 +130,14 @@ export default function ResultsDisplay({
                   </>
                 )}
               </h3>
-              <p className="text-sm text-gray-500">Detected with {confidence.toFixed(2)}% confidence</p>
+              {/* Only show confidence to the uploader */}
+              {isUploader && <p className="text-sm text-gray-500">Detected with {confidence.toFixed(2)}% confidence</p>}
             </div>
           </CardContent>
         </Card>
 
         <Card className="relative border-rose-200 overflow-hidden">
-          {/* Cat ears for cat image (opposite) */}
+          {/* Cat ears for pet image (opposite) */}
           {type === "human" && (
             <>
               <div className="absolute -top-3 left-1/4 h-6 w-6 rotate-45 rounded-t-full bg-rose-200 z-10"></div>
@@ -157,7 +161,7 @@ export default function ResultsDisplay({
               )}
               <img
                 src={oppositeUrl || "/placeholder.svg"}
-                alt={`${type === "cat" ? "Human" : "Cat"} version`}
+                alt={`${type === "pet" ? "Human" : "Pet"} version`}
                 className="object-cover w-full h-full"
                 onLoad={() => setOppositeImageLoaded(true)}
                 style={{ display: oppositeImageLoaded ? "block" : "none" }}
@@ -165,7 +169,7 @@ export default function ResultsDisplay({
             </div>
             <div className="mt-4 text-center">
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
-                {type === "cat" ? (
+                {type === "pet" ? (
                   <>
                     <span>Peep</span>
                     <span className="text-xl">👤</span>
@@ -183,6 +187,36 @@ export default function ResultsDisplay({
         </Card>
       </div>
 
+      {/* Original image section - only visible to uploaders or after voting */}
+      {(isUploader || voted) && (
+        <Card className="border-rose-200 relative">
+          <CardContent className="pt-6">
+            <h3 className="text-lg font-semibold text-center mb-4 flex items-center justify-center gap-2">
+              <span>Original Image</span>
+              <span className="text-xl">{type === "pet" ? "🐾" : "👤"}</span>
+            </h3>
+            <div className="aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg relative">
+              {!originalImageLoaded && (
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                </div>
+              )}
+              <img
+                src={originalUrl || "/placeholder.svg"}
+                alt="Original image"
+                className="object-cover w-full h-full"
+                onLoad={() => setOriginalImageLoaded(true)}
+                style={{ display: originalImageLoaded ? "block" : "none" }}
+              />
+              {/* Add a tiny cat in the corner of the original image */}
+              <div className="absolute right-2 bottom-2 z-10">
+                <RandomCat size="tiny" index={2} />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {error && (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
@@ -191,7 +225,8 @@ export default function ResultsDisplay({
         </Alert>
       )}
 
-      {!voted ? (
+      {/* Voting section - only visible to non-uploaders who haven't voted yet */}
+      {!isUploader && !voted ? (
         <Card className="border-rose-200 relative">
           {/* Decorative paw prints */}
           <div className="absolute -left-6 -top-6 opacity-30">
@@ -213,14 +248,14 @@ export default function ResultsDisplay({
             </h3>
             <div className="flex justify-center gap-4">
               <CatButton
-                onClick={() => handleVote("cat")}
+                onClick={() => handleVote("pet")}
                 disabled={loading}
                 variant="outline"
                 className="flex-1 max-w-[150px] border-rose-300 text-rose-600 hover:bg-rose-50"
               >
                 <span className="flex items-center gap-2">
                   <ThumbsUp className="h-4 w-4" />
-                  Cat 🐱
+                  Pet 🐾
                 </span>
               </CatButton>
               <CatButton
@@ -237,7 +272,7 @@ export default function ResultsDisplay({
             </div>
           </CardContent>
         </Card>
-      ) : (
+      ) : voted ? (
         <Card className="border-rose-200 relative">
           {/* Decorative paw prints */}
           <div className="absolute -left-6 -top-6 opacity-30">
@@ -272,12 +307,12 @@ export default function ResultsDisplay({
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="flex items-center gap-1">
-                    Cat <span className="text-sm">🐱</span>
+                    Pet <span className="text-sm">🐾</span>
                   </span>
-                  <span>{voteStats?.catPercentage.toFixed(1)}%</span>
+                  <span>{voteStats?.petPercentage.toFixed(1)}%</span>
                 </div>
                 <Progress
-                  value={voteStats?.catPercentage || 0}
+                  value={voteStats?.petPercentage || 0}
                   className="h-2 bg-rose-100"
                   indicatorClassName="bg-rose-500"
                 />
@@ -301,19 +336,8 @@ export default function ResultsDisplay({
             <div className="mt-6">
               <h4 className="text-md font-medium text-center mb-2 flex items-center justify-center gap-2">
                 <span>The original was actually a {originalType}!</span>
-                <span className="text-xl">{originalType === "cat" ? "🐱" : "👤"}</span>
+                <span className="text-xl">{originalType === "pet" ? "🐾" : "👤"}</span>
               </h4>
-              <div className="aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg relative">
-                <img
-                  src={originalUrl || "/placeholder.svg"}
-                  alt="Original image"
-                  className="object-cover w-full h-full"
-                />
-                {/* Add a tiny cat in the corner of the original image */}
-                <div className="absolute right-2 bottom-2 z-10">
-                  <RandomCat size="tiny" index={2} />
-                </div>
-              </div>
             </div>
 
             <div className="mt-6 text-center">
@@ -331,6 +355,33 @@ export default function ResultsDisplay({
                   View Gallery
                 </Button>
               </Link>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        /* For uploaders who can't vote, show a simple action card */
+        <Card className="border-rose-200 relative">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <p className="text-gray-600">
+                This is your upload! Others can vote on which image they think is the original.
+              </p>
+              <div className="flex justify-center gap-4">
+                <Link href="/">
+                  <CatButton className="bg-rose-500 hover:bg-rose-600">
+                    <span className="flex items-center gap-2">
+                      Upload Another
+                      <span className="text-sm">🐾</span>
+                    </span>
+                  </CatButton>
+                </Link>
+                <Link href="/gallery">
+                  <Button variant="outline" className="gap-2 border-rose-200">
+                    <ImageIcon className="h-4 w-4" />
+                    View Gallery
+                  </Button>
+                </Link>
+              </div>
             </div>
           </CardContent>
         </Card>

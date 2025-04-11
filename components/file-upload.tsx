@@ -6,34 +6,34 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, Upload, ImageIcon } from 'lucide-react'
+import { AlertCircle, Upload, ImageIcon } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CatButton } from "@/components/cat-button"
 import { PawPrint } from "@/components/paw-print"
 import { RandomCat } from "@/components/random-cat"
 
-// Cat facts about similarities and differences between cats and humans
-const CAT_FACTS = [
-  "Cats and humans both have a similar brain structure responsible for emotions.",
-  "Cats sleep twice as much as humans do on average.",
-  "Both cats and humans have dominant hands (or paws).",
+// Pet facts about similarities and differences between pets and humans
+const PET_FACTS = [
+  "Pets and humans both have a similar brain structure responsible for emotions.",
+  "Dogs can understand up to 250 words and gestures, similar to a 2-year-old human.",
+  "Both pets and humans have dominant hands (or paws).",
   "A cat's brain is 90% similar to a human's brain.",
-  "Cats can't taste sweetness, unlike humans.",
-  "Both cats and humans have a similar range of hearing.",
-  "Cats have 230 bones, while humans have 206.",
-  "Cats and humans both dream during sleep.",
-  "A cat's heart beats twice as fast as a human heart.",
+  "Pets can't taste all the same flavors humans can.",
+  "Both pets and humans have a similar range of hearing.",
+  "Dogs have about 300 million olfactory receptors, humans only have 6 million.",
+  "Pets and humans both dream during sleep.",
+  "A pet's heart beats faster than a human heart.",
   "Cats have better night vision than humans.",
-  "Both cats and humans have a similar social structure in groups.",
-  "Cats have 30 teeth, while adult humans have 32.",
-  "Cats can jump 6 times their length, humans can't even jump their own height.",
-  "Both cats and humans use facial expressions to communicate.",
-  "Cats have a third eyelid, humans don't.",
-  "Cats and humans both have a similar response to catnip... just kidding!",
+  "Both pets and humans form social bonds and can feel loneliness.",
+  "Dogs have 42 teeth, while adult humans have 32.",
+  "Pets can jump much higher relative to their size than humans can.",
+  "Both pets and humans use facial expressions to communicate.",
+  "Many pets have a third eyelid, humans don't.",
+  "Pets can sense changes in barometric pressure before storms, humans typically can't.",
   "Cats have 24 whiskers, humans have none (usually).",
-  "Both cats and humans yawn when tired or stressed.",
-  "Cats can rotate their ears 180 degrees, humans can't.",
-  "Cats and humans both get hairballs... wait, that's not right.",
+  "Both pets and humans yawn when tired or stressed.",
+  "Pets can rotate their ears to locate sounds, humans can't.",
+  "Pets and humans both benefit from regular exercise and a healthy diet.",
 ]
 
 export default function FileUpload() {
@@ -48,14 +48,14 @@ export default function FileUpload() {
   const dropZoneRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Cycle through cat facts during loading
+  // Cycle through pet facts during loading
   useEffect(() => {
     let factInterval: NodeJS.Timeout | null = null
     let catInterval: NodeJS.Timeout | null = null
 
     if (loading) {
       factInterval = setInterval(() => {
-        setCurrentFactIndex((prevIndex) => (prevIndex + 1) % CAT_FACTS.length)
+        setCurrentFactIndex((prevIndex) => (prevIndex + 1) % PET_FACTS.length)
       }, 3000) // Change fact every 3 seconds
 
       catInterval = setInterval(() => {
@@ -263,7 +263,7 @@ export default function FileUpload() {
             </div>
 
             <p className="text-sm text-gray-500">
-              Upload a photo of a cat or a human face. AI processing may take up to 30 seconds.
+              Upload a photo of a pet or a human. AI processing may take up to 30 seconds.
             </p>
           </div>
 
@@ -279,7 +279,7 @@ export default function FileUpload() {
             {loading ? (
               <span className="flex items-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Meowifying...
+                Transforming...
               </span>
             ) : (
               <span className="flex items-center gap-2">
@@ -289,7 +289,7 @@ export default function FileUpload() {
             )}
           </CatButton>
 
-          {/* Cat facts during loading with cycling cat images */}
+          {/* Pet facts during loading with cycling cat images */}
           {loading && (
             <div className="relative text-center text-sm text-gray-600 mt-2 px-8">
               <div className="flex items-center justify-center mb-2">
@@ -297,7 +297,7 @@ export default function FileUpload() {
               </div>
               <div className="flex items-center">
                 <span className="text-lg mr-2">🐾</span>
-                <p className="animate-pulse">Cat Fact: {CAT_FACTS[currentFactIndex]}</p>
+                <p className="animate-pulse">Pet Fact: {PET_FACTS[currentFactIndex]}</p>
                 <span className="text-lg ml-2">🐾</span>
               </div>
             </div>

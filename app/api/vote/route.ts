@@ -9,8 +9,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Image ID and vote are required" }, { status: 400 })
     }
 
-    if (vote !== "cat" && vote !== "human") {
-      return NextResponse.json({ error: 'Vote must be either "cat" or "human"' }, { status: 400 })
+    if (vote !== "pet" && vote !== "human") {
+      return NextResponse.json({ error: 'Vote must be either "pet" or "human"' }, { status: 400 })
     }
 
     // Save the vote
