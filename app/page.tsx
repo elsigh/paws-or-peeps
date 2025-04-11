@@ -5,6 +5,7 @@ import { RandomCat } from "@/components/random-cat"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ImageIcon } from "lucide-react"
+import { DatabaseStatus } from "@/components/database-status"
 
 export default function Home() {
   return (
@@ -43,6 +44,11 @@ export default function Home() {
           </div>
         </div>
         <p className="text-xl text-gray-600">Upload a photo of a pet or human and see the magical transformation!</p>
+
+        {/* Database status component */}
+        <div className="max-w-md mx-auto mt-4">
+          <DatabaseStatus />
+        </div>
 
         {/* Gallery link */}
         <div className="mt-4">

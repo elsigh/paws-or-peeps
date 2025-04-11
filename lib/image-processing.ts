@@ -1,5 +1,4 @@
 import { createServerClient } from "./supabase"
-import { generateText } from "ai"
 import { replicate } from "@ai-sdk/replicate"
 import { cookies } from "next/headers"
 import { nanoid } from "nanoid"
@@ -27,24 +26,32 @@ export async function detectImageContent(imageUrl: string) {
       throw new Error(`Invalid image URL: ${imageUrl}`)
     }
 
-    // Using Replicate's CLIP model for image classification with AI SDK
-    const { text } = await generateText({
-      model: replicate("replicate/clip-vit-base32:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591"),
-      prompt: JSON.stringify({
-        image: imageUrl,
-        candidates: ["a photo of a pet animal", "a photo of a human", "something else"],
-      }),
-    })
+    // Using Replicate's CLIP model for image classification
+    // Fix: Use the replicate function directly instead of generateText
+    const result = await replicate.run(
+      "replicate/clip-vit-base32:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591",
+      {
+        input: {
+          image: imageUrl,
+          candidates: ["a photo of a pet animal", "a photo of a human", "something else"],
+        },
+      },
+    )
 
-    console.log("CLIP model response:", text)
+    console.log("CLIP model response:", result)
 
     // Parse the result
     let classifications
     try {
-      classifications = JSON.parse(text)
+      // The result might already be an object, so we'll handle both cases
+      if (typeof result === "string") {
+        classifications = JSON.parse(result)
+      } else {
+        classifications = result
+      }
     } catch (error) {
       console.error("Failed to parse CLIP model response:", error)
-      throw new Error(`Invalid response from CLIP model: ${text}`)
+      throw new Error(`Invalid response from CLIP model: ${result}`)
     }
 
     // Find the highest confidence classification
@@ -81,7 +88,7 @@ export async function detectImageContent(imageUrl: string) {
   }
 }
 
-// Function to create an animated version of the image using Replicate API with AI SDK
+// Function to create an animated version of the image using Replicate API
 export async function createAnimatedVersion(imageUrl: string) {
   try {
     console.log("Starting animated version creation with SDXL model...")
@@ -91,30 +98,25 @@ export async function createAnimatedVersion(imageUrl: string) {
       throw new Error(`Invalid image URL: ${imageUrl}`)
     }
 
-    // Using Replicate's animation model with AI SDK
-    const { text } = await generateText({
-      model: replicate("stability-ai/sdxl:9f747673945c62801b13b5a9939f3c015db3fb8c61015cbd2c28cb94e1251fa3"),
-      prompt: JSON.stringify({
-        image: imageUrl,
-        prompt: "animated style, cartoon, vibrant colors",
-        negative_prompt: "realistic, photo, blurry, distorted",
-        num_inference_steps: 30,
-        guidance_scale: 7.5,
-      }),
-    })
+    // Using Replicate's animation model
+    // Fix: Use the replicate function directly
+    const result = await replicate.run(
+      "stability-ai/sdxl:9f747673945c62801b13b5a9939f3c015db3fb8c61015cbd2c28cb94e1251fa3",
+      {
+        input: {
+          image: imageUrl,
+          prompt: "animated style, cartoon, vibrant colors",
+          negative_prompt: "realistic, photo, blurry, distorted",
+          num_inference_steps: 30,
+          guidance_scale: 7.5,
+        },
+      },
+    )
 
     console.log("SDXL model response received")
 
-    // Parse the result
-    let result
-    try {
-      result = JSON.parse(text)
-    } catch (error) {
-      console.error("Failed to parse SDXL model response:", error)
-      throw new Error(`Invalid response from SDXL model: ${text}`)
-    }
-
-    if (!result || !result[0] || typeof result[0] !== "string") {
+    // The result should be an array of image URLs
+    if (!result || !Array.isArray(result) || !result[0] || typeof result[0] !== "string") {
       throw new Error(`Invalid result format from SDXL model: ${JSON.stringify(result)}`)
     }
 
@@ -126,7 +128,7 @@ export async function createAnimatedVersion(imageUrl: string) {
   }
 }
 
-// Function to transform the image to its opposite using Replicate API with AI SDK
+// Function to transform the image to its opposite using Replicate API
 export async function createOppositeVersion(imageUrl: string, type: string) {
   try {
     console.log(`Starting opposite version creation (${type} to ${type === "pet" ? "human" : "pet"})...`)
@@ -142,31 +144,26 @@ export async function createOppositeVersion(imageUrl: string, type: string) {
         ? "Transform this pet into a human character, maintain the personality and features, cartoon style"
         : "Transform this human into a pet character (preferably cat-like), maintain the personality and features, cartoon style"
 
-    // Using Replicate's Stable Diffusion model for image transformation with AI SDK
-    const { text } = await generateText({
-      model: replicate("stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b"),
-      prompt: JSON.stringify({
-        image: imageUrl,
-        prompt: prompt,
-        negative_prompt: "deformed, distorted, disfigured, poorly drawn, bad anatomy, wrong anatomy",
-        num_inference_steps: 30,
-        guidance_scale: 7.5,
-        controlnet_conditioning_scale: 0.8,
-      }),
-    })
+    // Using Replicate's Stable Diffusion model for image transformation
+    // Fix: Use the replicate function directly
+    const result = await replicate.run(
+      "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
+      {
+        input: {
+          image: imageUrl,
+          prompt: prompt,
+          negative_prompt: "deformed, distorted, disfigured, poorly drawn, bad anatomy, wrong anatomy",
+          num_inference_steps: 30,
+          guidance_scale: 7.5,
+          controlnet_conditioning_scale: 0.8,
+        },
+      },
+    )
 
     console.log("Transformation model response received")
 
-    // Parse the result
-    let result
-    try {
-      result = JSON.parse(text)
-    } catch (error) {
-      console.error("Failed to parse transformation model response:", error)
-      throw new Error(`Invalid response from transformation model: ${text}`)
-    }
-
-    if (!result || !result[0] || typeof result[0] !== "string") {
+    // The result should be an array of image URLs
+    if (!result || !Array.isArray(result) || !result[0] || typeof result[0] !== "string") {
       throw new Error(`Invalid result format from transformation model: ${JSON.stringify(result)}`)
     }
 
@@ -192,34 +189,89 @@ export async function saveImageData(
 
     const supabase = createServerClient()
     if (!supabase) {
-      throw new Error("Failed to create Supabase client")
+      throw new Error("Failed to create Supabase client - check environment variables")
     }
 
     const visitorId = getVisitorId()
 
-    const { data, error } = await supabase
-      .from("images")
-      .insert({
-        original_url: originalUrl,
-        animated_url: animatedUrl,
-        opposite_url: oppositeUrl,
-        image_type: imageType,
-        confidence: confidence,
-        uploader_id: visitorId,
-      })
-      .select()
-      .single()
+    // Truncate URLs if they're too long (most databases have limits)
+    // Typically 2000-8000 characters is the max for text fields
+    const MAX_URL_LENGTH = 2000
 
-    if (error) {
-      console.error("Supabase error:", error)
-      throw new Error(`Database error: ${error.message}`)
+    const safeOriginalUrl =
+      originalUrl && originalUrl.length > MAX_URL_LENGTH ? originalUrl.substring(0, MAX_URL_LENGTH) : originalUrl
+
+    const safeAnimatedUrl =
+      animatedUrl && animatedUrl.length > MAX_URL_LENGTH ? animatedUrl.substring(0, MAX_URL_LENGTH) : animatedUrl
+
+    const safeOppositeUrl =
+      oppositeUrl && oppositeUrl.length > MAX_URL_LENGTH ? oppositeUrl.substring(0, MAX_URL_LENGTH) : oppositeUrl
+
+    // Ensure confidence is a valid number
+    const safeConfidence = typeof confidence === "number" && !isNaN(confidence) ? confidence : 85.0
+
+    // Ensure image type is valid - IMPORTANT: This must match the database constraint
+    // Based on the error, we need to make sure we're using a valid value
+    // Let's try both "pet" and "human" if one fails
+    const validImageTypes = ["pet", "human"]
+    let safeImageType = validImageTypes.includes(imageType) ? imageType : "human"
+
+    // Try to insert the data with retries
+    let retries = 3
+    let lastError = null
+
+    while (retries > 0) {
+      try {
+        console.log(`Attempting to save with image_type: ${safeImageType} (attempt ${4 - retries}/3)`)
+
+        const { data, error } = await supabase
+          .from("images")
+          .insert({
+            original_url: safeOriginalUrl,
+            animated_url: safeAnimatedUrl,
+            opposite_url: safeOppositeUrl,
+            image_type: safeImageType,
+            confidence: safeConfidence,
+            uploader_id: visitorId,
+          })
+          .select()
+          .single()
+
+        if (error) {
+          console.error(`Supabase error (attempt ${4 - retries}/3):`, error)
+
+          // If we get a constraint violation, try the other image type
+          if (error.message.includes("images_image_type_check") && retries > 1) {
+            console.log("Constraint violation on image_type, trying alternative value...")
+            safeImageType = safeImageType === "pet" ? "human" : "pet"
+          } else {
+            lastError = error
+            retries--
+          }
+
+          // Wait a bit before retrying
+          if (retries > 0) {
+            await new Promise((resolve) => setTimeout(resolve, 1000))
+          }
+        } else {
+          console.log("Image data saved successfully with ID:", data.id)
+          return data
+        }
+      } catch (err) {
+        console.error(`Unexpected error (attempt ${4 - retries}/3):`, err)
+        lastError = err
+        retries--
+
+        if (retries > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 1000))
+        }
+      }
     }
 
-    if (!data) {
-      throw new Error("No data returned from database insert")
-    }
-
-    return data
+    // If we get here, all retries failed
+    throw new Error(
+      `Database operation failed after 3 attempts: ${lastError instanceof Error ? lastError.message : String(lastError)}`,
+    )
   } catch (error) {
     console.error("Error in saveImageData:", error)
     throw new Error(`Failed to save image data: ${error instanceof Error ? error.message : String(error)}`)

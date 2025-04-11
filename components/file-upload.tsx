@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { AlertCircle, Upload, ImageIcon, FileWarning } from "lucide-react"
+import { AlertCircle, Upload, ImageIcon, FileWarning, Info } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { CatButton } from "@/components/cat-button"
 import { PawPrint } from "@/components/paw-print"
 import { RandomCat } from "@/components/random-cat"
 import { Progress } from "@/components/ui/progress"
+import Link from "next/link"
 
 // Pet facts about similarities and differences between pets and humans
 const PET_FACTS = [
@@ -51,8 +52,59 @@ export default function FileUpload() {
   const [currentFactIndex, setCurrentFactIndex] = useState(0)
   const [currentCatIndex, setCurrentCatIndex] = useState(0)
   const [fileSize, setFileSize] = useState<number>(0)
+  const [debugInfo, setDebugInfo] = useState<any>(null)
+  const [uploadProgress, setUploadProgress] = useState<number>(0)
+  const [systemStatus, setSystemStatus] = useState<"ok" | "warning" | "error" | "unknown">("unknown")
+  const [statusChecked, setStatusChecked] = useState(false)
+  const [systemStatusDetails, setSystemStatusDetails] = useState<any>(null)
   const dropZoneRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Check system status on component mount
+  useEffect(() => {
+    const checkSystemStatus = async () => {
+      try {
+        console.log("Checking system status...")
+        const response = await fetch("/api/health")
+
+        if (!response.ok) {
+          console.error("Health check returned non-OK status:", response.status)
+          setSystemStatus("error")
+          setSystemStatusDetails({
+            message: `Health API returned status ${response.status}`,
+            status: response.status,
+          })
+          setStatusChecked(true)
+          return
+        }
+
+        const data = await response.json()
+        console.log("Health check response:", data)
+
+        setSystemStatus(data.status)
+
+        // If there are database issues, show them in debug info
+        if (data.checks.database.status === "error") {
+          setSystemStatusDetails({
+            database: data.checks.database,
+            environment: data.environment,
+            timestamp: data.timestamp,
+          })
+        }
+      } catch (err) {
+        console.error("Error checking system status:", err)
+        setSystemStatus("error")
+        setSystemStatusDetails({
+          message: err instanceof Error ? err.message : String(err),
+          error: err,
+        })
+      } finally {
+        setStatusChecked(true)
+      }
+    }
+
+    checkSystemStatus()
+  }, [])
 
   // Cycle through pet facts during loading
   useEffect(() => {
@@ -67,6 +119,25 @@ export default function FileUpload() {
       catInterval = setInterval(() => {
         setCurrentCatIndex((prevIndex) => (prevIndex + 1) % 3)
       }, 2000) // Change cat image every 2 seconds
+
+      // Simulate upload progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress((prev) => {
+          if (prev >= 95) {
+            clearInterval(progressInterval)
+            return prev
+          }
+          return prev + 5
+        })
+      }, 1000)
+
+      return () => {
+        if (factInterval) clearInterval(factInterval)
+        if (catInterval) clearInterval(catInterval)
+        clearInterval(progressInterval)
+      }
+    } else {
+      setUploadProgress(0)
     }
 
     return () => {
@@ -95,6 +166,7 @@ export default function FileUpload() {
     setFile(selectedFile)
     setError(null)
     setErrorDetails(null)
+    setDebugInfo(null)
 
     if (selectedFile) {
       // Set file size for display
@@ -143,24 +215,40 @@ export default function FileUpload() {
     setLoading(true)
     setError(null)
     setErrorDetails(null)
+    setDebugInfo(null)
+    setUploadProgress(0)
     // Reset to first fact when starting loading
     setCurrentFactIndex(0)
     setCurrentCatIndex(0)
 
     try {
+      console.log("Creating FormData...")
       const formData = new FormData()
       formData.append("image", file)
+
+      console.log("FormData created, sending request...")
+      console.log("File details:", {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      })
 
       const response = await fetch("/api/process-image", {
         method: "POST",
         body: formData,
       })
 
+      console.log("Response received:", response.status, response.statusText)
+
       // Check if the response is JSON
       const contentType = response.headers.get("content-type")
+      console.log("Response content type:", contentType)
+
       if (!contentType || !contentType.includes("application/json")) {
         // Handle non-JSON responses
         const text = await response.text()
+        console.log("Non-JSON response:", text.substring(0, 200))
+
         if (text.includes("Request Entity Too Large")) {
           throw new Error("Image is too large. Please use an image smaller than 4MB.")
         } else {
@@ -169,6 +257,10 @@ export default function FileUpload() {
       }
 
       const data = await response.json()
+      console.log("Response data:", data)
+
+      // For debugging
+      setDebugInfo(data)
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to process image")
@@ -183,9 +275,22 @@ export default function FileUpload() {
         return
       }
 
-      // Redirect to the results page
-      router.push(`/results/${data.id}`)
+      // Redirect to the results page if we have an ID
+      if (data.id) {
+        // Set progress to 100% before redirecting
+        setUploadProgress(100)
+
+        // Short delay to show 100% progress
+        setTimeout(() => {
+          console.log("Redirecting to results page:", `/results/${data.id}`)
+          router.push(`/results/${data.id}`)
+        }, 500)
+      } else {
+        setLoading(false)
+        setError("No image ID returned from server")
+      }
     } catch (err) {
+      console.error("Error in handleSubmit:", err)
       setError(err instanceof Error ? err.message : "An unknown error occurred")
       setLoading(false)
     }
@@ -262,6 +367,60 @@ export default function FileUpload() {
       </div>
 
       <CardContent className="pt-6">
+        {/* System status warning */}
+        {statusChecked && systemStatus !== "ok" && (
+          <Alert variant={systemStatus === "error" ? "destructive" : "warning"} className="mb-4">
+            <Info className="h-4 w-4" />
+            <AlertTitle>System Status: {systemStatus.toUpperCase()}</AlertTitle>
+            <AlertDescription>
+              {systemStatus === "error"
+                ? "There are issues with the system that may affect functionality. Some features might not work correctly."
+                : "The system is running with warnings. Some features might be limited."}
+
+              {systemStatusDetails && (
+                <div className="mt-2 text-xs">
+                  <details open>
+                    <summary className="cursor-pointer font-medium">Technical Details</summary>
+                    <div className="mt-1 pl-2 border-l-2 border-gray-200">
+                      {systemStatusDetails.message && (
+                        <p className="mt-1">
+                          <strong>Message:</strong> {systemStatusDetails.message}
+                        </p>
+                      )}
+
+                      {systemStatusDetails.database && (
+                        <div className="mt-1">
+                          <strong>Database:</strong> {systemStatusDetails.database.message || "Unknown error"}
+                          {systemStatusDetails.database.details && (
+                            <pre className="mt-1 whitespace-pre-wrap overflow-auto max-h-40 bg-gray-100 p-2 rounded text-xs">
+                              {JSON.stringify(systemStatusDetails.database.details, null, 2)}
+                            </pre>
+                          )}
+                        </div>
+                      )}
+
+                      {systemStatusDetails.environment && (
+                        <div className="mt-2">
+                          <strong>Environment Variables:</strong>
+                          <pre className="mt-1 whitespace-pre-wrap overflow-auto max-h-40 bg-gray-100 p-2 rounded text-xs">
+                            {JSON.stringify(systemStatusDetails.environment, null, 2)}
+                          </pre>
+                        </div>
+                      )}
+                    </div>
+                  </details>
+
+                  <div className="mt-2 text-center">
+                    <Link href="/supabase-diagnostic" className="text-blue-500 hover:underline">
+                      View Full Diagnostic Information
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="image" className="flex items-center">
@@ -366,6 +525,18 @@ export default function FileUpload() {
             </Alert>
           )}
 
+          {/* Debug info */}
+          {debugInfo && (
+            <Alert className="bg-blue-50 border-blue-200">
+              <AlertTitle>Debug Information</AlertTitle>
+              <AlertDescription>
+                <pre className="mt-2 text-xs whitespace-pre-wrap overflow-auto max-h-40">
+                  {JSON.stringify(debugInfo, null, 2)}
+                </pre>
+              </AlertDescription>
+            </Alert>
+          )}
+
           <CatButton
             type="submit"
             className="w-full bg-rose-500 hover:bg-rose-600"
@@ -388,6 +559,17 @@ export default function FileUpload() {
               </span>
             )}
           </CatButton>
+
+          {/* Upload progress bar */}
+          {loading && (
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs">
+                <span>Upload progress</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <Progress value={uploadProgress} className="h-2 bg-gray-100" indicatorClassName="bg-rose-500" />
+            </div>
+          )}
 
           {/* Pet facts during loading with cycling cat images */}
           {loading && (
