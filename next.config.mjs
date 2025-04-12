@@ -1,8 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  api: {
-    bodyParser: {
-      sizeLimit: '4mb',
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "4mb",
     },
   },
   eslint: {
@@ -12,9 +12,9 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    domains: ['v0.blob.vercel-storage.com'],
+    domains: ["v0.blob.vercel-storage.com"],
     unoptimized: true,
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;
