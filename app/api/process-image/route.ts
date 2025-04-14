@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
     try {
       oppositeUrl = await createOppositeVersion(
         originalUrl,
-        detectionResult.type
+        detectionResult as string
       );
     } catch (error) {
       console.error("Error creating opposite version:", error);

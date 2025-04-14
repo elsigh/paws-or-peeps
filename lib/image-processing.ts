@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from "uuid";
 import { openai } from "@ai-sdk/openai";
 import { put } from "@vercel/blob";
 import { nanoid } from "nanoid";
-import { GeneratedFile } from "ai";
+import type { GeneratedFile } from "ai";
 
 // Define all possible animal types we support
 export const ANIMAL_TYPES = [
@@ -153,10 +153,10 @@ export async function createOppositeVersion(
   imageUrl: string,
   type: string,
   targetAnimalType?: string // New optional parameter for the target animal type
-) {
+): Promise<string | null> {
   try {
     const isHuman = type === "human";
-    const oppositeType = isHuman ? targetAnimalType || "animal" : "human";
+    const oppositeType = isHuman ? targetAnimalType || "Animal" : "Human";
 
     console.log(
       `Starting opposite version creation (${type} to ${oppositeType})...`
@@ -185,7 +185,7 @@ export async function createOppositeVersion(
       // Animal to human
       prompt = `Transform this ${
         type === "other" ? "animal" : type
-      } into a human character, maintain the personality and features, cartoon style`;
+      } into a human character, maintain the personality and features, cartoon style but make it look distinctly human`;
     }
 
     const { image } = await generateImage({
@@ -205,8 +205,6 @@ export async function createOppositeVersion(
 
     console.log("Luma model response received");
     return imageToBlobUrl(image);
-
-    return image;
   } catch (error) {
     console.error("Error in createOppositeVersion:", error);
     // Fallback to placeholder for demo purposes
