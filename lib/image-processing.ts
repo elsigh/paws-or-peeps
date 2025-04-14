@@ -4,6 +4,9 @@ import { luma } from "@ai-sdk/luma";
 import { cookies } from "next/headers";
 import { v4 as uuidv4 } from "uuid";
 import { openai } from "@ai-sdk/openai";
+import { put } from "@vercel/blob";
+import { nanoid } from "nanoid";
+import { GeneratedFile } from "ai";
 
 // Define all possible animal types we support
 export const ANIMAL_TYPES = [
@@ -103,6 +106,13 @@ export async function detectImageContent(imageUrl: string): Promise<string> {
   }
 }
 
+async function imageToBlobUrl(image: GeneratedFile) {
+  const filename = `animated-${nanoid()}.png`;
+  const imageBlob = new Blob([image.uint8Array], { type: image.mimeType });
+  const blob = await put(filename, imageBlob, { access: "public" });
+  return blob.url;
+}
+
 // Function to create an animated version of the image using Replicate API
 export async function createAnimatedVersion(imageUrl: string) {
   try {
@@ -113,7 +123,7 @@ export async function createAnimatedVersion(imageUrl: string) {
       throw new Error(`Invalid image URL: ${imageUrl}`);
     }
 
-    const result = await generateImage({
+    const { image } = await generateImage({
       model: luma.image("photon-flash-1"),
       prompt: "animated style, cartoon, vibrant colors",
       aspectRatio: "1:1",
@@ -130,20 +140,7 @@ export async function createAnimatedVersion(imageUrl: string) {
     });
 
     console.log("Luma model response received");
-
-    // The result should be an array of image URLs
-    if (
-      !result ||
-      !Array.isArray(result) ||
-      !result[0] ||
-      typeof result[0] !== "string"
-    ) {
-      throw new Error(
-        `Invalid result format from Luma model: ${JSON.stringify(result)}`
-      );
-    }
-
-    return result[0]; // Return the URL of the generated image
+    return imageToBlobUrl(image);
   } catch (error) {
     console.error("Error in createAnimatedVersion:", error);
     // Fallback to placeholder for demo purposes
@@ -191,8 +188,7 @@ export async function createOppositeVersion(
       } into a human character, maintain the personality and features, cartoon style`;
     }
 
-    // Using Replicate's Stable Diffusion model for image transformation
-    const result = await generateImage({
+    const { image } = await generateImage({
       model: luma.image("photon-flash-1"),
       prompt,
       providerOptions: {
@@ -207,21 +203,10 @@ export async function createOppositeVersion(
       },
     });
 
-    console.log("Transformation model response received");
+    console.log("Luma model response received");
+    return imageToBlobUrl(image);
 
-    // The result should be an array of image URLs
-    if (
-      !result ||
-      !Array.isArray(result) ||
-      !result[0] ||
-      typeof result[0] !== "string"
-    ) {
-      throw new Error(
-        `Invalid result format from Luma model: ${JSON.stringify(result)}`
-      );
-    }
-
-    return result[0]; // Return the URL of the generated image
+    return image;
   } catch (error) {
     console.error("Error in createOppositeVersion:", error);
     // Fallback to placeholder for demo purposes
