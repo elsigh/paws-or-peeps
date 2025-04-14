@@ -46,8 +46,8 @@ export async function uploadToBlob(file: File) {
     // Set a timeout for the upload (30 seconds)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        console.error("Blob upload timed out after 30 seconds");
-        reject(new Error("Upload timed out after 30 seconds"));
+        console.error("Blob upload timed out after 60 seconds");
+        reject(new Error("Upload timed out after 60 seconds"));
       }, 60000);
     });
 
