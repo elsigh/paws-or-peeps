@@ -1,6 +1,6 @@
 import { createServerClient } from "./supabase";
-import { generateText } from "ai";
-import { replicate } from "@ai-sdk/replicate";
+import { experimental_generateImage as generateImage, generateText } from "ai";
+import { luma } from "@ai-sdk/luma";
 import { cookies } from "next/headers";
 import { v4 as uuidv4 } from "uuid";
 import { openai } from "@ai-sdk/openai";
@@ -113,21 +113,23 @@ export async function createAnimatedVersion(imageUrl: string) {
       throw new Error(`Invalid image URL: ${imageUrl}`);
     }
 
-    // Using Replicate's animation model
-    const result = await replicate(
-      "stability-ai/sdxl:9f747673945c62801b13b5a9939f3c015db3fb8c61015cbd2c28cb94e1251fa3",
-      {
-        input: {
-          image: imageUrl,
-          prompt: "animated style, cartoon, vibrant colors",
-          negative_prompt: "realistic, photo, blurry, distorted",
-          num_inference_steps: 30,
-          guidance_scale: 7.5,
+    const result = await generateImage({
+      model: luma.image("photon-flash-1"),
+      prompt: "animated style, cartoon, vibrant colors",
+      aspectRatio: "1:1",
+      providerOptions: {
+        luma: {
+          image_ref: [
+            {
+              url: imageUrl,
+              weight: 0.8,
+            },
+          ],
         },
-      }
-    );
+      },
+    });
 
-    console.log("SDXL model response received");
+    console.log("Luma model response received");
 
     // The result should be an array of image URLs
     if (
@@ -137,7 +139,7 @@ export async function createAnimatedVersion(imageUrl: string) {
       typeof result[0] !== "string"
     ) {
       throw new Error(
-        `Invalid result format from SDXL model: ${JSON.stringify(result)}`
+        `Invalid result format from Luma model: ${JSON.stringify(result)}`
       );
     }
 
@@ -190,20 +192,20 @@ export async function createOppositeVersion(
     }
 
     // Using Replicate's Stable Diffusion model for image transformation
-    const result = await replicate(
-      "stability-ai/sdxl:39ed52f2a78e934b3ba6e2a89f5b1c712de7dfea535525255b1aa35c5565e08b",
-      {
-        input: {
-          image: imageUrl,
-          prompt: prompt,
-          negative_prompt:
-            "deformed, distorted, disfigured, poorly drawn, bad anatomy, wrong anatomy",
-          num_inference_steps: 30,
-          guidance_scale: 7.5,
-          controlnet_conditioning_scale: 0.8,
+    const result = await generateImage({
+      model: luma.image("photon-flash-1"),
+      prompt,
+      providerOptions: {
+        luma: {
+          image_ref: [
+            {
+              url: imageUrl,
+              weight: 0.8,
+            },
+          ],
         },
-      }
-    );
+      },
+    });
 
     console.log("Transformation model response received");
 
@@ -215,9 +217,7 @@ export async function createOppositeVersion(
       typeof result[0] !== "string"
     ) {
       throw new Error(
-        `Invalid result format from transformation model: ${JSON.stringify(
-          result
-        )}`
+        `Invalid result format from Luma model: ${JSON.stringify(result)}`
       );
     }
 
