@@ -194,12 +194,10 @@ export async function createOppositeVersion(
       prompt,
       providerOptions: {
         luma: {
-          image_ref: [
-            {
-              url: imageUrl,
-              weight: 0.8,
-            },
-          ],
+          modify_image_ref: {
+            url: imageUrl,
+            weight: 1.0,
+          },
         },
       },
     });
