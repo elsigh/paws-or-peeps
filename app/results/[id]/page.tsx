@@ -1,64 +1,69 @@
-import { notFound } from "next/navigation"
-import ResultsDisplay from "@/components/results-display"
-import { getImageById } from "@/lib/image-processing"
-import { CatLogo } from "@/components/cat-logo"
-import { PawPrint } from "@/components/paw-print"
-import { RandomCat } from "@/components/random-cat"
-import { createServerClient } from "@/lib/supabase"
+import { notFound } from "next/navigation";
+import ResultsDisplay from "@/components/results-display";
+import { getImageById } from "@/lib/image-processing";
+import { CatLogo } from "@/components/cat-logo";
+import { PawPrint } from "@/components/paw-print";
+import { RandomCat } from "@/components/random-cat";
+import { createServerClient } from "@/lib/supabase";
 
 interface ResultsPageProps {
   params: {
-    id: string
-  }
+    id: string;
+  };
 }
 
 export default async function ResultsPage({ params }: ResultsPageProps) {
   try {
-    console.log("Results page loading for ID:", params.id)
+    const { id } = await params;
+    console.log("Results page loading for ID:", id);
 
-    let imageData
+    let imageData;
 
     try {
       // First try to get the image data using the getImageById function
-      imageData = await getImageById(params.id)
-      console.log("Image data retrieved successfully")
+      imageData = await getImageById(id);
+      console.log("Image data retrieved successfully");
     } catch (error) {
-      console.error("Error getting image data with getImageById:", error)
+      console.error("Error getting image data with getImageById:", error);
 
       // If that fails, try a direct database query
       try {
-        console.log("Attempting direct database query...")
-        const supabase = createServerClient()
+        console.log("Attempting direct database query...");
+        const supabase = createServerClient();
         if (!supabase) {
-          throw new Error("Failed to create Supabase client")
+          throw new Error("Failed to create Supabase client");
         }
 
-        const { data, error: queryError } = await supabase.from("images").select("*").eq("id", params.id).single()
+        const { data, error: queryError } = await supabase
+          .from("images")
+          .select("*")
+          .eq("id", id)
+          .single();
 
         if (queryError) {
-          throw new Error(`Database query error: ${queryError.message}`)
+          throw new Error(`Database query error: ${queryError.message}`);
         }
 
         if (!data) {
-          throw new Error("No image data found")
+          throw new Error("No image data found");
         }
 
         // Add isUploader property
         imageData = {
           ...data,
           isUploader: true, // Default to true if we can't determine
-        }
+        };
 
-        console.log("Direct database query successful")
+        console.log("Direct database query successful");
       } catch (directQueryError) {
-        console.error("Direct database query also failed:", directQueryError)
+        console.error("Direct database query also failed:", directQueryError);
 
         // As a last resort, check if this is a temporary ID
         // In this case, we'll use placeholder data
-        console.log("Using placeholder data for possible temporary ID")
+        console.log("Using placeholder data for possible temporary ID");
 
         imageData = {
-          id: params.id,
+          id,
           original_url: "/colorful-abstract-shapes.png",
           animated_url: "/whimsical-forest-creatures.png",
           opposite_url: "/light-and-shadow.png",
@@ -66,17 +71,19 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           confidence: 85.0,
           isUploader: true,
           created_at: new Date().toISOString(),
-        }
+        };
       }
     }
 
     // Ensure image_type is valid for the component
     // If the database has a different value than what our component expects,
     // we need to map it to a value the component can handle
-    const validTypes = ["pet", "human"]
+    const validTypes = ["pet", "human"];
     if (!validTypes.includes(imageData.image_type)) {
-      console.log(`Converting non-standard image_type "${imageData.image_type}" to "human"`)
-      imageData.image_type = "human" // Default to human if we get an unexpected value
+      console.log(
+        `Converting non-standard image_type "${imageData.image_type}" to "human"`
+      );
+      imageData.image_type = "human"; // Default to human if we get an unexpected value
     }
 
     return (
@@ -132,9 +139,9 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           />
         </div>
       </div>
-    )
+    );
   } catch (error) {
-    console.error("Error loading results:", error)
-    return notFound()
+    console.error("Error loading results:", error);
+    return notFound();
   }
 }

@@ -1,45 +1,54 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { uploadToBlob } from "@/lib/blob"
-import { cookies } from "next/headers"
-import { nanoid } from "nanoid"
-import { getVisitorId, saveImageData } from "@/lib/image-processing"
-import { createServerClient } from "@/lib/supabase"
-import { checkEnvironmentVariables } from "@/lib/env-checker"
+import { type NextRequest, NextResponse } from "next/server";
+import { uploadToBlob } from "@/lib/blob";
+import { cookies } from "next/headers";
+import { nanoid } from "nanoid";
+import {
+  getVisitorId,
+  saveImageData,
+  detectImageContent,
+  createAnimatedVersion,
+  createOppositeVersion,
+} from "@/lib/image-processing";
+import { createServerClient } from "@/lib/supabase";
+import { checkEnvironmentVariables } from "@/lib/env-checker";
 
 export async function POST(request: NextRequest) {
-  console.log("API route started")
+  console.log("API route started");
 
   try {
     // Check environment variables first
-    const { issues, defined } = checkEnvironmentVariables()
+    const { issues, defined } = checkEnvironmentVariables();
     if (issues.length > 0) {
-      console.warn("Environment variable issues detected:", issues)
+      console.warn("Environment variable issues detected:", issues);
     }
 
     // Log request details
-    console.log("Request method:", request.method)
+    console.log("Request method:", request.method);
 
-    let formData
+    let formData;
     try {
-      console.log("Attempting to parse form data...")
-      formData = await request.formData()
-      console.log("Form data parsed successfully")
+      console.log("Attempting to parse form data...");
+      formData = await request.formData();
+      console.log("Form data parsed successfully");
     } catch (error) {
-      console.error("Error parsing form data:", error)
+      console.error("Error parsing form data:", error);
       return NextResponse.json(
         {
           error: "Failed to parse form data",
           details: error instanceof Error ? error.message : String(error),
         },
-        { status: 400 },
-      )
+        { status: 400 }
+      );
     }
 
-    const file = formData.get("image") as File | null
+    const file = formData.get("image") as File | null;
 
     if (!file) {
-      console.error("No file found in form data")
-      return NextResponse.json({ error: "No image file provided" }, { status: 400 })
+      console.error("No file found in form data");
+      return NextResponse.json(
+        { error: "No image file provided" },
+        { status: 400 }
+      );
     }
 
     // Log file details
@@ -47,68 +56,108 @@ export async function POST(request: NextRequest) {
       name: file.name,
       type: file.type,
       size: file.size,
-    })
+    });
 
     // Set visitor ID cookie if it doesn't exist
-    const cookieStore = cookies()
-    const visitorId = getVisitorId()
+    const cookieStore = await cookies();
+    const visitorId = await getVisitorId();
 
     // Upload original image to Vercel Blob
-    console.log("Starting image upload to Blob...")
-    let originalUrl
+    console.log("Starting image upload to Blob...");
+    let originalUrl;
     try {
-      originalUrl = await uploadToBlob(file)
-      console.log("Upload successful:", originalUrl)
+      originalUrl = await uploadToBlob(file);
+      console.log("Upload successful:", originalUrl);
 
       // Verify the URL is valid
-      if (!originalUrl || (originalUrl.startsWith("/placeholder") && process.env.NODE_ENV === "production")) {
-        console.error("Blob upload returned a placeholder in production")
+      if (
+        !originalUrl ||
+        (originalUrl.startsWith("/placeholder") &&
+          process.env.NODE_ENV === "production")
+      ) {
+        console.error("Blob upload returned a placeholder in production");
         return NextResponse.json(
           {
             error: "Failed to upload image to storage",
-            details: "Storage service is currently unavailable. Please try again later.",
+            details:
+              "Storage service is currently unavailable. Please try again later.",
           },
-          { status: 503 },
-        )
+          { status: 503 }
+        );
       }
     } catch (error) {
-      console.error("Error uploading to Vercel Blob:", error)
+      console.error("Error uploading to Vercel Blob:", error);
       return NextResponse.json(
         {
           error: "Failed to upload image to storage",
           details: error instanceof Error ? error.message : String(error),
         },
-        { status: 500 },
-      )
+        { status: 500 }
+      );
     }
 
-    // For now, use placeholder images for the animated and opposite versions
-    const animatedUrl = "/whimsical-forest-creatures.png"
-    const oppositeUrl = "/light-and-shadow.png"
-    const imageType = "human" // Using "human" as the default type
-    const confidence = 85.0 // Default confidence
+    // Use AI to detect if the image contains a pet or human
+    console.log("Detecting image content...");
+    let detectionResult;
+    try {
+      detectionResult = await detectImageContent(originalUrl);
+      console.log("Detection result:", detectionResult);
+    } catch (error) {
+      console.error("Error detecting image content:", error);
+      // Default to human if detection fails
+      detectionResult = { type: "human", confidence: 85.0 };
+    }
+
+    // Generate animated and opposite versions
+    console.log("Generating animated version...");
+    let animatedUrl;
+    try {
+      animatedUrl = await createAnimatedVersion(originalUrl);
+    } catch (error) {
+      console.error("Error creating animated version:", error);
+      animatedUrl = "/whimsical-forest-creatures.png"; // Fallback
+    }
+
+    console.log("Generating opposite version...");
+    let oppositeUrl;
+    try {
+      oppositeUrl = await createOppositeVersion(
+        originalUrl,
+        detectionResult.type
+      );
+    } catch (error) {
+      console.error("Error creating opposite version:", error);
+      oppositeUrl = "/light-and-shadow.png"; // Fallback
+    }
 
     // Try to save the image data to the database, but continue even if it fails
-    let imageData = null
-    let databaseError = null
-    let usedTempId = false
+    let imageData = null;
+    let databaseError = null;
+    let usedTempId = false;
 
     try {
-      console.log("Saving image data to database...")
+      console.log("Saving image data to database...");
 
       // First, try using the saveImageData function
       try {
-        imageData = await saveImageData(originalUrl, animatedUrl, oppositeUrl, imageType as "pet" | "human", confidence)
-        console.log("Image data saved successfully:", imageData)
+        imageData = await saveImageData(
+          originalUrl,
+          animatedUrl,
+          oppositeUrl,
+          detectionResult.type as "pet" | "human",
+          detectionResult.confidence
+        );
+        console.log("Image data saved successfully:", imageData);
       } catch (saveError) {
-        console.error("Error using saveImageData:", saveError)
-        databaseError = saveError instanceof Error ? saveError.message : String(saveError)
+        console.error("Error using saveImageData:", saveError);
+        databaseError =
+          saveError instanceof Error ? saveError.message : String(saveError);
 
         // If that fails, try a direct database insert as a fallback
-        console.log("Attempting direct database insert as fallback...")
-        const supabase = createServerClient()
+        console.log("Attempting direct database insert as fallback...");
+        const supabase = createServerClient();
         if (!supabase) {
-          throw new Error("Failed to create Supabase client")
+          throw new Error("Failed to create Supabase client");
         }
 
         // Try to insert with a valid image_type
@@ -118,29 +167,29 @@ export async function POST(request: NextRequest) {
             original_url: originalUrl,
             animated_url: animatedUrl,
             opposite_url: oppositeUrl,
-            image_type: imageType,
-            confidence: confidence,
+            image_type: detectionResult.type,
+            confidence: detectionResult.confidence,
             uploader_id: visitorId,
           })
           .select()
-          .single()
+          .single();
 
         if (error) {
-          console.error("Database insert error:", error)
-          throw new Error(`Database error: ${error.message}`)
+          console.error("Database insert error:", error);
+          throw new Error(`Database error: ${error.message}`);
         }
 
-        imageData = data
-        console.log("Direct database insert successful:", imageData)
+        imageData = data;
+        console.log("Direct database insert successful:", imageData);
       }
     } catch (error) {
-      console.error("All database save attempts failed:", error)
-      databaseError = error instanceof Error ? error.message : String(error)
+      console.error("All database save attempts failed:", error);
+      databaseError = error instanceof Error ? error.message : String(error);
 
       // Generate a temporary ID and continue
-      const tempId = nanoid()
-      console.log("Using temporary ID:", tempId)
-      usedTempId = true
+      const tempId = nanoid();
+      console.log("Using temporary ID:", tempId);
+      usedTempId = true;
 
       // Create a mock image data object
       imageData = {
@@ -148,11 +197,11 @@ export async function POST(request: NextRequest) {
         original_url: originalUrl,
         animated_url: animatedUrl,
         opposite_url: oppositeUrl,
-        image_type: imageType,
-        confidence: confidence,
+        image_type: detectionResult.type,
+        confidence: detectionResult.confidence,
         uploader_id: visitorId,
         created_at: new Date().toISOString(),
-      }
+      };
     }
 
     // Return success with the image data
@@ -165,11 +214,11 @@ export async function POST(request: NextRequest) {
       originalUrl,
       animatedUrl,
       oppositeUrl,
-      type: imageType,
-      confidence,
+      type: detectionResult.type,
+      confidence: detectionResult.confidence,
       temporary: usedTempId,
       databaseError: databaseError,
-    })
+    });
 
     // Set the visitor_id cookie if it doesn't exist
     if (!cookieStore.get("visitor_id")) {
@@ -179,19 +228,20 @@ export async function POST(request: NextRequest) {
         httpOnly: true,
         maxAge: 60 * 60 * 24 * 365,
         path: "/",
-      })
+      });
     }
 
-    return response
+    return response;
   } catch (error) {
-    console.error("Unhandled error in API route:", error)
+    console.error("Unhandled error in API route:", error);
     return NextResponse.json(
       {
         error: "Internal server error",
         details: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : "No stack trace available",
+        stack:
+          error instanceof Error ? error.stack : "No stack trace available",
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }
