@@ -1,8 +1,33 @@
 import { createServerClient } from "./supabase";
+import { generateText } from "ai";
 import { replicate } from "@ai-sdk/replicate";
 import { cookies } from "next/headers";
-// Remove nanoid import as we're standardizing on UUID
 import { v4 as uuidv4 } from "uuid";
+import { openai } from "@ai-sdk/openai";
+
+// Define all possible animal types we support
+export const ANIMAL_TYPES = [
+  "cat",
+  "dog",
+  "bird",
+  "horse",
+  "elephant",
+  "lion",
+  "tiger",
+  "bear",
+  "deer",
+  "wolf",
+  "dolphin",
+  "whale",
+  "monkey",
+  "giraffe",
+  "zebra",
+  "penguin",
+  "fox",
+  "rabbit",
+  "squirrel",
+  "koala",
+];
 
 // Function to get or create a visitor ID
 export async function getVisitorId() {
@@ -29,88 +54,38 @@ export async function getVisitorId() {
 
   return visitorId;
 }
-
-// Function to detect if an image contains a pet or human using Replicate API
-export async function detectImageContent(imageUrl: string) {
+export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
-    console.log(
-      "Starting image content detection with Replicate CLIP model..."
-    );
+    // Validate URL
+    new URL(imageUrl);
 
-    // Check if the image URL is valid
-    if (!imageUrl || typeof imageUrl !== "string") {
-      throw new Error(`Invalid image URL: ${imageUrl}`);
-    }
+    // Use AI SDK with OpenAI to analyze the image
+    const { text } = await generateText({
+      model: openai("gpt-4o"),
+      prompt: `
+        Analyze the image at this URL: ${imageUrl}
+        
+        Determine if the image contains a human or one of these animals: ${ANIMAL_TYPES.join(
+          ", "
+        )}
+        
+        If it contains a human, respond with exactly "Human".
+        If it contains one of the listed animals, respond with the animal type (e.g., "Cat", "Dog", etc.).
+        If it contains both a human and an animal, respond with "Human and [animal type]".
+        If it contains multiple animals but no human, list the animals (e.g., "Cat and Dog").
+        If it doesn't contain a human or any of the listed animals, respond with "Neither human nor listed animal detected".
+        
+        Respond with ONLY the classification result, no additional text.
+      `,
+    });
 
-    // Using Replicate's CLIP model for image classification
-    const result = await replicate(
-      "replicate/clip-vit-base32:2facb4a474a0462c15041b78b1ad70952ea46b5ec6ad29583c0b29dbd4249591",
-      {
-        input: {
-          image: imageUrl,
-          candidates: [
-            "a photo of a pet animal",
-            "a photo of a human",
-            "something else",
-          ],
-        },
-      }
-    );
-
-    console.log("CLIP model response:", result);
-
-    // Parse the result
-    let classifications;
-    try {
-      // The result might already be an object, so we'll handle both cases
-      if (typeof result === "string") {
-        classifications = JSON.parse(result);
-      } else {
-        classifications = result;
-      }
-    } catch (error) {
-      console.error("Failed to parse CLIP model response:", error);
-      throw new Error(`Invalid response from CLIP model: ${result}`);
-    }
-
-    // Find the highest confidence classification
-    let highestConfidence = 0;
-    let detectedType = "pet"; // Default to "pet" instead of "unknown"
-
-    for (const [label, confidence] of Object.entries(classifications)) {
-      if (typeof confidence === "number" && confidence > highestConfidence) {
-        highestConfidence = confidence;
-
-        if (label.includes("pet")) {
-          detectedType = "pet";
-        } else if (label.includes("human")) {
-          detectedType = "human";
-        } else {
-          // For "something else", default to "pet" to satisfy the constraint
-          detectedType = "pet";
-        }
-      }
-    }
-
-    console.log(
-      `Detection result: ${detectedType} with ${
-        highestConfidence * 100
-      }% confidence`
-    );
-
-    // If confidence is too low, return pet as default
-    if (highestConfidence < 0.5) {
-      return { type: "pet", confidence: 85.0 };
-    }
-
-    return {
-      type: detectedType,
-      confidence: highestConfidence * 100,
-    };
+    return text.trim();
   } catch (error) {
-    console.error("Error in detectImageContent:", error);
-    // Default to pet if detection fails or times out
-    return { type: "pet", confidence: 85.0 };
+    console.error("Classification error:", error);
+    if (error instanceof Error) {
+      throw new Error(`Failed to classify image: ${error.message}`);
+    }
+    throw new Error("Failed to classify image");
   }
 }
 
@@ -161,12 +136,17 @@ export async function createAnimatedVersion(imageUrl: string) {
 }
 
 // Function to transform the image to its opposite using Replicate API
-export async function createOppositeVersion(imageUrl: string, type: string) {
+export async function createOppositeVersion(
+  imageUrl: string,
+  type: string,
+  targetAnimalType?: string // New optional parameter for the target animal type
+) {
   try {
+    const isHuman = type === "human";
+    const oppositeType = isHuman ? targetAnimalType || "animal" : "human";
+
     console.log(
-      `Starting opposite version creation (${type} to ${
-        type === "pet" ? "human" : "pet"
-      })...`
+      `Starting opposite version creation (${type} to ${oppositeType})...`
     );
 
     // Check if the image URL is valid
@@ -174,11 +154,26 @@ export async function createOppositeVersion(imageUrl: string, type: string) {
       throw new Error(`Invalid image URL: ${imageUrl}`);
     }
 
-    const oppositeType = type === "pet" ? "human" : "pet";
-    const prompt =
-      type === "pet"
-        ? "Transform this pet into a human character, maintain the personality and features, cartoon style"
-        : "Transform this human into a pet character (preferably cat-like), maintain the personality and features, cartoon style";
+    // If it's a human and no target animal type is specified, return null
+    // This will signal the frontend that it needs to ask the user for an animal type
+    if (isHuman && !targetAnimalType) {
+      console.log(
+        "Human detected but no target animal type specified. Returning null."
+      );
+      return null;
+    }
+
+    // Create a specific prompt based on the detected animal type
+    let prompt;
+    if (isHuman && targetAnimalType) {
+      // Human to specific animal
+      prompt = `Transform this human into a ${targetAnimalType} character, maintain the personality and features, cartoon style`;
+    } else {
+      // Animal to human
+      prompt = `Transform this ${
+        type === "other" ? "animal" : type
+      } into a human character, maintain the personality and features, cartoon style`;
+    }
 
     // Using Replicate's Stable Diffusion model for image transformation
     const result = await replicate(
@@ -216,7 +211,8 @@ export async function createOppositeVersion(imageUrl: string, type: string) {
   } catch (error) {
     console.error("Error in createOppositeVersion:", error);
     // Fallback to placeholder for demo purposes
-    const oppositeType = type === "pet" ? "human" : "pet";
+    const oppositeType =
+      type === "human" ? targetAnimalType || "animal" : "human";
     return `/placeholder.svg?height=400&width=400&query=${oppositeType} version of ${imageUrl}`;
   }
 }
@@ -225,17 +221,19 @@ export async function createOppositeVersion(imageUrl: string, type: string) {
 export async function saveImageData(
   originalUrl: string,
   animatedUrl: string,
-  oppositeUrl: string,
-  imageType: "pet" | "human" | "unknown",
-  confidence: number
+  oppositeUrl: string | null, // Can be null initially for human uploads
+  imageType: string,
+  confidence: number,
+  targetAnimalType?: string // New optional parameter
 ) {
   try {
     console.log("Saving image data to Supabase with params:", {
       originalUrl: originalUrl?.substring(0, 50) + "...",
       animatedUrl: animatedUrl?.substring(0, 50) + "...",
-      oppositeUrl: oppositeUrl?.substring(0, 50) + "...",
+      oppositeUrl: oppositeUrl ? oppositeUrl.substring(0, 50) + "..." : "null",
       imageType,
       confidence,
+      targetAnimalType,
     });
 
     const supabase = createServerClient();
@@ -245,42 +243,69 @@ export async function saveImageData(
       );
     }
 
+    // Get visitor ID
     const visitorId = await getVisitorId();
-    console.log("Using visitor ID:", visitorId);
-
-    // Verify visitor ID is a valid UUID
-    const isValidUUID =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        visitorId
-      );
-    if (!isValidUUID) {
-      console.error(`Invalid UUID format for visitor ID: ${visitorId}`);
-      throw new Error(`Invalid UUID format for visitor ID: ${visitorId}`);
-    }
 
     // Generate a UUID for this image if needed
     const imageId = uuidv4();
 
     // Truncate URLs if they're too long
-    const MAX_URL_LENGTH = 1000; // Reduced from 2000 to avoid potential issues
+    const MAX_URL_LENGTH = 1000;
     const safeOriginalUrl = originalUrl?.substring(0, MAX_URL_LENGTH) || "";
     const safeAnimatedUrl = animatedUrl?.substring(0, MAX_URL_LENGTH) || "";
     const safeOppositeUrl = oppositeUrl?.substring(0, MAX_URL_LENGTH) || "";
 
     // Ensure confidence is a valid number
     const safeConfidence =
-      typeof confidence === "number" && !isNaN(confidence) ? confidence : 85.0;
+      typeof confidence === "number" && !isNaN(confidence) ? confidence : 60.0;
 
-    // IMPORTANT: Make sure imageType matches the database constraint
-    // Based on the error, your database only accepts 'pet' or 'human'
-    let safeImageType: "pet" | "human";
+    // Validate image type against allowed values
+    const validImageTypes = [
+      "cat",
+      "dog",
+      "bird",
+      "horse",
+      "elephant",
+      "lion",
+      "tiger",
+      "bear",
+      "deer",
+      "wolf",
+      "dolphin",
+      "whale",
+      "monkey",
+      "giraffe",
+      "zebra",
+      "penguin",
+      "fox",
+      "rabbit",
+      "squirrel",
+      "koala",
+      "human",
+      "other",
+    ];
 
-    // Convert 'unknown' to a valid type (defaulting to 'pet')
-    if (imageType !== "pet" && imageType !== "human") {
-      console.log(`Invalid image type "${imageType}", defaulting to "pet"`);
-      safeImageType = "pet";
-    } else {
+    let safeImageType = "other";
+    if (validImageTypes.includes(imageType)) {
       safeImageType = imageType;
+    } else {
+      console.log(`Invalid image type "${imageType}", defaulting to "other"`);
+    }
+
+    // Validate target animal type if provided
+    let safeTargetAnimalType = null;
+    if (targetAnimalType) {
+      if (
+        validImageTypes.includes(targetAnimalType) &&
+        targetAnimalType !== "human" &&
+        targetAnimalType !== "other"
+      ) {
+        safeTargetAnimalType = targetAnimalType;
+      } else {
+        console.log(
+          `Invalid target animal type "${targetAnimalType}", ignoring`
+        );
+      }
     }
 
     console.log(`Attempting to save with image_type: ${safeImageType}`);
@@ -289,26 +314,24 @@ export async function saveImageData(
     const { data, error } = await supabase
       .from("images")
       .insert({
-        id: imageId, // Explicitly set UUID
+        id: imageId,
         original_url: safeOriginalUrl,
         animated_url: safeAnimatedUrl,
         opposite_url: safeOppositeUrl,
-        image_type: safeImageType, // Using the validated image type
+        image_type: safeImageType,
         confidence: safeConfidence,
         uploader_id: visitorId,
+        target_animal_type: safeTargetAnimalType, // New field
       })
       .select()
       .single();
 
     if (error) {
       console.error("Supabase insert error:", error);
-
-      // Log more details about the error
       if (error.code) {
         console.error(`Error code: ${error.code}, Message: ${error.message}`);
         if (error.details) console.error("Error details:", error.details);
       }
-
       throw error;
     }
 
@@ -526,4 +549,80 @@ export async function getRecentTransformations(limit = 12) {
   });
 
   return processedData;
+}
+
+// Function to update the opposite image after user selects an animal type
+export async function updateOppositeImage(
+  imageId: string,
+  targetAnimalType: string
+) {
+  try {
+    console.log(
+      `Updating opposite image for ID: ${imageId} to ${targetAnimalType}`
+    );
+
+    const supabase = createServerClient();
+    if (!supabase) {
+      throw new Error("Failed to create Supabase client");
+    }
+
+    // Get the current image data
+    const { data: imageData, error: fetchError } = await supabase
+      .from("images")
+      .select("*")
+      .eq("id", imageId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching image data:", fetchError);
+      throw new Error(`Failed to fetch image data: ${fetchError.message}`);
+    }
+
+    if (!imageData) {
+      throw new Error(`No image found with ID: ${imageId}`);
+    }
+
+    // Verify this is a human image
+    if (imageData.image_type !== "human") {
+      throw new Error("Can only update opposite image for human images");
+    }
+
+    // Generate the new opposite image
+    const newOppositeUrl = await createOppositeVersion(
+      imageData.original_url,
+      "human",
+      targetAnimalType
+    );
+
+    if (!newOppositeUrl) {
+      throw new Error("Failed to generate new opposite image");
+    }
+
+    // Update the database record
+    const { data, error } = await supabase
+      .from("images")
+      .update({
+        opposite_url: newOppositeUrl,
+        target_animal_type: targetAnimalType,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", imageId)
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error updating opposite image:", error);
+      throw new Error(`Failed to update opposite image: ${error.message}`);
+    }
+
+    console.log("Opposite image updated successfully");
+    return data;
+  } catch (error) {
+    console.error("Error in updateOppositeImage:", error);
+    throw new Error(
+      `Failed to update opposite image: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
 }
