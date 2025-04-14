@@ -183,9 +183,8 @@ export async function createOppositeVersion(
       prompt = `Transform this human into a ${targetAnimalType} character, maintain the personality and features, cartoon style`;
     } else {
       // Animal to human
-      prompt = `Transform this ${
-        type === "other" ? "animal" : type
-      } into a clothed human - in cartoon style, maintaining some of the personality and features of the animal`;
+      const animalType = type === "other" ? "animal" : type;
+      prompt = `Transform this ${animalType} into a human being, in cartoon style, with the personality of the original ${animalType} but distinctly human`;
     }
     console.debug("Prompt:", prompt);
 
