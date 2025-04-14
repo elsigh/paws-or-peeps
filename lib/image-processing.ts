@@ -62,9 +62,15 @@ export async function detectImageContent(imageUrl: string): Promise<string> {
     // Use AI SDK with OpenAI to analyze the image
     const { text } = await generateText({
       model: openai("gpt-4o"),
-      prompt: `
-        Analyze the image at this URL: ${imageUrl}
-        
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `
+            Analyze the attached image.
+            
         Determine if the image contains a human or one of these animals: ${ANIMAL_TYPES.join(
           ", "
         )}
@@ -77,6 +83,14 @@ export async function detectImageContent(imageUrl: string): Promise<string> {
         
         Respond with ONLY the classification result, no additional text.
       `,
+            },
+            {
+              type: "image",
+              image: imageUrl,
+            },
+          ],
+        },
+      ],
     });
 
     return text.trim();
