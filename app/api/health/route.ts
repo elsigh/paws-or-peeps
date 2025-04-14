@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase"
+import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase";
 
 export async function GET() {
   const healthChecks = {
@@ -7,7 +7,7 @@ export async function GET() {
     database: { status: "unknown", message: "Not checked yet" },
     blob: { status: "unknown", message: "Not checked yet" },
     replicate: { status: "unknown", message: "Not checked yet" },
-  }
+  };
 
   // Check environment variables (don't expose actual values)
   const envStatus = {
@@ -25,134 +25,147 @@ export async function GET() {
     POSTGRES_DATABASE: !!process.env.POSTGRES_DATABASE,
     BLOB_READ_WRITE_TOKEN: !!process.env.BLOB_READ_WRITE_TOKEN,
     REPLICATE_API_TOKEN: !!process.env.REPLICATE_API_TOKEN,
-  }
+  };
 
   // Check if required environment variables are set
-  const hasSupabaseUrl = envStatus.SUPABASE_URL || envStatus.NEXT_PUBLIC_SUPABASE_URL
+  const hasSupabaseUrl =
+    envStatus.SUPABASE_URL || envStatus.NEXT_PUBLIC_SUPABASE_URL;
   const hasSupabaseKey =
-    envStatus.SUPABASE_SERVICE_ROLE_KEY || envStatus.SUPABASE_ANON_KEY || envStatus.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    envStatus.SUPABASE_SERVICE_ROLE_KEY ||
+    envStatus.SUPABASE_ANON_KEY ||
+    envStatus.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   // If we have the required environment variables, assume database is OK by default
   if (hasSupabaseUrl && hasSupabaseKey) {
     healthChecks.database = {
       status: "ok",
       message: "Database configuration appears valid",
-    }
+    };
   }
 
   // Check database connection only if we have the required environment variables
   if (hasSupabaseUrl && hasSupabaseKey) {
     try {
-      console.log("Testing database connection in health check...")
-      let supabase
+      console.log("Testing database connection in health check...");
+      let supabase;
 
       try {
-        supabase = createServerClient()
+        supabase = createServerClient();
         if (!supabase) {
           healthChecks.database = {
             status: "error",
             message: "Failed to create Supabase client",
-            details: "The createServerClient function returned null or undefined",
-          }
+            details:
+              "The createServerClient function returned null or undefined",
+          };
         } else {
-          console.log("Supabase client created, testing query...")
+          console.log("Supabase client created, testing query...");
           try {
-            const { data, error } = await supabase.from("images").select("count(*)", { count: "exact", head: true })
+            // Use a simpler query that's less likely to fail due to syntax
+            const { data, error } = await supabase
+              .from("images")
+              .select("id")
+              .limit(1);
 
             if (error) {
               // Check if this is a real error or just a missing table (which is fine for new setups)
               const isTableNotFoundError =
-                error.code === "42P01" || (error.message && error.message.includes("does not exist"))
+                error.code === "42P01" ||
+                (error.message && error.message.includes("does not exist"));
 
               if (isTableNotFoundError) {
                 // This is expected for new setups, not a critical error
                 healthChecks.database = {
                   status: "warning",
-                  message: "Database tables not found. You may need to run the setup script.",
+                  message:
+                    "Database tables not found. You may need to run the setup script.",
                   details: {
-                    code: error.code,
-                    message: error.message,
+                    code: error.code || "UNKNOWN",
+                    message: error.message || "No error message provided",
                   },
-                }
+                };
               } else {
                 // Ensure we capture all error properties for real errors
                 const errorDetails = {
                   message: error.message || "No error message provided",
-                  code: error.code,
-                  details: error.details,
-                  hint: error.hint,
-                }
+                  code: error.code || "UNKNOWN",
+                  details: error.details || "No details provided",
+                  hint: error.hint || "No hint provided",
+                };
 
                 healthChecks.database = {
                   status: "error",
                   message: `Database error: ${errorDetails.message}`,
                   details: errorDetails,
-                }
+                };
               }
             } else {
               healthChecks.database = {
                 status: "ok",
                 message: "Database connection successful",
-                data,
-              }
+                data: { count: data?.length || 0 },
+              };
             }
           } catch (queryError) {
-            // Only treat as error if we have a specific error message
-            const errorMessage = queryError instanceof Error ? queryError.message : String(queryError)
+            // Handle query errors with better fallbacks for missing properties
+            const errorMessage =
+              queryError instanceof Error
+                ? queryError.message || "Unknown query error"
+                : String(queryError) || "Unknown query error";
 
-            if (errorMessage && errorMessage !== "undefined" && errorMessage !== "[object Object]") {
-              healthChecks.database = {
-                status: "error",
-                message: `Database query exception: ${errorMessage}`,
-                details:
-                  queryError instanceof Error
-                    ? {
-                        name: queryError.name,
-                        message: queryError.message,
-                        stack: queryError.stack,
-                      }
-                    : String(queryError),
-              }
-            }
+            healthChecks.database = {
+              status: "error",
+              message: `Database query exception: ${errorMessage}`,
+              details:
+                queryError instanceof Error
+                  ? {
+                      name: queryError.name || "Error",
+                      message: queryError.message || "No message",
+                      stack: queryError.stack || "No stack trace",
+                    }
+                  : String(queryError) || "Unknown error",
+            };
           }
         }
       } catch (clientError) {
-        // Only treat as error if we have a specific error message
-        const errorMessage = clientError instanceof Error ? clientError.message : String(clientError)
+        // Handle client creation errors with better fallbacks
+        const errorMessage =
+          clientError instanceof Error
+            ? clientError.message || "Unknown client error"
+            : String(clientError) || "Unknown client error";
 
-        if (errorMessage && errorMessage !== "undefined" && errorMessage !== "[object Object]") {
-          healthChecks.database = {
-            status: "error",
-            message: `Failed to create Supabase client: ${errorMessage}`,
-            details:
-              clientError instanceof Error
-                ? {
-                    name: clientError.name,
-                    message: clientError.message,
-                    stack: clientError.stack,
-                  }
-                : String(clientError),
-          }
-        }
-      }
-    } catch (error) {
-      // Only treat as error if we have a specific error message
-      const errorMessage = error instanceof Error ? error.message : String(error)
-
-      if (errorMessage && errorMessage !== "undefined" && errorMessage !== "[object Object]") {
         healthChecks.database = {
           status: "error",
-          message: `Database connection exception: ${errorMessage}`,
+          message: `Failed to create Supabase client: ${errorMessage}`,
           details:
-            error instanceof Error
+            clientError instanceof Error
               ? {
-                  name: error.name,
-                  message: error.message,
-                  stack: error.stack,
+                  name: clientError.name || "Error",
+                  message: clientError.message || "No message",
+                  stack: clientError.stack || "No stack trace",
                 }
-              : String(error),
-        }
+              : String(clientError) || "Unknown error",
+        };
       }
+    } catch (error) {
+      // Handle outer try/catch with better fallbacks
+      const errorMessage =
+        error instanceof Error
+          ? error.message || "Unknown error"
+          : String(error) || "Unknown error";
+
+      healthChecks.database = {
+        status: "error",
+        message: `Database connection exception: ${errorMessage}`,
+        details:
+          error instanceof Error
+            ? {
+                name: error.name || "Error",
+                message: error.message || "No message",
+                stack: error.stack || "No stack trace",
+              }
+            : String(error) || "Unknown error",
+      };
     }
   } else {
     // Missing required environment variables
@@ -163,21 +176,30 @@ export async function GET() {
         missingUrl: !hasSupabaseUrl,
         missingKey: !hasSupabaseKey,
       },
-    }
+    };
   }
 
   // Check Blob storage
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
-    healthChecks.blob = { status: "error", message: "BLOB_READ_WRITE_TOKEN is not set" }
+    healthChecks.blob = {
+      status: "error",
+      message: "BLOB_READ_WRITE_TOKEN is not set",
+    };
   } else {
-    healthChecks.blob = { status: "ok", message: "Blob token is configured" }
+    healthChecks.blob = { status: "ok", message: "Blob token is configured" };
   }
 
   // Check Replicate API
   if (!process.env.REPLICATE_API_TOKEN) {
-    healthChecks.replicate = { status: "error", message: "REPLICATE_API_TOKEN is not set" }
+    healthChecks.replicate = {
+      status: "error",
+      message: "REPLICATE_API_TOKEN is not set",
+    };
   } else {
-    healthChecks.replicate = { status: "ok", message: "Replicate token is configured" }
+    healthChecks.replicate = {
+      status: "ok",
+      message: "Replicate token is configured",
+    };
   }
 
   // Overall status - only consider it an error if there's a specific error message
@@ -186,19 +208,19 @@ export async function GET() {
       check.status === "error" &&
       check.message &&
       check.message !== "Database error:" &&
-      !check.message.includes("undefined"),
-  )
+      !check.message.includes("undefined")
+  );
 
   const overallStatus = hasRealError
     ? "error"
     : Object.values(healthChecks).some((check) => check.status === "warning")
-      ? "warning"
-      : "ok"
+    ? "warning"
+    : "ok";
 
   return NextResponse.json({
     status: overallStatus,
     checks: healthChecks,
     environment: envStatus,
     timestamp: new Date().toISOString(),
-  })
+  });
 }

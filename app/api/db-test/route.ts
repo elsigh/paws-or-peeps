@@ -1,22 +1,25 @@
-import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase"
-import { nanoid } from "nanoid"
+import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase";
+import { nanoid } from "nanoid";
 
 export async function GET() {
   try {
-    const supabase = createServerClient()
+    const supabase = createServerClient();
     if (!supabase) {
-      return NextResponse.json({ error: "Failed to create Supabase client" }, { status: 500 })
+      return NextResponse.json(
+        { error: "Failed to create Supabase client" },
+        { status: 500 }
+      );
     }
 
     // Test 1: Simple query to check connection
-    const connectionTest = await testConnection(supabase)
+    const connectionTest = await testConnection(supabase);
 
     // Test 2: Insert a test record
-    const insertTest = await testInsert(supabase)
+    const insertTest = await testInsert(supabase);
 
     // Test 3: Check permissions
-    const permissionsTest = await testPermissions(supabase)
+    const permissionsTest = await testPermissions(supabase);
 
     return NextResponse.json({
       status: "success",
@@ -26,112 +29,127 @@ export async function GET() {
         permissions: permissionsTest,
       },
       timestamp: new Date().toISOString(),
-    })
+    });
   } catch (error) {
     return NextResponse.json(
       {
         status: "error",
-        message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
+        message: `Unexpected error: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }
 
 async function testConnection(supabase: any) {
   try {
-    const { data, error } = await supabase.from("images").select("count(*)").limit(1)
+    // Use the correct syntax for count in Supabase
+    const { data, error } = await supabase
+      .from("images")
+      .select("*", { count: "exact", head: true });
 
     if (error) {
       return {
         success: false,
         message: `Connection error: ${error.message}`,
         error,
-      }
+      };
     }
 
     return {
       success: true,
       message: "Successfully connected to database",
-    }
+    };
   } catch (error) {
     return {
       success: false,
-      message: `Connection test failed: ${error instanceof Error ? error.message : String(error)}`,
-    }
+      message: `Connection test failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
   }
 }
 
 async function testInsert(supabase: any) {
   try {
-    const testId = nanoid()
+    const testId = nanoid();
 
-    // Create a test record
+    // Create a test record with a valid image_type value
+    // Based on the constraint error, only "pet" or "human" are valid
     const { data, error } = await supabase
       .from("images")
       .insert({
         original_url: `https://test-url.com/${testId}`,
         animated_url: `https://test-url.com/animated-${testId}`,
         opposite_url: `https://test-url.com/opposite-${testId}`,
-        image_type: "pet",
+        image_type: "human", // Using "human" as it's a valid value
         confidence: 99.9,
         uploader_id: `test-${testId}`,
       })
       .select()
-      .single()
+      .single();
 
     if (error) {
       return {
         success: false,
         message: `Insert error: ${error.message}`,
         error,
-      }
+      };
     }
 
     // Clean up the test record
-    const { error: deleteError } = await supabase.from("images").delete().eq("id", data.id)
+    const { error: deleteError } = await supabase
+      .from("images")
+      .delete()
+      .eq("id", data.id);
 
     if (deleteError) {
       return {
         success: true,
         message: "Insert successful but cleanup failed",
         warning: deleteError.message,
-      }
+      };
     }
 
     return {
       success: true,
       message: "Successfully inserted and cleaned up test record",
-    }
+    };
   } catch (error) {
     return {
       success: false,
-      message: `Insert test failed: ${error instanceof Error ? error.message : String(error)}`,
-    }
+      message: `Insert test failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
   }
 }
 
 async function testPermissions(supabase: any) {
   try {
     // Test RLS policies by trying to read from the images table
-    const { data, error } = await supabase.from("images").select("id").limit(1)
+    const { data, error } = await supabase.from("images").select("id").limit(1);
 
     if (error && error.message.includes("permission denied")) {
       return {
         success: false,
         message: "Row Level Security might be blocking access",
         error,
-      }
+      };
     }
 
     return {
       success: true,
       message: "Permissions appear to be correctly configured",
-    }
+    };
   } catch (error) {
     return {
       success: false,
-      message: `Permissions test failed: ${error instanceof Error ? error.message : String(error)}`,
-    }
+      message: `Permissions test failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
+    };
   }
 }

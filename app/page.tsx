@@ -47,11 +47,6 @@ export default function Home() {
           Upload a photo of a pet or human and see the magical transformation!
         </p>
 
-        {/* Database status component */}
-        <div className="max-w-md mx-auto mt-4">
-          <DatabaseStatus />
-        </div>
-
         {/* Gallery link */}
         <div className="mt-4">
           <Link href="/gallery">
