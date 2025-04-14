@@ -185,8 +185,9 @@ export async function createOppositeVersion(
       // Animal to human
       prompt = `Transform this ${
         type === "other" ? "animal" : type
-      } into a human character, maintain the personality and features, cartoon style but make it look distinctly human`;
+      } into a clothed human - in cartoon style, maintaining some of the personality and features of the animal`;
     }
+    console.debug("Prompt:", prompt);
 
     const { image } = await generateImage({
       model: luma.image("photon-flash-1"),
