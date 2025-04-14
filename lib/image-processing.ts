@@ -155,8 +155,8 @@ export async function createOppositeVersion(
   targetAnimalType?: string // New optional parameter for the target animal type
 ): Promise<string | null> {
   try {
-    const isHuman = type === "human";
-    const oppositeType = isHuman ? targetAnimalType || "Animal" : "Human";
+    const isHuman = type === "Human";
+    const oppositeType = isHuman ? targetAnimalType || "Cat" : "Human";
 
     console.log(
       `Starting opposite version creation (${type} to ${oppositeType})...`
@@ -178,13 +178,14 @@ export async function createOppositeVersion(
 
     // Create a specific prompt based on the detected animal type
     let prompt;
+    const style = "cartoon";
     if (isHuman && targetAnimalType) {
       // Human to specific animal
-      prompt = `Transform this human into a ${targetAnimalType} character, maintain the personality and features, cartoon style`;
+      prompt = `Transform this human into a ${targetAnimalType} character, maintain the personality and features, ${style} style`;
     } else {
       // Animal to human
       const animalType = type === "other" ? "animal" : type;
-      prompt = `Transform this ${animalType} into a human being, in cartoon style, with the personality of the original ${animalType} but distinctly human`;
+      prompt = `Transform this ${animalType} into a human being, ${style} style, with the personality of the original ${animalType} but distinctly human`;
     }
     console.debug("Prompt:", prompt);
 
