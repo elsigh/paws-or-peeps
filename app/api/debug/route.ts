@@ -1,5 +1,6 @@
-import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase"
+import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function GET() {
   // Check environment variables (don't expose actual values)
@@ -10,24 +11,29 @@ export async function GET() {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
     BLOB_READ_WRITE_TOKEN: !!process.env.BLOB_READ_WRITE_TOKEN,
     REPLICATE_API_TOKEN: !!process.env.REPLICATE_API_TOKEN,
-  }
+  };
 
   // Test Supabase connection
-  let supabaseStatus = "Unknown"
+  let supabaseStatus = "Unknown";
   try {
-    const supabase = createServerClient()
+    const supabase = createServerClient() as SupabaseClient;
     if (!supabase) {
-      supabaseStatus = "Failed to create Supabase client"
+      supabaseStatus = "Failed to create Supabase client";
     } else {
-      const { data, error } = await supabase.from("images").select("id").limit(1)
+      const { data, error } = await supabase
+        .from("images")
+        .select("id")
+        .limit(1);
       if (error) {
-        supabaseStatus = `Error: ${error.message}`
+        supabaseStatus = `Error: ${error.message}`;
       } else {
-        supabaseStatus = "Connected successfully"
+        supabaseStatus = "Connected successfully";
       }
     }
   } catch (error) {
-    supabaseStatus = `Exception: ${error instanceof Error ? error.message : String(error)}`
+    supabaseStatus = `Exception: ${
+      error instanceof Error ? error.message : String(error)
+    }`;
   }
 
   return NextResponse.json({
@@ -35,5 +41,5 @@ export async function GET() {
     environment: envStatus,
     supabase: supabaseStatus,
     timestamp: new Date().toISOString(),
-  })
+  });
 }

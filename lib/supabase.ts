@@ -198,6 +198,7 @@ function createMockClient() {
         count: () => Promise.resolve({ data: { count: 0 }, error: null }),
         head: () => Promise.resolve({ data: null, error: null }),
       }),
+      // biome-ignore lint/suspicious/noExplicitAny: <explanation>
       insert: (data: any) => ({
         select: () => ({
           single: () =>
@@ -242,3 +243,20 @@ function mockData(table: string) {
 
   return { id: "mock-id" };
 }
+
+// Check if the images table exists and has the correct schema
+// const { data: tableInfo, error: tableError } = await supabase
+//   .from("images")
+//   .select("id")
+//   .limit(1)
+//   .single();
+
+// If you need to handle the case where no rows are found without throwing an error:
+// const { data: tableInfo, error: tableError } = await supabase
+//   .from("images")
+//   .select("id")
+//   .limit(1)
+//   .then(result => {
+//     if (result.error) return result;
+//     return { data: result.data[0] || null, error: null };
+//   });

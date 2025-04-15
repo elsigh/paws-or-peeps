@@ -1,42 +1,49 @@
-import { Suspense } from "react"
-import Link from "next/link"
-import { getRecentTransformations } from "@/lib/image-processing"
-import { CatLogo } from "@/components/cat-logo"
-import { PawPrint } from "@/components/paw-print"
-import { RandomCat } from "@/components/random-cat"
-import { GalleryCard } from "@/components/gallery-card"
-import { GalleryFilter } from "@/components/gallery-filter"
-import { Button } from "@/components/ui/button"
-import { ArrowLeft } from "lucide-react"
+import { Suspense } from "react";
+import Link from "next/link";
+import { getRecentTransformations } from "@/lib/image-processing";
+import { CatLogo } from "@/components/cat-logo";
+import { PawPrint } from "@/components/paw-print";
+import { RandomCat } from "@/components/random-cat";
+import { GalleryCard } from "@/components/gallery-card";
+import { GalleryFilter } from "@/components/gallery-filter";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
-export const dynamic = "force-dynamic"
-export const revalidate = 0
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 interface GalleryContentProps {
-  searchParams: {
-    type?: string
-    sort?: string
-  }
+  searchParams: Promise<{
+    type?: string;
+    sort?: string;
+  }>;
 }
 
 async function GalleryContent({ searchParams }: GalleryContentProps) {
-  const { type, sort } = searchParams
-  let transformations = await getRecentTransformations(24)
+  const { type, sort } = await searchParams;
+  let transformations = await getRecentTransformations(24);
 
   // Apply type filter
   if (type && type !== "all") {
-    transformations = transformations.filter((item) => item.image_type === type)
+    transformations = transformations.filter(
+      (item) => item.image_type === type
+    );
   }
 
   // Apply sorting
   if (sort) {
     switch (sort) {
       case "oldest":
-        transformations.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
-        break
+        transformations.sort(
+          (a, b) =>
+            new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+        );
+        break;
       case "most_votes":
-        transformations.sort((a, b) => b.voteStats.totalVotes - a.voteStats.totalVotes)
-        break
+        transformations.sort(
+          (a, b) => b.voteStats.totalVotes - a.voteStats.totalVotes
+        );
+        break;
       // Default is "newest" which is already sorted from the database query
     }
   }
@@ -45,12 +52,16 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold mb-4">No transformations found</h2>
-        <p className="text-gray-500 mb-6">Try adjusting your filters or create a new transformation</p>
+        <p className="text-gray-500 mb-6">
+          Try adjusting your filters or create a new transformation
+        </p>
         <Link href="/">
-          <Button className="bg-rose-500 hover:bg-rose-600">Create a Transformation</Button>
+          <Button className="bg-rose-500 hover:bg-rose-600">
+            Create a Transformation
+          </Button>
         </Link>
       </div>
-    )
+    );
   }
 
   return (
@@ -68,10 +79,12 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
         />
       ))}
     </div>
-  )
+  );
 }
 
-export default function GalleryPage({ searchParams }: GalleryContentProps) {
+export default async function GalleryPage({
+  searchParams,
+}: GalleryContentProps) {
   return (
     <div className="container relative mx-auto px-4 py-12">
       {/* Decorative paw prints */}
@@ -116,8 +129,12 @@ export default function GalleryPage({ searchParams }: GalleryContentProps) {
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-center mb-2">Transformation Gallery</h1>
-        <p className="text-center text-gray-600 mb-8">Browse recent cat-human transformations created by our users</p>
+        <h1 className="text-3xl font-bold text-center mb-2">
+          Transformation Gallery
+        </h1>
+        <p className="text-center text-gray-600 mb-8">
+          Browse recent cat-human transformations created by our users
+        </p>
 
         <GalleryFilter />
 
@@ -137,5 +154,5 @@ export default function GalleryPage({ searchParams }: GalleryContentProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

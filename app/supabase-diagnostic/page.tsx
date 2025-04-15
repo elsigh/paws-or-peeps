@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle, Info } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle, Info } from "lucide-react";
 
 export default async function SupabaseDiagnosticPage() {
   // Collect environment variables (without exposing values)
@@ -17,26 +17,32 @@ export default async function SupabaseDiagnosticPage() {
     POSTGRES_HOST: !!process.env.POSTGRES_HOST,
     POSTGRES_PASSWORD: !!process.env.POSTGRES_PASSWORD,
     POSTGRES_DATABASE: !!process.env.POSTGRES_DATABASE,
-  }
+  };
 
   // Check for required variables
-  const missingVars = []
+  const missingVars = [];
   if (!envVars.SUPABASE_URL && !envVars.NEXT_PUBLIC_SUPABASE_URL) {
-    missingVars.push("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL")
+    missingVars.push("SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL");
   }
 
-  if (!envVars.SUPABASE_SERVICE_ROLE_KEY && !envVars.SUPABASE_ANON_KEY && !envVars.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    missingVars.push("SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, or NEXT_PUBLIC_SUPABASE_ANON_KEY")
+  if (
+    !envVars.SUPABASE_SERVICE_ROLE_KEY &&
+    !envVars.SUPABASE_ANON_KEY &&
+    !envVars.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    missingVars.push(
+      "SUPABASE_SERVICE_ROLE_KEY, SUPABASE_ANON_KEY, or NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    );
   }
 
   // Try to create a direct Postgres connection to test if the database is accessible
-  let postgresStatus = "Unknown"
-  const postgresError = null
+  let postgresStatus = "Unknown";
+  const postgresError = null;
 
   if (envVars.POSTGRES_URL || envVars.POSTGRES_PRISMA_URL) {
-    postgresStatus = "Available"
+    postgresStatus = "Available";
   } else {
-    postgresStatus = "Not configured"
+    postgresStatus = "Not configured";
   }
 
   return (
@@ -49,10 +55,18 @@ export default async function SupabaseDiagnosticPage() {
             <CardTitle>Environment Variables</CardTitle>
           </CardHeader>
           <CardContent>
-            <Alert variant={missingVars.length === 0 ? "default" : "warning"}>
-              {missingVars.length === 0 ? <CheckCircle className="h-4 w-4" /> : <Info className="h-4 w-4" />}
+            <Alert
+              variant={missingVars.length === 0 ? "default" : "destructive"}
+            >
+              {missingVars.length === 0 ? (
+                <CheckCircle className="h-4 w-4" />
+              ) : (
+                <Info className="h-4 w-4" />
+              )}
               <AlertTitle>
-                {missingVars.length === 0 ? "All Required Variables Set" : `Missing Required Variables`}
+                {missingVars.length === 0
+                  ? "All Required Variables Set"
+                  : "Missing Required Variables"}
               </AlertTitle>
               <AlertDescription>
                 {missingVars.length === 0 ? (
@@ -76,8 +90,10 @@ export default async function SupabaseDiagnosticPage() {
                 {Object.entries(envVars).map(([key, value]) => (
                   <div key={key} className="flex items-center">
                     <span
-                      className={`inline-block w-3 h-3 rounded-full mr-2 ${value ? "bg-green-500" : "bg-red-500"}`}
-                    ></span>
+                      className={`inline-block w-3 h-3 rounded-full mr-2 ${
+                        value ? "bg-green-500" : "bg-red-500"
+                      }`}
+                    />
                     <code className="text-xs">{key}</code>
                   </div>
                 ))}
@@ -96,8 +112,8 @@ export default async function SupabaseDiagnosticPage() {
                 postgresStatus === "Available"
                   ? "default"
                   : postgresStatus === "Not configured"
-                    ? "warning"
-                    : "destructive"
+                  ? "destructive"
+                  : "destructive"
               }
             >
               {postgresStatus === "Available" ? (
@@ -110,8 +126,8 @@ export default async function SupabaseDiagnosticPage() {
                 {postgresStatus === "Available"
                   ? "Postgres connection variables are available"
                   : postgresStatus === "Not configured"
-                    ? "Direct Postgres connection is not configured"
-                    : `Postgres connection error: ${postgresError}`}
+                  ? "Direct Postgres connection is not configured"
+                  : `Postgres connection error: ${postgresError}`}
               </AlertDescription>
             </Alert>
 
@@ -119,22 +135,26 @@ export default async function SupabaseDiagnosticPage() {
               <h3 className="font-medium mb-2">Troubleshooting Steps:</h3>
               <ol className="list-decimal pl-4 space-y-2 text-sm">
                 <li>
-                  <strong>Check Supabase Project Settings:</strong> Verify your Supabase project is active and the API
-                  credentials are correct.
+                  <strong>Check Supabase Project Settings:</strong> Verify your
+                  Supabase project is active and the API credentials are
+                  correct.
                 </li>
                 <li>
-                  <strong>Verify Environment Variables:</strong> Ensure all required environment variables are set
-                  correctly in your Vercel project or .env file.
+                  <strong>Verify Environment Variables:</strong> Ensure all
+                  required environment variables are set correctly in your
+                  Vercel project or .env file.
                 </li>
                 <li>
-                  <strong>Check Network Access:</strong> Make sure your Supabase project allows connections from your
-                  deployment environment.
+                  <strong>Check Network Access:</strong> Make sure your Supabase
+                  project allows connections from your deployment environment.
                 </li>
                 <li>
-                  <strong>Review Database Schema:</strong> Ensure the required tables exist in your Supabase database.
+                  <strong>Review Database Schema:</strong> Ensure the required
+                  tables exist in your Supabase database.
                 </li>
                 <li>
-                  <strong>Check RLS Policies:</strong> Verify Row Level Security policies aren't blocking access.
+                  <strong>Check RLS Policies:</strong> Verify Row Level Security
+                  policies aren't blocking access.
                 </li>
               </ol>
             </div>
@@ -148,7 +168,8 @@ export default async function SupabaseDiagnosticPage() {
         </CardHeader>
         <CardContent>
           <p className="text-sm mb-4">
-            To test your Supabase connection directly, run the following code in your browser console:
+            To test your Supabase connection directly, run the following code in
+            your browser console:
           </p>
           <pre className="bg-gray-100 p-4 rounded-md text-xs overflow-auto">
             {`
@@ -175,5 +196,5 @@ supabase
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -191,13 +191,11 @@ export default function FileUpload() {
     const k = 1024;
     const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return (
-      Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i]
-    );
+    return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   };
 
   // Process the file regardless of source (input, paste, or drop)
-  const processFile = (selectedFile: File | null) => {
+  const processFile = useCallback((selectedFile: File | null) => {
     setFile(selectedFile);
     setError(null);
     setErrorDetails(null);
@@ -232,7 +230,7 @@ export default function FileUpload() {
       setPreview(null);
       setFileSize(0);
     }
-  };
+  }, []);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -383,7 +381,7 @@ export default function FileUpload() {
     return () => {
       document.removeEventListener("paste", handlePaste);
     };
-  }, []);
+  }, [processFile]);
 
   // Handle click on the drop zone to trigger file input
   const handleDropZoneClick = () => {
@@ -396,7 +394,7 @@ export default function FileUpload() {
   const fileSizePercentage = file
     ? Math.min((file.size / MAX_FILE_SIZE) * 100, 100)
     : 0;
-  const isFileTooLarge = file && file.size > MAX_FILE_SIZE * 2;
+  const isFileTooLarge = !!file && file.size > MAX_FILE_SIZE * 2;
 
   return (
     <Card className="w-full max-w-md mx-auto relative border-rose-200">
@@ -529,8 +527,8 @@ export default function FileUpload() {
               {/* Cat ears on the drop zone when empty */}
               {!preview && (
                 <>
-                  <div className="absolute -top-3 left-1/2 ml-6 h-6 w-6 rotate-45 rounded-t-full bg-rose-200"></div>
-                  <div className="absolute -top-3 left-1/2 -ml-12 h-6 w-6 -rotate-45 rounded-t-full bg-rose-200"></div>
+                  <div className="absolute -top-3 left-1/2 ml-6 h-6 w-6 rotate-45 rounded-t-full bg-rose-200" />
+                  <div className="absolute -top-3 left-1/2 -ml-12 h-6 w-6 -rotate-45 rounded-t-full bg-rose-200" />
                 </>
               )}
 
@@ -630,7 +628,7 @@ export default function FileUpload() {
           <CatButton
             type="submit"
             className="w-full bg-rose-500 hover:bg-rose-600"
-            disabled={loading || !file || isFileTooLarge}
+            disabled={loading || !file || Boolean(isFileTooLarge)}
           >
             {loading ? (
               <span className="flex items-center gap-2">

@@ -10,9 +10,9 @@ import { Home } from "lucide-react";
 import Link from "next/link";
 
 interface ResultsPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function ResultsPage({ params }: ResultsPageProps) {

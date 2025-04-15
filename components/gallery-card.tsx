@@ -1,25 +1,26 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import Link from "next/link"
-import { Card, CardContent } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { RandomCat } from "@/components/random-cat"
+import { useState } from "react";
+import Link from "next/link";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { RandomCat } from "@/components/random-cat";
+import type { ANIMAL_TYPES } from "@/lib/image-processing";
 
 interface GalleryCardProps {
-  id: string
-  animatedUrl: string
-  oppositeUrl: string
-  type: "pet" | "human"
-  confidence: number
+  id: string;
+  animatedUrl: string;
+  oppositeUrl: string;
+  type: "human" | (typeof ANIMAL_TYPES)[number];
+  confidence: number;
   voteStats: {
-    petVotes: number
-    humanVotes: number
-    totalVotes: number
-    petPercentage: number
-    humanPercentage: number
-  }
-  createdAt: string
+    petVotes: number;
+    humanVotes: number;
+    totalVotes: number;
+    petPercentage: number;
+    humanPercentage: number;
+  };
+  createdAt: string;
 }
 
 export function GalleryCard({
@@ -31,8 +32,8 @@ export function GalleryCard({
   voteStats,
   createdAt,
 }: GalleryCardProps) {
-  const [isHovered, setIsHovered] = useState(false)
-  const formattedDate = new Date(createdAt).toLocaleDateString()
+  const [isHovered, setIsHovered] = useState(false);
+  const formattedDate = new Date(createdAt).toLocaleDateString();
 
   return (
     <Link href={`/results/${id}`}>
@@ -49,24 +50,23 @@ export function GalleryCard({
             className="object-cover w-full h-full transition-transform duration-500 hover:scale-110"
           />
 
-          {/* Type indicator with cat ears for pet images */}
           <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm rounded-full px-2 py-1 text-xs font-medium flex items-center gap-1">
-            {type === "pet" ? (
-              <>
-                <span>Pet</span>
-                <span className="text-sm">🐾</span>
-              </>
-            ) : (
+            {type === "human" ? (
               <>
                 <span>Human</span>
                 <span className="text-sm">👤</span>
+              </>
+            ) : (
+              <>
+                <span>Animal</span>
+                <span className="text-sm">🐾</span>
               </>
             )}
           </div>
 
           {/* Tiny cat in corner */}
           <div className="absolute bottom-2 right-2 z-10">
-            <RandomCat size="tiny" index={type === "pet" ? 0 : 2} />
+            <RandomCat size="tiny" index={type === "human" ? 2 : 0} />
           </div>
 
           {/* Hover instruction */}
@@ -89,11 +89,15 @@ export function GalleryCard({
                 </span>
                 <span>{voteStats.petPercentage.toFixed(0)}%</span>
               </div>
-              <Progress value={voteStats.petPercentage} className="h-1 bg-rose-100" indicatorClassName="bg-rose-500" />
+              <Progress
+                value={voteStats.petPercentage}
+                className="h-1 bg-rose-100"
+                indicatorClassName="bg-rose-500"
+              />
             </div>
           )}
         </CardContent>
       </Card>
     </Link>
-  )
+  );
 }

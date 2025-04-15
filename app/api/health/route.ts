@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function GET() {
   const healthChecks = {
@@ -47,85 +48,85 @@ export async function GET() {
   if (hasSupabaseUrl && hasSupabaseKey) {
     try {
       console.log("Testing database connection in health check...");
-      let supabase;
+      let supabase: SupabaseClient | null = null;
 
       try {
-        supabase = createServerClient();
+        supabase = createServerClient() as SupabaseClient;
         if (!supabase) {
           healthChecks.database = {
             status: "error",
             message: "Failed to create Supabase client",
-            details:
-              "The createServerClient function returned null or undefined",
+            // details:
+            //   "The createServerClient function returned null or undefined",
           };
-        } else {
-          console.log("Supabase client created, testing query...");
-          try {
-            // Use a simpler query that's less likely to fail due to syntax
-            const { data, error } = await supabase
-              .from("images")
-              .select("id")
-              .limit(1);
+          throw new Error("Failed to create Supabase client");
+        }
+        console.log("Supabase client created, testing query...");
+        try {
+          // Use a simpler query that's less likely to fail due to syntax
+          const { data, error } = await supabase
+            .from("images")
+            .select("id")
+            .limit(1);
 
-            if (error) {
-              // Check if this is a real error or just a missing table (which is fine for new setups)
-              const isTableNotFoundError =
-                error.code === "42P01" ||
-                (error.message && error.message.includes("does not exist"));
+          if (error) {
+            // Check if this is a real error or just a missing table (which is fine for new setups)
+            const isTableNotFoundError =
+              error.code === "42P01" ||
+              error.message?.includes("does not exist");
 
-              if (isTableNotFoundError) {
-                // This is expected for new setups, not a critical error
-                healthChecks.database = {
-                  status: "warning",
-                  message:
-                    "Database tables not found. You may need to run the setup script.",
-                  details: {
-                    code: error.code || "UNKNOWN",
-                    message: error.message || "No error message provided",
-                  },
-                };
-              } else {
-                // Ensure we capture all error properties for real errors
-                const errorDetails = {
-                  message: error.message || "No error message provided",
-                  code: error.code || "UNKNOWN",
-                  details: error.details || "No details provided",
-                  hint: error.hint || "No hint provided",
-                };
-
-                healthChecks.database = {
-                  status: "error",
-                  message: `Database error: ${errorDetails.message}`,
-                  details: errorDetails,
-                };
-              }
-            } else {
+            if (isTableNotFoundError) {
+              // This is expected for new setups, not a critical error
               healthChecks.database = {
-                status: "ok",
-                message: "Database connection successful",
-                data: { count: data?.length || 0 },
+                status: "warning",
+                message:
+                  "Database tables not found. You may need to run the setup script.",
+                // details: {
+                //   code: error.code || "UNKNOWN",
+                //   message: error.message || "No error message provided",
+                // },
+              };
+            } else {
+              // Ensure we capture all error properties for real errors
+              const errorDetails = {
+                message: error.message || "No error message provided",
+                code: error.code || "UNKNOWN",
+                details: error.details || "No details provided",
+                hint: error.hint || "No hint provided",
+              };
+
+              healthChecks.database = {
+                status: "error",
+                message: `Database error: ${errorDetails.message}`,
+                // details: errorDetails,
               };
             }
-          } catch (queryError) {
-            // Handle query errors with better fallbacks for missing properties
-            const errorMessage =
-              queryError instanceof Error
-                ? queryError.message || "Unknown query error"
-                : String(queryError) || "Unknown query error";
-
+          } else {
             healthChecks.database = {
-              status: "error",
-              message: `Database query exception: ${errorMessage}`,
-              details:
-                queryError instanceof Error
-                  ? {
-                      name: queryError.name || "Error",
-                      message: queryError.message || "No message",
-                      stack: queryError.stack || "No stack trace",
-                    }
-                  : String(queryError) || "Unknown error",
+              status: "ok",
+              message: "Database connection successful",
+              // data: { count: data?.length || 0 },
             };
           }
+        } catch (queryError) {
+          // Handle query errors with better fallbacks for missing properties
+          const errorMessage =
+            queryError instanceof Error
+              ? queryError.message || "Unknown query error"
+              : String(queryError) || "Unknown query error";
+
+          healthChecks.database = {
+            status: "error",
+            message: `Database query exception: ${errorMessage}`,
+            // details:
+            //   queryError instanceof Error
+            //     ? {
+            //         name: queryError.name || "Error",
+            //         message: queryError.message || "No message",
+            //         stack: queryError.stack || "No stack trace",
+            //       }
+            //     : String(queryError) || "Unknown error",
+          };
         }
       } catch (clientError) {
         // Handle client creation errors with better fallbacks
@@ -137,14 +138,14 @@ export async function GET() {
         healthChecks.database = {
           status: "error",
           message: `Failed to create Supabase client: ${errorMessage}`,
-          details:
-            clientError instanceof Error
-              ? {
-                  name: clientError.name || "Error",
-                  message: clientError.message || "No message",
-                  stack: clientError.stack || "No stack trace",
-                }
-              : String(clientError) || "Unknown error",
+          // details:
+          //   clientError instanceof Error
+          //     ? {
+          //         name: clientError.name || "Error",
+          //         message: clientError.message || "No message",
+          //         stack: clientError.stack || "No stack trace",
+          //       }
+          //     : String(clientError) || "Unknown error",
         };
       }
     } catch (error) {
@@ -157,14 +158,14 @@ export async function GET() {
       healthChecks.database = {
         status: "error",
         message: `Database connection exception: ${errorMessage}`,
-        details:
-          error instanceof Error
-            ? {
-                name: error.name || "Error",
-                message: error.message || "No message",
-                stack: error.stack || "No stack trace",
-              }
-            : String(error) || "Unknown error",
+        // details:
+        //   error instanceof Error
+        //     ? {
+        //         name: error.name || "Error",
+        //         message: error.message || "No message",
+        //         stack: error.stack || "No stack trace",
+        //       }
+        //     : String(error) || "Unknown error",
       };
     }
   } else {
@@ -172,10 +173,10 @@ export async function GET() {
     healthChecks.database = {
       status: "error",
       message: "Missing required Supabase environment variables",
-      details: {
-        missingUrl: !hasSupabaseUrl,
-        missingKey: !hasSupabaseKey,
-      },
+      // details: {
+      //   missingUrl: !hasSupabaseUrl,
+      //   missingKey: !hasSupabaseKey,
+      // },
     };
   }
 

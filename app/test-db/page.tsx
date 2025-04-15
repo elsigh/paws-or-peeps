@@ -1,68 +1,77 @@
-import { createServerClient } from "@/lib/supabase"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle } from "lucide-react"
+import { createServerClient } from "@/lib/supabase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle, CheckCircle } from "lucide-react";
 
 export default async function TestDbPage() {
-  let connectionStatus = "Unknown"
-  let connectionError = null
-  let tableStatus = "Unknown"
-  let tableError = null
-  let recentImages = []
+  let connectionStatus = "Unknown";
+  let connectionError = null;
+  let tableStatus = "Unknown";
+  let tableError = null;
+  let recentImages: { id: number; original_url: string; created_at: string }[] =
+    [];
 
   try {
     // Test database connection
-    const supabase = createServerClient()
+    const supabase = createServerClient();
     if (!supabase) {
-      connectionStatus = "Failed"
-      connectionError = "Failed to create Supabase client"
+      connectionStatus = "Failed";
+      connectionError = "Failed to create Supabase client";
     } else {
       try {
         // Test simple query
-        const { data, error } = await supabase.from("images").select("count(*)", { count: "exact", head: true })
+        // @ts-ignore
+        const { data, error } = await supabase
+          .from("images")
+          .select("count(*)", { count: "exact", head: true });
 
         if (error) {
-          connectionStatus = "Failed"
-          connectionError = error.message
+          connectionStatus = "Failed";
+          connectionError = error.message;
         } else {
-          connectionStatus = "Success"
+          connectionStatus = "Success";
         }
       } catch (error) {
-        connectionStatus = "Failed"
-        connectionError = error instanceof Error ? error.message : String(error)
+        connectionStatus = "Failed";
+        connectionError =
+          error instanceof Error ? error.message : String(error);
       }
     }
 
     // Check if tables exist
     if (connectionStatus === "Success") {
       try {
-        const { data, error } = await supabase.from("images").select("id").limit(1)
+        const { data, error } = await supabase
+          .from("images")
+          .select("id")
+          .limit(1);
 
         if (error) {
-          tableStatus = "Failed"
-          tableError = error.message
+          tableStatus = "Failed";
+          tableError = error.message;
         } else {
-          tableStatus = "Success"
+          tableStatus = "Success";
 
           // Get recent images
           const { data: recentData, error: recentError } = await supabase
             .from("images")
             .select("id, original_url, created_at")
             .order("created_at", { ascending: false })
-            .limit(5)
+            .limit(5);
 
           if (!recentError && recentData) {
-            recentImages = recentData
+            // @ts-ignore
+            recentImages = recentData;
           }
         }
       } catch (error) {
-        tableStatus = "Failed"
-        tableError = error instanceof Error ? error.message : String(error)
+        tableStatus = "Failed";
+        tableError = error instanceof Error ? error.message : String(error);
       }
     }
   } catch (error) {
-    connectionStatus = "Failed"
-    connectionError = error instanceof Error ? error.message : String(error)
+    connectionStatus = "Failed";
+    connectionError = error instanceof Error ? error.message : String(error);
   }
 
   return (
@@ -75,13 +84,21 @@ export default async function TestDbPage() {
             <CardTitle>Database Connection</CardTitle>
           </CardHeader>
           <CardContent>
-            <Alert variant={connectionStatus === "Success" ? "default" : "destructive"}>
+            <Alert
+              variant={
+                connectionStatus === "Success" ? "default" : "destructive"
+              }
+            >
               {connectionStatus === "Success" ? (
                 <CheckCircle className="h-4 w-4" />
               ) : (
                 <AlertCircle className="h-4 w-4" />
               )}
-              <AlertTitle>{connectionStatus === "Success" ? "Connected" : "Connection Failed"}</AlertTitle>
+              <AlertTitle>
+                {connectionStatus === "Success"
+                  ? "Connected"
+                  : "Connection Failed"}
+              </AlertTitle>
               <AlertDescription>
                 {connectionStatus === "Success"
                   ? "Successfully connected to the database"
@@ -96,11 +113,21 @@ export default async function TestDbPage() {
             <CardTitle>Tables Status</CardTitle>
           </CardHeader>
           <CardContent>
-            <Alert variant={tableStatus === "Success" ? "default" : "destructive"}>
-              {tableStatus === "Success" ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-              <AlertTitle>{tableStatus === "Success" ? "Tables OK" : "Tables Error"}</AlertTitle>
+            <Alert
+              variant={tableStatus === "Success" ? "default" : "destructive"}
+            >
+              {tableStatus === "Success" ? (
+                <CheckCircle className="h-4 w-4" />
+              ) : (
+                <AlertCircle className="h-4 w-4" />
+              )}
+              <AlertTitle>
+                {tableStatus === "Success" ? "Tables OK" : "Tables Error"}
+              </AlertTitle>
               <AlertDescription>
-                {tableStatus === "Success" ? "Required tables exist and are accessible" : `Tables error: ${tableError}`}
+                {tableStatus === "Success"
+                  ? "Required tables exist and are accessible"
+                  : `Tables error: ${tableError}`}
               </AlertDescription>
             </Alert>
           </CardContent>
@@ -120,7 +147,8 @@ export default async function TestDbPage() {
                     <strong>ID:</strong> {image.id}
                   </p>
                   <p>
-                    <strong>Created:</strong> {new Date(image.created_at).toLocaleString()}
+                    <strong>Created:</strong>{" "}
+                    {new Date(image.created_at).toLocaleString()}
                   </p>
                   <p className="truncate">
                     <strong>URL:</strong> {image.original_url}
@@ -132,5 +160,5 @@ export default async function TestDbPage() {
         </Card>
       )}
     </div>
-  )
+  );
 }

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { createServerClient } from "@/lib/supabase";
 import { nanoid } from "nanoid";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function GET() {
   try {
-    const supabase = createServerClient();
+    const supabase = createServerClient() as SupabaseClient;
+    console.debug("Supabase client created:", supabase);
     if (!supabase) {
       return NextResponse.json(
         { error: "Failed to create Supabase client" },
@@ -43,7 +45,7 @@ export async function GET() {
   }
 }
 
-async function testConnection(supabase: any) {
+async function testConnection(supabase: SupabaseClient) {
   try {
     // Use the correct syntax for count in Supabase
     const { data, error } = await supabase
@@ -72,7 +74,7 @@ async function testConnection(supabase: any) {
   }
 }
 
-async function testInsert(supabase: any) {
+async function testInsert(supabase: SupabaseClient) {
   try {
     const testId = nanoid();
 
@@ -127,12 +129,12 @@ async function testInsert(supabase: any) {
   }
 }
 
-async function testPermissions(supabase: any) {
+async function testPermissions(supabase: SupabaseClient) {
   try {
     // Test RLS policies by trying to read from the images table
     const { data, error } = await supabase.from("images").select("id").limit(1);
 
-    if (error && error.message.includes("permission denied")) {
+    if (error?.message.includes("permission denied")) {
       return {
         success: false,
         message: "Row Level Security might be blocking access",
