@@ -167,7 +167,16 @@ export async function POST(request: NextRequest) {
           );
         } catch (error) {
           console.error("Error creating animated version:", error);
-          animatedUrl = "/whimsical-forest-creatures.png"; // Fallback
+          controller.enqueue(
+            encoder.encode(
+              `${JSON.stringify({
+                status: "error",
+                message: `Failed to create animated version: ${error}`,
+              })}\n`
+            )
+          );
+          controller.close();
+          return;
         }
 
         // Generate opposite version
