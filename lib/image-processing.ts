@@ -96,9 +96,8 @@ export async function createAnimatedVersion(imageUrl: string) {
     console.log("Luma model response received");
     return imageToBlobUrl(image);
   } catch (error) {
-    console.error("Error in createAnimatedVersion:", error);
-    // Fallback to placeholder for demo purposes
-    return `/placeholder.svg?height=400&width=400&query=animated-${Date.now()}`;
+    console.error("Error in createAnimatedVersion:", new String(error));
+    throw error;
   }
 }
 
