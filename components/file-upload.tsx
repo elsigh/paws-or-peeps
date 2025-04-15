@@ -19,6 +19,8 @@ import { PawPrint } from "@/components/paw-print";
 import { RandomCat } from "@/components/random-cat";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
+import router from "next/router";
 
 // Pet facts about similarities and differences between pets and humans
 const PET_FACTS = [
@@ -49,6 +51,7 @@ const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
 export default function FileUpload() {
   const router = useRouter();
+  const { user, requireAuth } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -58,12 +61,14 @@ export default function FileUpload() {
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [currentCatIndex, setCurrentCatIndex] = useState(0);
   const [fileSize, setFileSize] = useState<number>(0);
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [systemStatus, setSystemStatus] = useState<
     "ok" | "warning" | "error" | "unknown"
   >("unknown");
   const [statusChecked, setStatusChecked] = useState(false);
+  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [systemStatusDetails, setSystemStatusDetails] = useState<any>(null);
   const [hasRealError, setHasRealError] = useState(false);
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -169,9 +174,8 @@ export default function FileUpload() {
         if (catInterval) clearInterval(catInterval);
         clearInterval(progressInterval);
       };
-    } else {
-      setUploadProgress(0);
     }
+    setUploadProgress(0);
 
     return () => {
       if (factInterval) clearInterval(factInterval);
@@ -195,6 +199,7 @@ export default function FileUpload() {
   };
 
   // Process the file regardless of source (input, paste, or drop)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const processFile = useCallback((selectedFile: File | null) => {
     setFile(selectedFile);
     setError(null);
@@ -251,92 +256,94 @@ export default function FileUpload() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
-    setErrorDetails(null);
-    setDebugInfo(null);
-    setUploadProgress(0);
-    // Reset to first fact when starting loading
-    setCurrentFactIndex(0);
-    setCurrentCatIndex(0);
+    // Use requireAuth to ensure the user is logged in before proceeding
+    requireAuth(async () => {
+      setLoading(true);
+      setError(null);
+      setErrorDetails(null);
+      setDebugInfo(null);
+      setUploadProgress(0);
+      // Reset to first fact when starting loading
+      setCurrentFactIndex(0);
+      setCurrentCatIndex(0);
 
-    try {
-      console.log("Creating FormData...");
-      const formData = new FormData();
-      formData.append("image", file);
+      try {
+        console.log("Creating FormData...");
+        const formData = new FormData();
+        formData.append("image", file);
 
-      console.log("FormData created, sending request...");
-      console.log("File details:", {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-      });
+        console.log("FormData created, sending request...");
+        console.log("File details:", {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+        });
 
-      const response = await fetch("/api/process-image", {
-        method: "POST",
-        body: formData,
-      });
+        const response = await fetch("/api/process-image", {
+          method: "POST",
+          body: formData,
+        });
 
-      console.log("Response received:", response.status, response.statusText);
+        console.log("Response received:", response.status, response.statusText);
 
-      // Check if the response is JSON
-      const contentType = response.headers.get("content-type");
-      console.log("Response content type:", contentType);
+        // Check if the response is JSON
+        const contentType = response.headers.get("content-type");
+        console.log("Response content type:", contentType);
 
-      if (!contentType || !contentType.includes("application/json")) {
-        // Handle non-JSON responses
-        const text = await response.text();
-        console.log("Non-JSON response:", text.substring(0, 200));
+        if (!contentType || !contentType.includes("application/json")) {
+          // Handle non-JSON responses
+          const text = await response.text();
+          console.log("Non-JSON response:", text.substring(0, 200));
 
-        if (text.includes("Request Entity Too Large")) {
-          throw new Error(
-            "Image is too large. Please use an image smaller than 4MB."
-          );
-        } else {
+          if (text.includes("Request Entity Too Large")) {
+            throw new Error(
+              "Image is too large. Please use an image smaller than 4MB."
+            );
+          }
           throw new Error(`Server error: ${text.substring(0, 100)}...`);
         }
-      }
 
-      const data = await response.json();
-      console.log("Response data:", data);
+        const data = await response.json();
+        console.log("Response data:", data);
 
-      // For debugging
-      //setDebugInfo(data)
+        // For debugging
+        //setDebugInfo(data)
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to process image");
-      }
-
-      if (data.error) {
-        setError(data.error);
-        if (data.details) {
-          setErrorDetails(data.details);
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to process image");
         }
-        setLoading(false);
-        return;
-      }
 
-      // Redirect to the results page if we have an ID
-      if (data.id) {
-        // Set progress to 100% before redirecting
-        setUploadProgress(100);
+        if (data.error) {
+          setError(data.error);
+          if (data.details) {
+            setErrorDetails(data.details);
+          }
+          setLoading(false);
+          return;
+        }
 
-        // Short delay to show 100% progress
-        setTimeout(() => {
-          console.log("Redirecting to results page:", `/results/${data.id}`);
-          router.push(`/results/${data.id}`);
-        }, 500);
-      } else {
+        // Redirect to the results page if we have an ID
+        if (data.id) {
+          // Set progress to 100% before redirecting
+          setUploadProgress(100);
+
+          // Short delay to show 100% progress
+          setTimeout(() => {
+            console.log("Redirecting to results page:", `/results/${data.id}`);
+            router.push(`/results/${data.id}`);
+          }, 500);
+        } else {
+          setLoading(false);
+          setError("No image ID returned from server");
+        }
+      } catch (err) {
+        console.error("Error in handleSubmit:", err);
+        setError(
+          err instanceof Error ? err.message : "An unknown error occurred"
+        );
         setLoading(false);
-        setError("No image ID returned from server");
       }
-    } catch (err) {
-      console.error("Error in handleSubmit:", err);
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred"
-      );
-      setLoading(false);
-    }
+    });
   };
 
   // Handle drag events

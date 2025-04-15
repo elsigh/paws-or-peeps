@@ -2,15 +2,15 @@ import { type NextRequest, NextResponse } from "next/server";
 import { uploadToBlob } from "@/lib/blob";
 import { cookies } from "next/headers";
 import { nanoid } from "nanoid";
-import getVisitorId from "@/lib/get-visitor-id";
 import {
   saveImageData,
   detectImageContent,
   createAnimatedVersion,
   createOppositeVersion,
 } from "@/lib/image-processing";
-import { createServerClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { checkEnvironmentVariables } from "@/lib/env-checker";
+import getVisitorId from "@/lib/get-visitor-id";
 
 export async function POST(request: NextRequest) {
   console.log("API route started");
@@ -22,9 +22,40 @@ export async function POST(request: NextRequest) {
       console.warn("Environment variable issues detected:", issues);
     }
 
+    // Create Supabase client and check authentication early
+    const cookieStore = cookies();
+    const supabase = await createClient();
+
+    if (!supabase) {
+      return NextResponse.json(
+        { error: "Failed to create Supabase client" },
+        { status: 500 }
+      );
+    }
+
+    // Get the current user's ID from the session
+    const {
+      data: { session },
+      // @ts-ignore
+    } = await supabase.auth.getSession();
+
+    console.log("Session check:", session ? "Session exists" : "No session");
+
+    if (!session?.user?.id) {
+      console.error("No authenticated user found in session");
+      return NextResponse.json(
+        { error: "User must be authenticated to upload images" },
+        { status: 401 }
+      );
+    }
+
+    const userId = session.user.id;
+    console.log(`Processing image for authenticated user: ${userId}`);
+
     // Log request details
     console.log("Request method:", request.method);
 
+    // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
     let formData;
     try {
       console.log("Attempting to parse form data...");
@@ -57,10 +88,6 @@ export async function POST(request: NextRequest) {
       type: file.type,
       size: file.size,
     });
-
-    // Set visitor ID cookie if it doesn't exist
-    const cookieStore = await cookies();
-    const visitorId = await getVisitorId();
 
     // Upload original image to Vercel Blob
     console.log("Starting image upload to Blob...");
@@ -131,7 +158,7 @@ export async function POST(request: NextRequest) {
     // Try to save the image data to the database, but continue even if it fails
     let imageData = null;
     let databaseError = null;
-    let usedTempId = false;
+    const usedTempId = false;
 
     try {
       console.log("Saving image data to database...");
@@ -152,10 +179,29 @@ export async function POST(request: NextRequest) {
 
         // If that fails, try a direct database insert as a fallback
         console.log("Attempting direct database insert as fallback...");
-        const supabase = createServerClient();
+        const supabase = await createClient();
         if (!supabase) {
-          throw new Error("Failed to create Supabase client");
+          return NextResponse.json(
+            { error: "Failed to create Supabase client" },
+            { status: 500 }
+          );
         }
+
+        // Get the current user's ID from the session
+        const {
+          data: { session },
+          // @ts-ignore
+        } = await supabase.auth.getSession();
+
+        if (!session?.user?.id) {
+          return NextResponse.json(
+            { error: "User must be authenticated to upload images" },
+            { status: 401 }
+          );
+        }
+
+        const userId = session.user.id;
+        console.log(`Processing image for authenticated user: ${userId}`);
 
         // Try to insert with a valid image_type
         const { data, error } = await supabase
@@ -165,7 +211,7 @@ export async function POST(request: NextRequest) {
             animated_url: animatedUrl,
             opposite_url: oppositeUrl,
             image_type: detectionResult,
-            uploader_id: visitorId,
+            uploader_id: userId, // Use the authenticated user ID
           })
           .select()
           .single();
@@ -180,23 +226,7 @@ export async function POST(request: NextRequest) {
       }
     } catch (error) {
       console.error("All database save attempts failed:", error);
-      databaseError = error instanceof Error ? error.message : String(error);
-
-      // Generate a temporary ID and continue
-      const tempId = nanoid();
-      console.log("Using temporary ID:", tempId);
-      usedTempId = true;
-
-      // Create a mock image data object
-      imageData = {
-        id: tempId,
-        original_url: originalUrl,
-        animated_url: animatedUrl,
-        opposite_url: oppositeUrl,
-        image_type: detectionResult,
-        uploader_id: visitorId,
-        created_at: new Date().toISOString(),
-      };
+      throw error;
     }
 
     // Return success with the image data
@@ -213,17 +243,6 @@ export async function POST(request: NextRequest) {
       temporary: usedTempId,
       databaseError: databaseError,
     });
-
-    // Set the visitor_id cookie if it doesn't exist
-    if (!cookieStore.get("visitor_id")) {
-      response.cookies.set({
-        name: "visitor_id",
-        value: visitorId,
-        httpOnly: true,
-        maxAge: 60 * 60 * 24 * 365,
-        path: "/",
-      });
-    }
 
     return response;
   } catch (error) {

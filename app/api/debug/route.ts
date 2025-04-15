@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function GET() {
@@ -16,7 +16,7 @@ export async function GET() {
   // Test Supabase connection
   let supabaseStatus = "Unknown";
   try {
-    const supabase = createServerClient() as SupabaseClient;
+    const supabase = (await createClient()) as SupabaseClient;
     if (!supabase) {
       supabaseStatus = "Failed to create Supabase client";
     } else {

@@ -19,7 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { ANIMAL_TYPES } from "@/lib/image-processing";
-import { useVisitorId } from "@/lib/visitor-id-context";
+import { useAuth } from "@/lib/auth-context";
 
 interface ResultsDisplayProps {
   imageId: string;
@@ -57,22 +57,40 @@ export default function ResultsDisplay({
   const [isUploader, setIsUploader] = useState(false);
   const shareUrlRef = useRef<HTMLInputElement>(null);
 
-  const { visitorId } = useVisitorId();
+  const { user } = useAuth();
 
   // Check if current user is the uploader
   useEffect(() => {
-    console.debug("Checking if user is uploader...", { visitorId, uploaderId });
+    console.debug("Checking if user is uploader...", {
+      userId: user?.id,
+      uploaderId: uploaderId || "null",
+    });
+
     const checkIfUploader = () => {
       try {
-        setIsUploader(visitorId === uploaderId);
+        if (!uploaderId) {
+          console.warn("Uploader ID is null or undefined");
+          setIsUploader(false);
+          return;
+        }
+
+        if (!user?.id) {
+          console.warn("Current user ID is null or undefined");
+          setIsUploader(false);
+          return;
+        }
+
+        const isUploader = user.id === uploaderId;
+        console.debug(`User is uploader: ${isUploader}`);
+        setIsUploader(isUploader);
       } catch (err) {
         console.error("Error checking if user is uploader:", err);
-        setIsUploader(false); // Default to false if we can't determine
+        setIsUploader(false);
       }
     };
 
     checkIfUploader();
-  }, [uploaderId, visitorId]);
+  }, [uploaderId, user?.id]);
 
   const handleVote = async (vote: "animal" | "human") => {
     setLoading(true);

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+
+const DEBUG = false;
 
 export async function GET() {
   const healthChecks = {
@@ -8,6 +10,7 @@ export async function GET() {
     database: { status: "unknown", message: "Not checked yet" },
     blob: { status: "unknown", message: "Not checked yet" },
     replicate: { status: "unknown", message: "Not checked yet" },
+    auth: { status: "unknown", message: "Not checked yet" },
   };
 
   // Check environment variables (don't expose actual values)
@@ -47,11 +50,11 @@ export async function GET() {
   // Check database connection only if we have the required environment variables
   if (hasSupabaseUrl && hasSupabaseKey) {
     try {
-      console.log("Testing database connection in health check...");
+      if (DEBUG) console.log("Testing database connection in health check...");
       let supabase: SupabaseClient | null = null;
 
       try {
-        supabase = createServerClient() as SupabaseClient;
+        supabase = (await createClient()) as SupabaseClient;
         if (!supabase) {
           healthChecks.database = {
             status: "error",
@@ -61,7 +64,7 @@ export async function GET() {
           };
           throw new Error("Failed to create Supabase client");
         }
-        console.log("Supabase client created, testing query...");
+        if (DEBUG) console.log("Supabase client created, testing query...");
         try {
           // Use a simpler query that's less likely to fail due to syntax
           const { data, error } = await supabase
@@ -200,6 +203,52 @@ export async function GET() {
     healthChecks.replicate = {
       status: "ok",
       message: "Replicate token is configured",
+    };
+  }
+
+  // Check if user has an active session
+  if (hasSupabaseUrl && hasSupabaseKey) {
+    try {
+      const supabase = (await createClient()) as SupabaseClient;
+      if (supabase) {
+        // @ts-ignore - Supabase client type issue
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) {
+          healthChecks.auth = {
+            status: "error",
+            message: `Auth error: ${error.message}`,
+          };
+        } else if (session) {
+          healthChecks.auth = {
+            status: "ok",
+            message: session.user.id,
+          };
+        } else {
+          healthChecks.auth = {
+            status: "warning",
+            message: "No active user session",
+          };
+        }
+      }
+    } catch (authError) {
+      const errorMessage =
+        authError instanceof Error
+          ? authError.message || "Unknown auth error"
+          : String(authError) || "Unknown auth error";
+
+      healthChecks.auth = {
+        status: "error",
+        message: `Auth check exception: ${errorMessage}`,
+      };
+    }
+  } else {
+    healthChecks.auth = {
+      status: "error",
+      message: "Missing required Supabase environment variables",
     };
   }
 

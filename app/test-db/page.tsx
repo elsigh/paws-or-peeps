@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle, CheckCircle } from "lucide-react";
@@ -13,7 +13,7 @@ export default async function TestDbPage() {
 
   try {
     // Test database connection
-    const supabase = createServerClient();
+    const supabase = await createClient();
     if (!supabase) {
       connectionStatus = "Failed";
       connectionError = "Failed to create Supabase client";

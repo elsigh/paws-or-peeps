@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { nanoid } from "nanoid";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function GET() {
   try {
-    const supabase = createServerClient() as SupabaseClient;
+    const supabase = (await createClient()) as SupabaseClient;
     console.debug("Supabase client created:", supabase);
     if (!supabase) {
       return NextResponse.json(

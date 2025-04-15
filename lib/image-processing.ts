@@ -1,4 +1,4 @@
-import { createServerClient } from "./supabase";
+import { createClient } from "./supabase-server";
 import { experimental_generateImage as generateImage, generateText } from "ai";
 import { luma } from "@ai-sdk/luma";
 import { v4 as uuidv4 } from "uuid";
@@ -194,15 +194,25 @@ export async function saveImageData(
       throw new Error(`Invalid image type: ${imageType}`);
     }
 
-    const supabase = createServerClient();
+    const supabase = await createClient();
     if (!supabase) {
       throw new Error(
         "Failed to create Supabase client - check environment variables"
       );
     }
 
-    // Get visitor ID
-    const visitorId = await getVisitorId();
+    // Get the current user's ID from the session
+    const {
+      data: { session },
+      // @ts-ignore
+    } = await supabase.auth.getSession();
+
+    if (!session?.user?.id) {
+      throw new Error("User must be authenticated to save images");
+    }
+
+    const userId = session.user.id;
+    console.log(`Using authenticated user ID: ${userId}`);
 
     // Generate a UUID for this image if needed
     const imageId = uuidv4();
@@ -213,7 +223,9 @@ export async function saveImageData(
     const safeAnimatedUrl = animatedUrl?.substring(0, MAX_URL_LENGTH) || "";
     const safeOppositeUrl = oppositeUrl?.substring(0, MAX_URL_LENGTH) || "";
 
-    console.log(`Attempting to save with image_type: ${imageType}`);
+    console.log(
+      `Attempting to save with image_type: ${imageType} and uploader_id: ${userId}`
+    );
 
     // Now attempt the insert
     const { data, error } = await supabase
@@ -224,7 +236,7 @@ export async function saveImageData(
         animated_url: safeAnimatedUrl,
         opposite_url: safeOppositeUrl,
         image_type: imageType,
-        uploader_id: visitorId,
+        uploader_id: userId,
         target_animal_type: targetAnimalType,
       })
       .select()
@@ -256,12 +268,17 @@ export async function getImageById(id: string) {
   try {
     console.log(`Getting image data for ID: ${id}`);
 
-    const supabase = createServerClient();
+    const supabase = await createClient();
     if (!supabase) {
       throw new Error("Failed to create Supabase client");
     }
 
-    const visitorId = await getVisitorId();
+    // Get current user's ID from session
+    const {
+      data: { session },
+      // @ts-ignore
+    } = await supabase.auth.getSession();
+    const currentUserId = session?.user?.id;
 
     // During transition period, we'll accept any ID format
     // but log a warning for non-UUID formats
@@ -293,8 +310,12 @@ export async function getImageById(id: string) {
       throw new Error(`No image found with ID: ${id}`);
     }
 
+    console.log(
+      `Image data retrieved. Uploader ID: ${data.uploader_id}, Current user ID: ${currentUserId}`
+    );
+
     // Check if the current user is the uploader
-    const isUploader = data.uploader_id === visitorId;
+    const isUploader = data.uploader_id === currentUserId;
 
     return {
       ...data,
@@ -328,7 +349,7 @@ export async function recordVote(
 }> {
   try {
     console.log(`Recording vote for image ${imageId}: ${vote}`);
-    const supabase = createServerClient();
+    const supabase = await createClient();
     if (!supabase) {
       throw new Error("Failed to create Supabase client");
     }
@@ -402,7 +423,7 @@ export async function recordVote(
 
 // Function to get recent transformations
 export async function getRecentTransformations(limit = 12) {
-  const supabase = createServerClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("images")
@@ -462,7 +483,7 @@ export async function updateOppositeImage(
       `Updating opposite image for ID: ${imageId} to ${targetAnimalType}`
     );
 
-    const supabase = createServerClient();
+    const supabase = await createClient();
     if (!supabase) {
       throw new Error("Failed to create Supabase client");
     }
@@ -536,7 +557,7 @@ export async function saveVote(
   try {
     console.log(`Saving vote for image ${imageId}: ${vote}`);
 
-    const supabase = createServerClient();
+    const supabase = await createClient();
     if (!supabase) {
       throw new Error("Failed to create Supabase client");
     }
@@ -602,7 +623,7 @@ export async function getVoteStats(imageId: string): Promise<VoteStats> {
   try {
     console.log(`Getting vote stats for image ${imageId}`);
 
-    const supabase = createServerClient();
+    const supabase = await createClient();
     if (!supabase) {
       throw new Error("Failed to create Supabase client");
     }
@@ -650,7 +671,7 @@ export async function getVoteStats(imageId: string): Promise<VoteStats> {
 // Function to check if a user has already voted for an image
 export async function hasUserVoted(imageId: string): Promise<boolean> {
   try {
-    const supabase = createServerClient();
+    const supabase = await createClient();
     if (!supabase) {
       throw new Error("Failed to create Supabase client");
     }

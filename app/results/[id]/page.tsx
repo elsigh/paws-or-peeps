@@ -4,7 +4,7 @@ import { getImageById } from "@/lib/image-processing";
 import { CatLogo } from "@/components/cat-logo";
 import { PawPrint } from "@/components/paw-print";
 import { RandomCat } from "@/components/random-cat";
-import { createServerClient } from "@/lib/supabase";
+import { createClient } from "@/lib/supabase-server";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import Link from "next/link";
@@ -20,6 +20,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     const { id } = await params;
     console.log("Results page loading for ID:", id);
 
+    // biome-ignore lint/suspicious/noImplicitAnyLet: <explanation>
     let imageData;
 
     try {
@@ -32,7 +33,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       // If that fails, try a direct database query
       try {
         console.log("Attempting direct database query...");
-        const supabase = createServerClient();
+        const supabase = await createClient();
         if (!supabase) {
           throw new Error("Failed to create Supabase client");
         }
