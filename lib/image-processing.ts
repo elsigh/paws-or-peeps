@@ -280,19 +280,6 @@ export async function getImageById(id: string) {
     } = await supabase.auth.getSession();
     const currentUserId = session?.user?.id;
 
-    // During transition period, we'll accept any ID format
-    // but log a warning for non-UUID formats
-    const isValidUUID =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        id
-      );
-
-    if (!isValidUUID) {
-      console.warn(
-        `Non-UUID format ID detected: ${id}. Future versions will require UUID format.`
-      );
-    }
-
     // Try to get the image data regardless of ID format
     const { data, error } = await supabase
       .from("images")
@@ -317,9 +304,22 @@ export async function getImageById(id: string) {
     // Check if the current user is the uploader
     const isUploader = data.uploader_id === currentUserId;
 
+    // Check if there are votes for this image
+    const { count, error: voteError } = await supabase
+      .from("votes")
+      .select("*", { count: "exact", head: true })
+      .eq("image_id", id);
+
+    if (voteError) {
+      console.error(`Error checking votes for image ${id}:`, voteError);
+    }
+
+    const hasVotes = count !== null && count > 0;
+
     return {
       ...data,
       isUploader,
+      hasVotes,
     };
   } catch (error) {
     console.error("Error in getImageById:", error);
