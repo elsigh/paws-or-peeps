@@ -61,10 +61,10 @@ export default function ResultsDisplay({
 
   // Check if current user is the uploader
   useEffect(() => {
-    console.debug("Checking if user is uploader...", {
-      userId: user?.id,
-      uploaderId: uploaderId || "null",
-    });
+    // console.debug("Checking if user is uploader...", {
+    //   userId: user?.id,
+    //   uploaderId: uploaderId || "null",
+    // });
 
     const checkIfUploader = () => {
       try {
@@ -81,7 +81,7 @@ export default function ResultsDisplay({
         }
 
         const isUploader = user.id === uploaderId;
-        console.debug(`User is uploader: ${isUploader}`);
+        //console.debug(`User is uploader: ${isUploader}`);
         setIsUploader(isUploader);
       } catch (err) {
         console.error("Error checking if user is uploader:", err);

@@ -8,6 +8,7 @@ import { GalleryCard } from "@/components/gallery-card";
 import { GalleryFilter } from "@/components/gallery-filter";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { createClient } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -23,11 +24,44 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
   const { type, sort } = await searchParams;
   let transformations = await getRecentTransformations(24);
 
+  // Get current user if we need to filter by "mine"
+  let currentUserId = null;
+  if (type === "mine") {
+    const supabase = await createClient();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    currentUserId = session?.user?.id;
+
+    // If user is not logged in but "mine" filter is selected, show no results
+    if (!currentUserId) {
+      return (
+        <div className="text-center py-12">
+          <h2 className="text-xl font-semibold mb-4">Please sign in</h2>
+          <p className="text-gray-500 mb-6">
+            You need to be signed in to view your transformations
+          </p>
+          <Link href="/auth">
+            <Button className="bg-rose-500 hover:bg-rose-600">Sign In</Button>
+          </Link>
+        </div>
+      );
+    }
+  }
+
   // Apply type filter
-  if (type && type !== "all") {
-    transformations = transformations.filter(
-      (item) => item.image_type === type
-    );
+  if (type) {
+    if (type === "mine" && currentUserId) {
+      // Filter by uploader_id for "mine" filter
+      transformations = transformations.filter(
+        (item) => item.uploader_id === currentUserId
+      );
+    } else if (type !== "all" && type !== "mine") {
+      // Apply regular type filter
+      transformations = transformations.filter(
+        (item) => item.image_type === type
+      );
+    }
   }
 
   // Apply sorting

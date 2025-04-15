@@ -436,6 +436,7 @@ export async function getRecentTransformations(limit = 12) {
       image_type,
       confidence,
       created_at,
+      uploader_id,
       votes (
         vote
       )
