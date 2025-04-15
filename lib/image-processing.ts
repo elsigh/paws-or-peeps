@@ -542,3 +542,94 @@ export async function updateOppositeImage(
     );
   }
 }
+
+// Function to save a vote for an image
+export async function saveVote(
+  imageId: string,
+  voteType: "animal" | "human"
+): Promise<VoteStats> {
+  try {
+    console.log(`Saving vote for image ${imageId}: ${voteType}`);
+
+    const supabase = createServerClient();
+    if (!supabase) {
+      throw new Error("Failed to create Supabase client");
+    }
+
+    // Get visitor ID
+    const visitorId = await getVisitorId();
+
+    // Check if user already voted for this image
+    const { data: existingVote, error: checkError } = await supabase
+      .from("votes")
+      .select("*")
+      .eq("image_id", imageId)
+      .eq("voter_id", visitorId)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking existing vote:", checkError);
+      throw new Error(`Failed to check existing vote: ${checkError.message}`);
+    }
+
+    // If user already voted, update their vote
+    if (existingVote) {
+      const { error: updateError } = await supabase
+        .from("votes")
+        .update({ vote_type: voteType, updated_at: new Date().toISOString() })
+        .eq("id", existingVote.id);
+
+      if (updateError) {
+        console.error("Error updating vote:", updateError);
+        throw new Error(`Failed to update vote: ${updateError.message}`);
+      }
+    } else {
+      // Otherwise insert a new vote
+      const { error: insertError } = await supabase.from("votes").insert({
+        image_id: imageId,
+        voter_id: visitorId,
+        vote_type: voteType,
+      });
+
+      if (insertError) {
+        console.error("Error inserting vote:", insertError);
+        throw new Error(`Failed to insert vote: ${insertError.message}`);
+      }
+    }
+
+    // Get updated vote counts
+    const { data: voteData, error: statsError } = await supabase
+      .from("votes")
+      .select("vote_type")
+      .eq("image_id", imageId);
+
+    if (statsError) {
+      console.error("Error fetching vote stats:", statsError);
+      throw new Error(`Failed to fetch vote stats: ${statsError.message}`);
+    }
+
+    // Calculate vote statistics
+    const animalVotes = voteData.filter((v) => v.vote_type === "animal").length;
+    const humanVotes = voteData.filter((v) => v.vote_type === "human").length;
+    const totalVotes = animalVotes + humanVotes;
+
+    const animalPercentage =
+      totalVotes > 0 ? (animalVotes / totalVotes) * 100 : 0;
+    const humanPercentage =
+      totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0;
+
+    return {
+      animalVotes,
+      humanVotes,
+      animalPercentage,
+      humanPercentage,
+    };
+  } catch (error) {
+    console.error("Error in saveVote:", error);
+    throw new Error(
+      `Failed to save vote: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}

@@ -112,27 +112,10 @@ export default function ResultsDisplay({
         <Card className="relative border-rose-200 overflow-hidden">
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
-              {!animatedImageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                </div>
-              )}
               <img
                 src={type === "human" ? animatedUrl : oppositeUrl}
-                alt="Human image"
+                alt=""
                 className="object-cover w-full h-full"
-                onLoad={() =>
-                  type === "human"
-                    ? setAnimatedImageLoaded(true)
-                    : setOppositeImageLoaded(true)
-                }
-                style={{
-                  display: (
-                    type === "human" ? animatedImageLoaded : oppositeImageLoaded
-                  )
-                    ? "block"
-                    : "none",
-                }}
               />
             </div>
             <div className="mt-4 text-center">
@@ -157,29 +140,10 @@ export default function ResultsDisplay({
 
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
-              {!oppositeImageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                </div>
-              )}
               <img
-                src={type === "animal" ? animatedUrl : oppositeUrl}
-                alt="Animal image"
+                src={type === "human" ? oppositeUrl : animatedUrl}
+                alt=""
                 className="object-cover w-full h-full"
-                onLoad={() =>
-                  type === "animal"
-                    ? setAnimatedImageLoaded(true)
-                    : setOppositeImageLoaded(true)
-                }
-                style={{
-                  display: (
-                    type === "animal"
-                      ? animatedImageLoaded
-                      : oppositeImageLoaded
-                  )
-                    ? "block"
-                    : "none",
-                }}
               />
             </div>
             <div className="mt-4 text-center">
@@ -223,17 +187,6 @@ export default function ResultsDisplay({
             </h3>
             <div className="flex justify-center gap-4">
               <CatButton
-                onClick={() => handleVote("animal")}
-                disabled={loading}
-                variant="outline"
-                className="flex-1 max-w-[150px] border-rose-300 text-rose-600 hover:bg-rose-50"
-              >
-                <span className="flex items-center gap-2">
-                  <ThumbsUp className="h-4 w-4" />
-                  Animal 🐾
-                </span>
-              </CatButton>
-              <CatButton
                 onClick={() => handleVote("human")}
                 disabled={loading}
                 variant="outline"
@@ -242,6 +195,17 @@ export default function ResultsDisplay({
                 <span className="flex items-center gap-2">
                   <ThumbsUp className="h-4 w-4" />
                   Human 👤
+                </span>
+              </CatButton>
+              <CatButton
+                onClick={() => handleVote("animal")}
+                disabled={loading}
+                variant="outline"
+                className="flex-1 max-w-[150px] border-rose-300 text-rose-600 hover:bg-rose-50"
+              >
+                <span className="flex items-center gap-2">
+                  <ThumbsUp className="h-4 w-4" />
+                  Animal 🐾
                 </span>
               </CatButton>
             </div>
