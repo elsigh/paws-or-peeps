@@ -79,7 +79,7 @@ export async function createAnimatedVersion(imageUrl: string) {
 
     const { image } = await generateImage({
       model: luma.image("photon-flash-1"),
-      prompt: "cartoon style, visually true to the original",
+      prompt: "light cartoon style",
       aspectRatio: "1:1",
       providerOptions: {
         luma: {
