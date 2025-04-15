@@ -219,7 +219,6 @@ export async function POST(request: NextRequest) {
         let imageData = null;
 
         try {
-          // Database saving logic here...
           imageData = await saveImageData(
             originalUrl,
             animatedUrl,

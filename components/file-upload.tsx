@@ -81,7 +81,7 @@ export default function FileUpload() {
   useEffect(() => {
     const checkSystemStatus = async () => {
       try {
-        console.log("Checking system status...");
+        //console.log("Checking system status...");
         const response = await fetch("/api/health");
 
         if (!response.ok) {
