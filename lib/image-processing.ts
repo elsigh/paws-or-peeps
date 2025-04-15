@@ -106,8 +106,8 @@ export async function createAnimatedVersion(imageUrl: string) {
 export async function createOppositeVersion(
   imageUrl: string,
   type: string,
-  targetAnimalType?: string
-): Promise<string | null> {
+  targetAnimalType: string
+): Promise<string> {
   try {
     if (!targetAnimalType) {
       // biome-ignore lint/style/noParameterAssign: This is a valid use case
@@ -159,7 +159,7 @@ export async function saveImageData(
   animatedUrl: string,
   oppositeUrl: string | null, // Can be null initially for human uploads
   imageType: string,
-  targetAnimalType?: string // New optional parameter
+  targetAnimalType: string
 ) {
   try {
     console.log("Saving image data to Supabase with params:", {

@@ -183,9 +183,13 @@ export async function POST(request: NextRequest) {
 
         console.log("Generating opposite version...");
         let oppositeUrl = "";
+        const targetAnimalType = detectionResult === "human" ? "cat" : "human";
         try {
-          oppositeUrl =
-            (await createOppositeVersion(originalUrl, detectionResult)) || "";
+          oppositeUrl = await createOppositeVersion(
+            originalUrl,
+            detectionResult,
+            targetAnimalType
+          );
           controller.enqueue(
             encoder.encode(
               `${JSON.stringify({
@@ -197,7 +201,7 @@ export async function POST(request: NextRequest) {
           );
         } catch (error) {
           console.error("Error creating opposite version:", error);
-          oppositeUrl = "/light-and-shadow.png"; // Fallback
+          throw error;
         }
 
         // Save to database
@@ -213,8 +217,6 @@ export async function POST(request: NextRequest) {
 
         // Try to save the image data to the database
         let imageData = null;
-        const databaseError = null;
-        const usedTempId = false;
 
         try {
           // Database saving logic here...
@@ -222,7 +224,8 @@ export async function POST(request: NextRequest) {
             originalUrl,
             animatedUrl,
             oppositeUrl,
-            detectionResult
+            detectionResult,
+            targetAnimalType
           );
 
           controller.enqueue(
