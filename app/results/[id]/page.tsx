@@ -73,15 +73,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
       <div className="max-w-4xl mx-auto">
         <Suspense fallback={<div>Loading results...</div>}>
-          <ResultsDisplay
-            imageId={imageData.id}
-            animatedUrl={imageData.animated_url}
-            oppositeUrl={imageData.opposite_url}
-            type={imageData.image_type}
-            originalUrl={imageData.original_url}
-            uploaderId={imageData.uploader_id}
-            hasVotes={imageData.hasVotes}
-          />
+          <ResultsDisplay imageData={imageData} />
         </Suspense>
       </div>
     </div>

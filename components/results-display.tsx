@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,8 +18,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { ANIMAL_TYPES } from "@/lib/image-processing";
-import { useAuth } from "@/lib/auth-context";
+import { ANIMAL_TYPES } from "@/lib/constants";
+import type { ImageData } from "@/lib/types";
 import {
   Select,
   SelectContent,
@@ -30,24 +30,10 @@ import {
 import { RefreshCw } from "lucide-react";
 
 interface ResultsDisplayProps {
-  imageId: string;
-  animatedUrl: string;
-  oppositeUrl: string;
-  type: "human" | (typeof ANIMAL_TYPES)[number];
-  originalUrl: string;
-  uploaderId: string; // Changed from isUploader to uploaderId
-  hasVotes: boolean; // Add this prop
+  imageData: ImageData;
 }
 
-export default function ResultsDisplay({
-  imageId,
-  animatedUrl,
-  oppositeUrl,
-  type,
-  originalUrl,
-  uploaderId,
-  hasVotes, // Add this prop
-}: ResultsDisplayProps) {
+export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,63 +50,21 @@ export default function ResultsDisplay({
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [isUploader, setIsUploader] = useState(false);
   const shareUrlRef = useRef<HTMLInputElement>(null);
   const [regenerating, setRegenerating] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
-  // Remove this state since we're now getting it as a prop
-  // const [hasVotes, setHasVotes] = useState(false);
 
-  const { user } = useAuth();
-
-  // Check if current user is the uploader
-  useEffect(() => {
-    // console.debug("Checking if user is uploader...", {
-    //   userId: user?.id,
-    //   uploaderId: uploaderId || "null",
-    // });
-
-    const checkIfUploader = () => {
-      try {
-        if (!uploaderId) {
-          console.warn("Uploader ID is null or undefined");
-          setIsUploader(false);
-          return;
-        }
-
-        if (!user?.id) {
-          console.warn("Current user ID is null or undefined");
-          setIsUploader(false);
-          return;
-        }
-
-        const isUploader = user.id === uploaderId;
-        //console.debug(`User is uploader: ${isUploader}`);
-        setIsUploader(isUploader);
-      } catch (err) {
-        console.error("Error checking if user is uploader:", err);
-        setIsUploader(false);
-      }
-    };
-
-    checkIfUploader();
-  }, [uploaderId, user?.id]);
-
-  // Remove the effect that checks for votes
-  // useEffect(() => {
-  //   const checkVotes = async () => {
-  //     try {
-  //       const response = await fetch(`/api/check-votes?imageId=${imageId}`);
-  //       const data = await response.json();
-  //       setHasVotes(data.hasVotes);
-  //     } catch (err) {
-  //       console.error("Error checking votes:", err);
-  //       setHasVotes(true); // Assume there are votes if we can't check
-  //     }
-  //   };
-  //
-  //   checkVotes();
-  // }, [imageId]);
+  // Destructure imageData for easier access
+  const {
+    id: imageId,
+    animated_url: animatedUrl,
+    opposite_url: oppositeUrl,
+    image_type: type,
+    original_url: originalUrl,
+    uploader_id: uploaderId,
+    hasVotes,
+    isUploader,
+  } = imageData;
 
   const handleVote = async (vote: "animal" | "human") => {
     setLoading(true);

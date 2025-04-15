@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RandomCat } from "@/components/random-cat";
-import type { ANIMAL_TYPES } from "@/lib/image-processing";
+import type { ANIMAL_TYPES } from "@/lib/constants";
 
 interface GalleryCardProps {
   id: string;

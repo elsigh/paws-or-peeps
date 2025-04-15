@@ -7,30 +7,12 @@ import { put } from "@vercel/blob";
 import { nanoid } from "nanoid";
 import type { GeneratedFile } from "ai";
 import getVisitorId from "./get-visitor-id";
+import { ANIMAL_TYPES } from "./constants";
+import type { ImageData, VoteStats } from "./types";
 
-// Define all possible animal types we support
-export const ANIMAL_TYPES = [
-  "cat",
-  "dog",
-  "bird",
-  "horse",
-  "elephant",
-  "lion",
-  "tiger",
-  "bear",
-  "deer",
-  "wolf",
-  "dolphin",
-  "whale",
-  "monkey",
-  "giraffe",
-  "zebra",
-  "penguin",
-  "fox",
-  "rabbit",
-  "squirrel",
-  "koala",
-];
+// Export ANIMAL_TYPES for backward compatibility
+export { ANIMAL_TYPES };
+export type { ImageData, VoteStats };
 
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
@@ -264,7 +246,7 @@ export async function saveImageData(
 }
 
 // Function to get image data by ID
-export async function getImageById(id: string) {
+export async function getImageById(id: string): Promise<ImageData> {
   try {
     console.log(`Getting image data for ID: ${id}`);
 
@@ -320,7 +302,7 @@ export async function getImageById(id: string) {
       ...data,
       isUploader,
       hasVotes,
-    };
+    } as ImageData;
   } catch (error) {
     console.error("Error in getImageById:", error);
     throw new Error(
@@ -332,12 +314,6 @@ export async function getImageById(id: string) {
 }
 
 // Update the vote stats interface
-export interface VoteStats {
-  animalVotes: number;
-  humanVotes: number;
-  animalPercentage: number;
-  humanPercentage: number;
-}
 
 // Update the vote function
 export async function recordVote(
