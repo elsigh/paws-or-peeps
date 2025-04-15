@@ -150,9 +150,13 @@ export async function createAnimatedVersion(imageUrl: string) {
 export async function createOppositeVersion(
   imageUrl: string,
   type: string,
-  targetAnimalType = "cat"
+  targetAnimalType?: string
 ): Promise<string | null> {
   try {
+    if (!targetAnimalType) {
+      // biome-ignore lint/style/noParameterAssign: This is a valid use case
+      targetAnimalType = type === "human" ? "cat" : "human";
+    }
     console.log(
       `Starting opposite version creation (${type} to ${targetAnimalType})...`
     );
@@ -241,8 +245,7 @@ export async function saveImageData(
         opposite_url: safeOppositeUrl,
         image_type: imageType,
         uploader_id: visitorId,
-        target_animal_type:
-          imageType === "human" ? targetAnimalType || "cat" : "human",
+        target_animal_type: targetAnimalType,
       })
       .select()
       .single();
