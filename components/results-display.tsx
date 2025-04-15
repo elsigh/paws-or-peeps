@@ -153,6 +153,11 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
     }
   };
 
+  let targetAnimalType = imageData.target_animal_type;
+  if (!targetAnimalType && type === "human") {
+    targetAnimalType = "cat";
+  }
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -201,7 +206,11 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
             </div>
             <div className="mt-4 text-center">
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
-                <span>Animal</span>
+                <span>
+                  {targetAnimalType &&
+                    targetAnimalType?.charAt(0).toUpperCase() +
+                      targetAnimalType?.slice(1)}
+                </span>
                 <span className="text-xl">🐾</span>
               </h3>
 
@@ -213,7 +222,7 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
                     onValueChange={setSelectedAnimal}
                   >
                     <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Select animal" />
+                      <SelectValue placeholder="Regenerate as ..." />
                     </SelectTrigger>
                     <SelectContent>
                       {ANIMAL_TYPES.map((animalType) => (

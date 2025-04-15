@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
     // Generate new opposite image
     const oppositeUrl = await createOppositeVersion(
       imageData.original_url,
+      imageData.image_type,
       newType
     );
 
@@ -83,6 +84,7 @@ export async function POST(request: NextRequest) {
       .from("images")
       .update({
         opposite_url: oppositeUrl,
+        target_animal_type: newType,
         updated_at: new Date().toISOString(),
       })
       .eq("id", imageId);
