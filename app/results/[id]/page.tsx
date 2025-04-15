@@ -53,11 +53,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4 relative">
           <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
-            <Link href="/">
-              <Button variant="ghost" size="sm" className="rounded-full">
-                <Home className="h-5 w-5 text-rose-500" />
-              </Button>
-            </Link>
+            <RandomCat size="tiny" index={2} className="opacity-90" />
           </div>
           <CatLogo size="lg" />
           {/* Tiny cat peeking from behind the logo */}

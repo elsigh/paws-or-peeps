@@ -41,9 +41,6 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
           <p className="text-gray-500 mb-6">
             You need to be signed in to view your transformations
           </p>
-          <Link href="/auth">
-            <Button className="bg-rose-500 hover:bg-rose-600">Sign In</Button>
-          </Link>
         </div>
       );
     }
@@ -150,7 +147,7 @@ export default async function GalleryPage({
           <Link href="/">
             <Button variant="ghost" className="gap-1">
               <ArrowLeft className="h-4 w-4" />
-              Back to Home
+              Home
             </Button>
           </Link>
           <div className="flex justify-center relative">
