@@ -54,7 +54,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         // Add isUploader property
         imageData = {
           ...data,
-          isUploader: true, // Default to true if we can't determine
+          // No need to add isUploader here anymore as we're passing uploaderId to the component
         };
 
         console.log("Direct database query successful");
@@ -130,7 +130,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             oppositeUrl={imageData.opposite_url}
             type={imageData.image_type}
             originalUrl={imageData.original_url}
-            isUploader={imageData.isUploader}
+            uploaderId={imageData.uploader_id}
           />
         </div>
       </div>

@@ -1,12 +1,12 @@
 import { createServerClient } from "./supabase";
 import { experimental_generateImage as generateImage, generateText } from "ai";
 import { luma } from "@ai-sdk/luma";
-import { cookies } from "next/headers";
 import { v4 as uuidv4 } from "uuid";
 import { openai } from "@ai-sdk/openai";
 import { put } from "@vercel/blob";
 import { nanoid } from "nanoid";
 import type { GeneratedFile } from "ai";
+import getVisitorId from "./get-visitor-id";
 
 // Define all possible animal types we support
 export const ANIMAL_TYPES = [
@@ -31,32 +31,6 @@ export const ANIMAL_TYPES = [
   "squirrel",
   "koala",
 ];
-
-// Function to get or create a visitor ID
-export async function getVisitorId() {
-  const cookieStore = await cookies();
-  let visitorId = cookieStore.get("visitor_id")?.value;
-
-  if (!visitorId) {
-    // Generate a UUID
-    visitorId = uuidv4();
-    // Note: In a real app, we would set this cookie server-side
-  } else {
-    // Check if existing ID is a valid UUID, if not, generate a new one
-    const isValidUUID =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        visitorId
-      );
-    if (!isValidUUID) {
-      console.log(
-        `Converting non-UUID visitor ID to UUID format: ${visitorId}`
-      );
-      visitorId = uuidv4();
-    }
-  }
-
-  return visitorId;
-}
 
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
@@ -167,7 +141,13 @@ export async function createOppositeVersion(
     }
 
     // Create a specific prompt based on the detected animal type
-    const prompt = `Transform this ${type} into a ${targetAnimalType}, maintain the personality and aesthetics, cartoon-style`;
+    let prompt = "";
+    if (type === "human") {
+      prompt = `Transform this ${type} into a light cartoon-style animal: ${targetAnimalType}, Retain realism. Do not put clothes on the ${targetAnimalType}.`;
+    } else {
+      prompt = `Transform this ${type} into a human, subtly cartoonish, retaining realism and making sure that the final image is definitively human and not a ${type}.`;
+    }
+
     console.debug("Prompt:", prompt);
 
     const { image } = await generateImage({
@@ -446,8 +426,8 @@ export async function getRecentTransformations(limit = 12) {
 
   // Process the data to include vote counts
   const processedData = data.map((item) => {
-    const votes = (item.votes as { vote: "pet" | "human" }[]) || [];
-    const petVotes = votes.filter((v) => v.vote === "pet").length;
+    const votes = (item.votes as { vote: "animal" | "human" }[]) || [];
+    const petVotes = votes.filter((v) => v.vote === "animal").length;
     const humanVotes = votes.filter((v) => v.vote === "human").length;
     const totalVotes = votes.length;
 
@@ -542,14 +522,13 @@ export async function updateOppositeImage(
     );
   }
 }
-
 // Function to save a vote for an image
 export async function saveVote(
   imageId: string,
-  voteType: "animal" | "human"
+  vote: "animal" | "human"
 ): Promise<VoteStats> {
   try {
-    console.log(`Saving vote for image ${imageId}: ${voteType}`);
+    console.log(`Saving vote for image ${imageId}: ${vote}`);
 
     const supabase = createServerClient();
     if (!supabase) {
@@ -559,10 +538,10 @@ export async function saveVote(
     // Get visitor ID
     const visitorId = await getVisitorId();
 
-    // Check if user already voted for this image
+    // Check if user already voted
     const { data: existingVote, error: checkError } = await supabase
       .from("votes")
-      .select("*")
+      .select("id")
       .eq("image_id", imageId)
       .eq("voter_id", visitorId)
       .maybeSingle();
@@ -576,7 +555,7 @@ export async function saveVote(
     if (existingVote) {
       const { error: updateError } = await supabase
         .from("votes")
-        .update({ vote_type: voteType, updated_at: new Date().toISOString() })
+        .update({ vote: vote })
         .eq("id", existingVote.id);
 
       if (updateError) {
@@ -588,7 +567,7 @@ export async function saveVote(
       const { error: insertError } = await supabase.from("votes").insert({
         image_id: imageId,
         voter_id: visitorId,
-        vote_type: voteType,
+        vote: vote,
       });
 
       if (insertError) {
@@ -597,10 +576,32 @@ export async function saveVote(
       }
     }
 
-    // Get updated vote counts
+    // Get updated vote counts using the getVoteStats function
+    return await getVoteStats(imageId);
+  } catch (error) {
+    console.error("Error in saveVote:", error);
+    throw new Error(
+      `Failed to save vote: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
+
+// Function to get vote statistics for an image
+export async function getVoteStats(imageId: string): Promise<VoteStats> {
+  try {
+    console.log(`Getting vote stats for image ${imageId}`);
+
+    const supabase = createServerClient();
+    if (!supabase) {
+      throw new Error("Failed to create Supabase client");
+    }
+
+    // Get all votes for this image
     const { data: voteData, error: statsError } = await supabase
       .from("votes")
-      .select("vote_type")
+      .select("vote")
       .eq("image_id", imageId);
 
     if (statsError) {
@@ -609,8 +610,8 @@ export async function saveVote(
     }
 
     // Calculate vote statistics
-    const animalVotes = voteData.filter((v) => v.vote_type === "animal").length;
-    const humanVotes = voteData.filter((v) => v.vote_type === "human").length;
+    const animalVotes = voteData.filter((v) => v.vote === "animal").length;
+    const humanVotes = voteData.filter((v) => v.vote === "human").length;
     const totalVotes = animalVotes + humanVotes;
 
     const animalPercentage =
@@ -625,9 +626,44 @@ export async function saveVote(
       humanPercentage,
     };
   } catch (error) {
-    console.error("Error in saveVote:", error);
+    console.error("Error in getVoteStats:", error);
     throw new Error(
-      `Failed to save vote: ${
+      `Failed to get vote stats: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
+
+// Function to check if a user has already voted for an image
+export async function hasUserVoted(imageId: string): Promise<boolean> {
+  try {
+    const supabase = createServerClient();
+    if (!supabase) {
+      throw new Error("Failed to create Supabase client");
+    }
+
+    // Get visitor ID
+    const visitorId = await getVisitorId();
+
+    // Check if user already voted for this image
+    const { data, error } = await supabase
+      .from("votes")
+      .select("id")
+      .eq("image_id", imageId)
+      .eq("voter_id", visitorId)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error checking if user voted:", error);
+      throw new Error(`Failed to check if user voted: ${error.message}`);
+    }
+
+    return !!data;
+  } catch (error) {
+    console.error("Error in hasUserVoted:", error);
+    throw new Error(
+      `Failed to check if user voted: ${
         error instanceof Error ? error.message : String(error)
       }`
     );

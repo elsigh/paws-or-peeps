@@ -396,7 +396,7 @@ export default function FileUpload() {
   const fileSizePercentage = file
     ? Math.min((file.size / MAX_FILE_SIZE) * 100, 100)
     : 0;
-  const isFileTooLarge = file && file.size > MAX_FILE_SIZE;
+  const isFileTooLarge = file && file.size > MAX_FILE_SIZE * 2;
 
   return (
     <Card className="w-full max-w-md mx-auto relative border-rose-200">
@@ -441,23 +441,22 @@ export default function FileUpload() {
                         </p>
                       )}
 
-                      {systemStatusDetails.database &&
-                        systemStatusDetails.database.message && (
-                          <div className="mt-1">
-                            <strong>Database:</strong>{" "}
-                            {systemStatusDetails.database.message ||
-                              "Unknown error"}
-                            {systemStatusDetails.database.details && (
-                              <pre className="mt-1 whitespace-pre-wrap overflow-auto max-h-40 bg-gray-100 p-2 rounded text-xs">
-                                {JSON.stringify(
-                                  systemStatusDetails.database.details,
-                                  null,
-                                  2
-                                )}
-                              </pre>
-                            )}
-                          </div>
-                        )}
+                      {systemStatusDetails.database?.message && (
+                        <div className="mt-1">
+                          <strong>Database:</strong>{" "}
+                          {systemStatusDetails.database.message ||
+                            "Unknown error"}
+                          {systemStatusDetails.database.details && (
+                            <pre className="mt-1 whitespace-pre-wrap overflow-auto max-h-40 bg-gray-100 p-2 rounded text-xs">
+                              {JSON.stringify(
+                                systemStatusDetails.database.details,
+                                null,
+                                2
+                              )}
+                            </pre>
+                          )}
+                        </div>
+                      )}
 
                       {systemStatusDetails.environment && (
                         <div className="mt-2">
@@ -507,6 +506,7 @@ export default function FileUpload() {
             />
 
             {/* Custom drop zone */}
+            {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
             <div
               ref={dropZoneRef}
               onClick={handleDropZoneClick}
@@ -677,7 +677,7 @@ export default function FileUpload() {
               </div>
               <div className="flex items-center">
                 <span className="text-lg mr-2">🐾</span>
-                <p className="animate-pulse">
+                <p className="animate-pulse min-h-[4.5rem] flex items-center justify-center">
                   Pet Fact: {PET_FACTS[currentFactIndex]}
                 </p>
                 <span className="text-lg ml-2">🐾</span>

@@ -50,7 +50,7 @@ export async function GET() {
     // Try a test insert with different image_type values
     const testResults = {};
 
-    for (const type of ["pet", "human", "cat", "dog", "person"]) {
+    for (const type of ["human", "cat", "dog", "person"]) {
       try {
         const { data, error } = await supabase
           .from("images")

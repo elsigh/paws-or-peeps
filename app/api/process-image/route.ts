@@ -2,8 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { uploadToBlob } from "@/lib/blob";
 import { cookies } from "next/headers";
 import { nanoid } from "nanoid";
+import getVisitorId from "@/lib/get-visitor-id";
 import {
-  getVisitorId,
   saveImageData,
   detectImageContent,
   createAnimatedVersion,

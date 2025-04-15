@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { AlertCircle, ThumbsUp, ImageIcon, Copy, Check } from "lucide-react";
@@ -18,6 +19,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import type { ANIMAL_TYPES } from "@/lib/image-processing";
+import { useVisitorId } from "@/lib/visitor-id-context";
 
 interface ResultsDisplayProps {
   imageId: string;
@@ -25,7 +27,7 @@ interface ResultsDisplayProps {
   oppositeUrl: string;
   type: "human" | (typeof ANIMAL_TYPES)[number];
   originalUrl: string;
-  isUploader: boolean;
+  uploaderId: string; // Changed from isUploader to uploaderId
 }
 
 export default function ResultsDisplay({
@@ -34,7 +36,7 @@ export default function ResultsDisplay({
   oppositeUrl,
   type,
   originalUrl,
-  isUploader,
+  uploaderId,
 }: ResultsDisplayProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -52,7 +54,25 @@ export default function ResultsDisplay({
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isUploader, setIsUploader] = useState(false);
   const shareUrlRef = useRef<HTMLInputElement>(null);
+
+  const { visitorId } = useVisitorId();
+
+  // Check if current user is the uploader
+  useEffect(() => {
+    console.debug("Checking if user is uploader...", { visitorId, uploaderId });
+    const checkIfUploader = () => {
+      try {
+        setIsUploader(visitorId === uploaderId);
+      } catch (err) {
+        console.error("Error checking if user is uploader:", err);
+        setIsUploader(false); // Default to false if we can't determine
+      }
+    };
+
+    checkIfUploader();
+  }, [uploaderId, visitorId]);
 
   const handleVote = async (vote: "animal" | "human") => {
     setLoading(true);
@@ -252,20 +272,6 @@ export default function ResultsDisplay({
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="flex items-center gap-1">
-                    Animal <span className="text-sm">🐾</span>
-                  </span>
-                  <span>{voteStats?.animalPercentage.toFixed(1)}%</span>
-                </div>
-                <Progress
-                  value={voteStats?.animalPercentage || 0}
-                  className="h-2 bg-rose-100"
-                  indicatorClassName="bg-rose-500"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="flex items-center gap-1">
                     Human <span className="text-sm">👤</span>
                   </span>
                   <span>{voteStats?.humanPercentage.toFixed(1)}%</span>
@@ -276,18 +282,56 @@ export default function ResultsDisplay({
                   indicatorClassName="bg-rose-500"
                 />
               </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="flex items-center gap-1">
+                    Animal <span className="text-sm">🐾</span>
+                  </span>
+                  <span>{voteStats?.animalPercentage.toFixed(1)}%</span>
+                </div>
+                <Progress
+                  value={voteStats?.animalPercentage || 0}
+                  className="h-2 bg-rose-100"
+                  indicatorClassName="bg-rose-500"
+                />
+              </div>
             </div>
 
             <div className="mt-6">
-              <h4 className="text-md font-medium text-center mb-2 flex items-center justify-center gap-2">
+              <h4 className="text-md font-medium text-center  flex items-center justify-center gap-2">
                 <span>The original was actually a {originalType}!</span>
                 <span className="text-xl">
                   {originalType !== "human" ? "🐾" : "👤"}
                 </span>
               </h4>
+              {/* Original image section - always visible to uploaders, visible to others after voting */}
+              {(isUploader || voted) && (
+                <CardContent className="pt-2">
+                  <div className="aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg relative">
+                    {!originalImageLoaded && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+                        <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      </div>
+                    )}
+                    <img
+                      src={originalUrl || "/placeholder.svg"}
+                      alt="Original"
+                      className="object-cover w-full h-full"
+                      onLoad={() => setOriginalImageLoaded(true)}
+                      style={{
+                        display: originalImageLoaded ? "block" : "none",
+                      }}
+                    />
+                    {/* Add a tiny cat in the corner of the original image */}
+                    <div className="absolute right-2 bottom-2 z-10">
+                      <RandomCat size="tiny" index={2} />
+                    </div>
+                  </div>
+                </CardContent>
+              )}
             </div>
 
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center flex justify-center gap-4">
               <CatButton
                 onClick={() => router.push("/")}
                 className="bg-rose-500 hover:bg-rose-600"
@@ -297,13 +341,9 @@ export default function ResultsDisplay({
                   <span className="text-sm">🐾</span>
                 </span>
               </CatButton>
-            </div>
-            <div className="mt-2">
+
               <Link href="/gallery">
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 border-rose-200"
-                >
+                <Button variant="outline" className="gap-2 border-rose-200">
                   <ImageIcon className="h-4 w-4" />
                   View Gallery
                 </Button>
@@ -373,36 +413,6 @@ export default function ResultsDisplay({
                     View Gallery
                   </Button>
                 </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Original image section - always visible to uploaders, visible to others after voting */}
-      {(isUploader || voted) && (
-        <Card className="border-rose-200 relative">
-          <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold text-center mb-4 flex items-center justify-center gap-2">
-              <span>Original Image</span>
-              <span className="text-xl">{type === "pet" ? "🐾" : "👤"}</span>
-            </h3>
-            <div className="aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg relative">
-              {!originalImageLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
-                  <div className="h-8 w-8 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                </div>
-              )}
-              <img
-                src={originalUrl || "/placeholder.svg"}
-                alt="Original image"
-                className="object-cover w-full h-full"
-                onLoad={() => setOriginalImageLoaded(true)}
-                style={{ display: originalImageLoaded ? "block" : "none" }}
-              />
-              {/* Add a tiny cat in the corner of the original image */}
-              <div className="absolute right-2 bottom-2 z-10">
-                <RandomCat size="tiny" index={2} />
               </div>
             </div>
           </CardContent>
