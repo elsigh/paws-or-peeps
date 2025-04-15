@@ -28,22 +28,21 @@ export function AuthModal({
   onClose,
   onSuccess,
   mode = "signin",
-}: AuthModalProps) {
+}: AuthModalProps & { redirectUrl?: string }) {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const supabase = createClient();
 
   const handleSocialSignIn = async (provider: "google" | "github") => {
     setLoading(true);
-
+    const redirectTo = `${window.location.origin}/auth/callback?next=${window.location.pathname}`;
+    console.debug("handleSocialSignIn:", redirectTo);
     try {
       if (!supabase) throw new Error("Supabase client not initialized");
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
+        options: { redirectTo },
       });
 
       if (error) throw error;

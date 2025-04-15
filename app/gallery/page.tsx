@@ -107,7 +107,6 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
           animatedUrl={item.animated_url}
           oppositeUrl={item.opposite_url}
           type={item.image_type}
-          confidence={item.confidence}
           voteStats={item.voteStats}
           createdAt={item.created_at}
         />

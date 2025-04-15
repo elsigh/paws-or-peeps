@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,6 +28,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { RefreshCw } from "lucide-react";
+import { createClient } from "@/lib/supabase-client";
+import { useAuth } from "@/lib/auth-context";
 
 interface ResultsDisplayProps {
   imageData: ImageData;
@@ -54,6 +56,33 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
   const [regenerating, setRegenerating] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
 
+  const { requireAuth } = useAuth();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const supabase = createClient();
+      if (!supabase) return;
+
+      const { data } = await supabase.auth.getSession();
+      setIsAuthenticated(!!data.session);
+
+      // Set up auth state change listener
+      const { data: authListener } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          setIsAuthenticated(!!session);
+        }
+      );
+
+      return () => {
+        authListener.subscription.unsubscribe();
+      };
+    };
+
+    checkAuth();
+  }, []);
+
   // Destructure imageData for easier access
   const {
     id: imageId,
@@ -70,6 +99,15 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
     setLoading(true);
     setError(null);
 
+    // Check if user is authenticated
+    if (!isAuthenticated) {
+      setLoading(false);
+
+      // Open auth modal with current path as redirect URL
+      requireAuth(() => {});
+      return;
+    }
+
     try {
       const response = await fetch("/api/vote", {
         method: "POST",
@@ -82,6 +120,20 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 401 && data.requireAuth) {
+          // If somehow we still get auth error, open auth modal
+          setError("Please sign in to vote");
+          localStorage.setItem(
+            "pendingVote",
+            JSON.stringify({
+              imageId,
+              vote,
+              redirectUrl: window.location.href,
+            })
+          );
+          requireAuth(() => {});
+          return;
+        }
         throw new Error(data.error || "Failed to submit vote");
       }
 

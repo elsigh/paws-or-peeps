@@ -12,7 +12,6 @@ interface GalleryCardProps {
   animatedUrl: string;
   oppositeUrl: string;
   type: "human" | (typeof ANIMAL_TYPES)[number];
-  confidence: number;
   voteStats: {
     petVotes: number;
     humanVotes: number;
@@ -28,7 +27,6 @@ export function GalleryCard({
   animatedUrl,
   oppositeUrl,
   type,
-  confidence,
   voteStats,
   createdAt,
 }: GalleryCardProps) {

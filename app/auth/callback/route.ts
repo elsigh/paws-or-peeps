@@ -3,7 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
+  console.debug("Callback route triggered with URL:", requestUrl.toString());
   const code = requestUrl.searchParams.get("code");
+  const redirectTo = requestUrl.searchParams.get("next");
 
   if (code) {
     const supabase = await createClient();
@@ -25,5 +27,5 @@ export async function GET(request: NextRequest) {
   }
 
   // URL to redirect to after sign in process completes
-  return NextResponse.redirect(new URL("/", requestUrl.origin));
+  return NextResponse.redirect(new URL(redirectTo || "/", requestUrl.origin));
 }

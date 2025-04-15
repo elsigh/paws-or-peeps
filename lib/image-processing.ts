@@ -409,7 +409,6 @@ export async function getRecentTransformations(limit = 12) {
       animated_url,
       opposite_url,
       image_type,
-      confidence,
       created_at,
       uploader_id,
       votes (
@@ -462,16 +461,23 @@ export async function saveVote(
       throw new Error("Failed to create Supabase client");
     }
 
-    // Get visitor ID
-    const visitorId = await getVisitorId();
+    // Get the authenticated user ID
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.user?.id) {
+      throw new Error("User must be authenticated to vote");
+    }
+
+    const userId = session.user.id;
 
     // Check if user already voted
     const { data: existingVote, error: checkError } = await supabase
       .from("votes")
       .select("id")
       .eq("image_id", imageId)
-      // @ts-ignore
-      .eq("voter_id", visitorId)
+      .eq("voter_id", userId)
       .maybeSingle();
 
     if (checkError) {
@@ -483,7 +489,6 @@ export async function saveVote(
     if (existingVote) {
       const { error: updateError } = await supabase
         .from("votes")
-        // @ts-ignore
         .update({ vote: vote })
         .eq("id", existingVote.id);
 
@@ -493,10 +498,9 @@ export async function saveVote(
       }
     } else {
       // Otherwise insert a new vote
-      // @ts-ignore
       const { error: insertError } = await supabase.from("votes").insert({
         image_id: imageId,
-        voter_id: visitorId,
+        voter_id: userId,
         vote: vote,
       });
 

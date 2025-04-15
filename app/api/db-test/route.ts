@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { nanoid } from "nanoid";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { error } from "console";
 
 export async function GET() {
   try {
@@ -86,8 +87,7 @@ async function testInsert(supabase: SupabaseClient) {
         original_url: `https://test-url.com/${testId}`,
         animated_url: `https://test-url.com/animated-${testId}`,
         opposite_url: `https://test-url.com/opposite-${testId}`,
-        image_type: "human", // Using "human" as it's a valid value
-        confidence: 99.9,
+        image_type: "human", /
         uploader_id: `test-${testId}`,
       })
       .select()

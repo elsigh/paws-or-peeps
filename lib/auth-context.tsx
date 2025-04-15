@@ -13,14 +13,14 @@ import type { User } from "@supabase/supabase-js";
 
 type AuthContextType = {
   user: User | null;
-  loading: boolean;
+  isLoading: boolean;
   signOut: () => Promise<void>;
   requireAuth: (callback: () => void) => void;
 };
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
-  loading: true,
+  isLoading: true,
   signOut: async () => {},
   requireAuth: () => {},
 });
@@ -29,7 +29,7 @@ export const useAuth = () => useContext(AuthContext);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingCallback, setPendingCallback] = useState<(() => void) | null>(
     null
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error("Error getting auth session:", error);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
     };
 
@@ -95,15 +95,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signOut, requireAuth }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        signOut,
+        requireAuth,
+      }}
+    >
       {children}
       <AuthModal
         isOpen={showAuthModal}
-        onClose={() => {
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
           setShowAuthModal(false);
-          setPendingCallback(null);
+          if (pendingCallback) {
+            pendingCallback();
+            setPendingCallback(null);
+          }
         }}
-        onSuccess={handleAuthSuccess}
       />
     </AuthContext.Provider>
   );
