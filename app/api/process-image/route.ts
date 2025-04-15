@@ -166,7 +166,11 @@ export async function POST(request: NextRequest) {
             )
           );
         } catch (error) {
-          console.error("Error creating animated version:", error);
+          console.error(
+            "Error creating animated version:",
+            JSON.stringify(error, null, 2)
+          );
+
           controller.enqueue(
             encoder.encode(
               `${JSON.stringify({
