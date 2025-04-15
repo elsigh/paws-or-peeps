@@ -12,6 +12,7 @@ import {
   ImageIcon,
   FileWarning,
   Info,
+  X, // Add X icon import
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CatButton } from "@/components/cat-button";
@@ -71,6 +72,8 @@ export default function FileUpload() {
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [systemStatusDetails, setSystemStatusDetails] = useState<any>(null);
   const [hasRealError, setHasRealError] = useState(false);
+  const [progressMessage, setProgressMessage] =
+    useState<string>("Transforming...");
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -284,57 +287,68 @@ export default function FileUpload() {
           body: formData,
         });
 
-        console.log("Response received:", response.status, response.statusText);
-
-        // Check if the response is JSON
-        const contentType = response.headers.get("content-type");
-        console.log("Response content type:", contentType);
-
-        if (!contentType || !contentType.includes("application/json")) {
-          // Handle non-JSON responses
-          const text = await response.text();
-          console.log("Non-JSON response:", text.substring(0, 200));
-
-          if (text.includes("Request Entity Too Large")) {
-            throw new Error(
-              "Image is too large. Please use an image smaller than 4MB."
-            );
-          }
-          throw new Error(`Server error: ${text.substring(0, 100)}...`);
-        }
-
-        const data = await response.json();
-        console.log("Response data:", data);
-
-        // For debugging
-        //setDebugInfo(data)
-
         if (!response.ok) {
-          throw new Error(data.error || "Failed to process image");
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        if (data.error) {
-          setError(data.error);
-          if (data.details) {
-            setErrorDetails(data.details);
+        // Handle the stream properly
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        if (!reader) {
+          throw new Error("Failed to get response reader");
+        }
+
+        // Process the stream
+        while (true) {
+          const { done, value } = await reader.read();
+
+          if (done) {
+            break;
           }
-          setLoading(false);
-          return;
-        }
 
-        // Redirect to the results page if we have an ID
-        if (data.id) {
-          // Set progress to 100% before redirecting
-          setUploadProgress(100);
+          // Decode the chunk and split by newlines
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n").filter((line) => line.trim() !== "");
 
-          // Short delay to show 100% progress
-          setTimeout(() => {
-            console.log("Redirecting to results page:", `/results/${data.id}`);
-            router.push(`/results/${data.id}`);
-          }, 500);
-        } else {
-          setLoading(false);
-          setError("No image ID returned from server");
+          // Process each line as a separate JSON message
+          for (const line of lines) {
+            try {
+              const data = JSON.parse(line);
+              console.log("Stream data:", data);
+
+              // Handle different status types
+              if (data.status === "progress") {
+                setUploadProgress((prev) => Math.min(prev + 10, 90));
+                setProgressMessage(data.message);
+              } else if (data.status === "complete") {
+                // Redirect to the results page if we have an ID
+                if (data.id) {
+                  // Set progress to 100% before redirecting
+                  setUploadProgress(100);
+
+                  // Short delay to show 100% progress
+                  setTimeout(() => {
+                    console.log(
+                      "Redirecting to results page:",
+                      `/results/${data.id}`
+                    );
+                    router.push(`/results/${data.id}`);
+                  }, 500);
+                }
+              } else if (data.status === "error") {
+                setError(data.message);
+                setLoading(false);
+              }
+            } catch (e) {
+              console.error(
+                "Error parsing JSON from stream:",
+                e,
+                "Line:",
+                line
+              );
+            }
+          }
         }
       } catch (err) {
         console.error("Error in handleSubmit:", err);
@@ -402,6 +416,14 @@ export default function FileUpload() {
     ? Math.min((file.size / MAX_FILE_SIZE) * 100, 100)
     : 0;
   const isFileTooLarge = !!file && file.size > MAX_FILE_SIZE * 2;
+
+  // Add a function to clear the selected file
+  const clearSelectedFile = () => {
+    setFile(null);
+    setPreview(null);
+    setFileSize(0);
+    setError(null);
+  };
 
   return (
     <Card className="w-full max-w-md mx-auto relative border-rose-200">
@@ -547,6 +569,19 @@ export default function FileUpload() {
                     className="object-cover w-full h-full"
                   />
 
+                  {/* Add X button to remove the image */}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering the drop zone click
+                      clearSelectedFile();
+                    }}
+                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                    aria-label="Remove image"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+
                   {/* File size warning overlay for large files */}
                   {isFileTooLarge && (
                     <div className="absolute inset-0 bg-red-500/70 flex flex-col items-center justify-center text-white p-4 text-center">
@@ -640,7 +675,7 @@ export default function FileUpload() {
             {loading ? (
               <span className="flex items-center gap-2">
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                Transforming...
+                {progressMessage}
               </span>
             ) : isFileTooLarge ? (
               <span className="flex items-center gap-2">

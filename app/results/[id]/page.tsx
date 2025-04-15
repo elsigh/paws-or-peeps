@@ -76,6 +76,24 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     //   imageData.image_type = "human"; // Default to human if we get an unexpected value
     // }
 
+    // Add this code to check for votes
+    let hasVotes = false;
+    try {
+      const supabase = await createClient();
+      const { count, error } = await supabase
+        .from("votes")
+        .select("*", { count: "exact", head: true })
+        .eq("image_id", id);
+
+      if (error) {
+        console.error("Error checking votes:", error);
+      } else {
+        hasVotes = count !== null && count > 0;
+      }
+    } catch (error) {
+      console.error("Error checking for votes:", error);
+    }
+
     return (
       <div className="container relative mx-auto px-4 py-12">
         {/* Decorative paw prints */}
@@ -132,6 +150,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             type={imageData.image_type}
             originalUrl={imageData.original_url}
             uploaderId={imageData.uploader_id}
+            hasVotes={hasVotes}
           />
         </div>
       </div>

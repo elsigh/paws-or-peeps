@@ -18,8 +18,16 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { ANIMAL_TYPES } from "@/lib/image-processing";
+import { ANIMAL_TYPES } from "@/lib/image-processing";
 import { useAuth } from "@/lib/auth-context";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { RefreshCw } from "lucide-react";
 
 interface ResultsDisplayProps {
   imageId: string;
@@ -28,6 +36,7 @@ interface ResultsDisplayProps {
   type: "human" | (typeof ANIMAL_TYPES)[number];
   originalUrl: string;
   uploaderId: string; // Changed from isUploader to uploaderId
+  hasVotes: boolean; // Add this prop
 }
 
 export default function ResultsDisplay({
@@ -37,6 +46,7 @@ export default function ResultsDisplay({
   type,
   originalUrl,
   uploaderId,
+  hasVotes, // Add this prop
 }: ResultsDisplayProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -56,6 +66,10 @@ export default function ResultsDisplay({
   const [copied, setCopied] = useState(false);
   const [isUploader, setIsUploader] = useState(false);
   const shareUrlRef = useRef<HTMLInputElement>(null);
+  const [regenerating, setRegenerating] = useState(false);
+  const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
+  // Remove this state since we're now getting it as a prop
+  // const [hasVotes, setHasVotes] = useState(false);
 
   const { user } = useAuth();
 
@@ -91,6 +105,22 @@ export default function ResultsDisplay({
 
     checkIfUploader();
   }, [uploaderId, user?.id]);
+
+  // Remove the effect that checks for votes
+  // useEffect(() => {
+  //   const checkVotes = async () => {
+  //     try {
+  //       const response = await fetch(`/api/check-votes?imageId=${imageId}`);
+  //       const data = await response.json();
+  //       setHasVotes(data.hasVotes);
+  //     } catch (err) {
+  //       console.error("Error checking votes:", err);
+  //       setHasVotes(true); // Assume there are votes if we can't check
+  //     }
+  //   };
+  //
+  //   checkVotes();
+  // }, [imageId]);
 
   const handleVote = async (vote: "animal" | "human") => {
     setLoading(true);
@@ -143,6 +173,42 @@ export default function ResultsDisplay({
       ? `${window.location.origin}/results/${imageId}`
       : `/results/${imageId}`;
 
+  // Add a function to handle regeneration
+  const handleRegenerate = async () => {
+    if (!selectedAnimal) return;
+
+    setRegenerating(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/regenerate-opposite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          imageId,
+          newType: selectedAnimal,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to regenerate image");
+      }
+
+      // Refresh the page to show the new image
+      router.refresh();
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -183,12 +249,47 @@ export default function ResultsDisplay({
                 alt=""
                 className="object-cover w-full h-full"
               />
+              {regenerating && (
+                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                  <RefreshCw className="h-8 w-8 text-white animate-spin" />
+                </div>
+              )}
             </div>
             <div className="mt-4 text-center">
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
                 <span>Animal</span>
                 <span className="text-xl">🐾</span>
               </h3>
+
+              {/* Add regeneration controls for uploaders of human images with no votes */}
+              {isUploader && type === "human" && !hasVotes && (
+                <div className="mt-3 flex items-center gap-2">
+                  <Select
+                    value={selectedAnimal || ""}
+                    onValueChange={setSelectedAnimal}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select animal" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ANIMAL_TYPES.map((animalType) => (
+                        <SelectItem key={animalType} value={animalType}>
+                          {animalType.charAt(0).toUpperCase() +
+                            animalType.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    size="sm"
+                    onClick={handleRegenerate}
+                    disabled={!selectedAnimal || regenerating}
+                    className="bg-rose-500 hover:bg-rose-600 flex-shrink-0"
+                  >
+                    <RefreshCw className="h-4 w-4" />
+                  </Button>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
