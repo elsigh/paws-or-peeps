@@ -5,6 +5,9 @@ import { CatLogo } from "@/components/cat-logo";
 import { PawPrint } from "@/components/paw-print";
 import { RandomCat } from "@/components/random-cat";
 import { createServerClient } from "@/lib/supabase";
+import { Button } from "@/components/ui/button";
+import { Home } from "lucide-react";
+import Link from "next/link";
 
 interface ResultsPageProps {
   params: {
@@ -22,7 +25,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     try {
       // First try to get the image data using the getImageById function
       imageData = await getImageById(id);
-      console.log("Image data retrieved successfully");
+      console.log("Image data retrieved successfully", { imageData });
     } catch (error) {
       console.error("Error getting image data with getImageById:", error);
 
@@ -57,34 +60,20 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         console.log("Direct database query successful");
       } catch (directQueryError) {
         console.error("Direct database query also failed:", directQueryError);
-
-        // As a last resort, check if this is a temporary ID
-        // In this case, we'll use placeholder data
-        console.log("Using placeholder data for possible temporary ID");
-
-        imageData = {
-          id,
-          original_url: "/colorful-abstract-shapes.png",
-          animated_url: "/whimsical-forest-creatures.png",
-          opposite_url: "/light-and-shadow.png",
-          image_type: "human", // Changed from "pet" to "human" to match our fix
-          confidence: 85.0,
-          isUploader: true,
-          created_at: new Date().toISOString(),
-        };
+        throw directQueryError;
       }
     }
 
-    // Ensure image_type is valid for the component
-    // If the database has a different value than what our component expects,
-    // we need to map it to a value the component can handle
-    const validTypes = ["pet", "human"];
-    if (!validTypes.includes(imageData.image_type)) {
-      console.log(
-        `Converting non-standard image_type "${imageData.image_type}" to "human"`
-      );
-      imageData.image_type = "human"; // Default to human if we get an unexpected value
-    }
+    // // Ensure image_type is valid for the component
+    // // If the database has a different value than what our component expects,
+    // // we need to map it to a value the component can handle
+    // const validTypes = ["pet", "human"];
+    // if (!validTypes.includes(imageData.image_type)) {
+    //   console.log(
+    //     `Converting non-standard image_type "${imageData.image_type}" to "human"`
+    //   );
+    //   imageData.image_type = "human"; // Default to human if we get an unexpected value
+    // }
 
     return (
       <div className="container relative mx-auto px-4 py-12">
@@ -115,6 +104,13 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4 relative">
+            <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
+              <Link href="/">
+                <Button variant="ghost" size="sm" className="rounded-full">
+                  <Home className="h-5 w-5 text-rose-500" />
+                </Button>
+              </Link>
+            </div>
             <CatLogo size="lg" />
             {/* Tiny cat peeking from behind the logo */}
             <div className="absolute -right-10 top-1/2 transform -translate-y-1/2">
@@ -133,7 +129,6 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
             animatedUrl={imageData.animated_url}
             oppositeUrl={imageData.opposite_url}
             type={imageData.image_type}
-            confidence={imageData.confidence}
             originalUrl={imageData.original_url}
             isUploader={imageData.isUploader}
           />

@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
 
     // Upload original image to Vercel Blob
     console.log("Starting image upload to Blob...");
-    let originalUrl;
+    let originalUrl = "";
     try {
       originalUrl = await uploadToBlob(file);
       console.log("Upload successful:", originalUrl);
@@ -98,19 +98,19 @@ export async function POST(request: NextRequest) {
 
     // Use AI to detect if the image contains a pet or human
     console.log("Detecting image content...");
-    let detectionResult;
+    let detectionResult = "";
     try {
       detectionResult = await detectImageContent(originalUrl);
       console.log("Detection result:", detectionResult);
     } catch (error) {
-      console.error("Error detecting image content:", error);
-      // Default to human if detection fails
-      detectionResult = { type: "human", confidence: 85.0 };
+      const msg = `Error detecting image content: ${error}`;
+      console.error(msg);
+      throw new Error(msg);
     }
 
     // Generate animated and opposite versions
     console.log("Generating animated version...");
-    let animatedUrl;
+    let animatedUrl = "";
     try {
       animatedUrl = await createAnimatedVersion(originalUrl);
     } catch (error) {
@@ -119,12 +119,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log("Generating opposite version...");
-    let oppositeUrl;
+    let oppositeUrl = "";
     try {
-      oppositeUrl = await createOppositeVersion(
-        originalUrl,
-        detectionResult as string
-      );
+      oppositeUrl =
+        (await createOppositeVersion(originalUrl, detectionResult)) || "";
     } catch (error) {
       console.error("Error creating opposite version:", error);
       oppositeUrl = "/light-and-shadow.png"; // Fallback
@@ -144,8 +142,7 @@ export async function POST(request: NextRequest) {
           originalUrl,
           animatedUrl,
           oppositeUrl,
-          detectionResult.type as "pet" | "human",
-          detectionResult.confidence
+          detectionResult
         );
         console.log("Image data saved successfully:", imageData);
       } catch (saveError) {
@@ -167,8 +164,7 @@ export async function POST(request: NextRequest) {
             original_url: originalUrl,
             animated_url: animatedUrl,
             opposite_url: oppositeUrl,
-            image_type: detectionResult.type,
-            confidence: detectionResult.confidence,
+            image_type: detectionResult,
             uploader_id: visitorId,
           })
           .select()
@@ -197,8 +193,7 @@ export async function POST(request: NextRequest) {
         original_url: originalUrl,
         animated_url: animatedUrl,
         opposite_url: oppositeUrl,
-        image_type: detectionResult.type,
-        confidence: detectionResult.confidence,
+        image_type: detectionResult,
         uploader_id: visitorId,
         created_at: new Date().toISOString(),
       };
@@ -214,8 +209,7 @@ export async function POST(request: NextRequest) {
       originalUrl,
       animatedUrl,
       oppositeUrl,
-      type: detectionResult.type,
-      confidence: detectionResult.confidence,
+      type: detectionResult,
       temporary: usedTempId,
       databaseError: databaseError,
     });

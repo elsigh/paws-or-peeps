@@ -57,6 +57,7 @@ export async function getVisitorId() {
 
   return visitorId;
 }
+
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
     // Validate URL
@@ -74,15 +75,12 @@ export async function detectImageContent(imageUrl: string): Promise<string> {
               text: `
             Analyze the attached image.
             
-        Determine if the image contains a human or one of these animals: ${ANIMAL_TYPES.join(
+        Determine if the image contains a Human or one of these animals: ${ANIMAL_TYPES.join(
           ", "
         )}
         
-        If it contains a human, respond with exactly "Human".
-        If it contains one of the listed animals, respond with the animal type (e.g., "Cat", "Dog", etc.).
-        If it contains both a human and an animal, respond with "Human and [animal type]".
-        If it contains multiple animals but no human, list the animals (e.g., "Cat and Dog").
-        If it doesn't contain a human or any of the listed animals, respond with "Neither human nor listed animal detected".
+        If it contains a human, respond with exactly "human".
+        If it contains one of the listed animals, respond with an animal type in lowercase (e.g., "cat", "dog", etc.).
         
         Respond with ONLY the classification result, no additional text.
       `,
@@ -96,7 +94,7 @@ export async function detectImageContent(imageUrl: string): Promise<string> {
       ],
     });
 
-    return text.trim();
+    return text.trim().toLowerCase();
   } catch (error) {
     console.error("Classification error:", error);
     if (error instanceof Error) {
@@ -125,14 +123,14 @@ export async function createAnimatedVersion(imageUrl: string) {
 
     const { image } = await generateImage({
       model: luma.image("photon-flash-1"),
-      prompt: "animated style, cartoon, vibrant colors",
+      prompt: "cartoon style, visually true to the original",
       aspectRatio: "1:1",
       providerOptions: {
         luma: {
           image_ref: [
             {
               url: imageUrl,
-              weight: 0.8,
+              weight: 1.0,
             },
           ],
         },
@@ -152,14 +150,11 @@ export async function createAnimatedVersion(imageUrl: string) {
 export async function createOppositeVersion(
   imageUrl: string,
   type: string,
-  targetAnimalType?: string // New optional parameter for the target animal type
+  targetAnimalType = "cat"
 ): Promise<string | null> {
   try {
-    const isHuman = type === "Human";
-    const oppositeType = isHuman ? targetAnimalType || "Cat" : "Human";
-
     console.log(
-      `Starting opposite version creation (${type} to ${oppositeType})...`
+      `Starting opposite version creation (${type} to ${targetAnimalType})...`
     );
 
     // Check if the image URL is valid
@@ -167,26 +162,8 @@ export async function createOppositeVersion(
       throw new Error(`Invalid image URL: ${imageUrl}`);
     }
 
-    // If it's a human and no target animal type is specified, return null
-    // This will signal the frontend that it needs to ask the user for an animal type
-    if (isHuman && !targetAnimalType) {
-      console.log(
-        "Human detected but no target animal type specified. Returning null."
-      );
-      return null;
-    }
-
     // Create a specific prompt based on the detected animal type
-    let prompt;
-    const style = "cartoon";
-    if (isHuman && targetAnimalType) {
-      // Human to specific animal
-      prompt = `Transform this human into a ${targetAnimalType} character, maintain the personality and features, ${style} style`;
-    } else {
-      // Animal to human
-      const animalType = type === "other" ? "animal" : type;
-      prompt = `Transform this ${animalType} into a human being, ${style} style, with the personality of the original ${animalType} but distinctly human`;
-    }
+    const prompt = `Transform this ${type} into a ${targetAnimalType}, maintain the personality and aesthetics, cartoon-style`;
     console.debug("Prompt:", prompt);
 
     const { image } = await generateImage({
@@ -206,10 +183,7 @@ export async function createOppositeVersion(
     return imageToBlobUrl(image);
   } catch (error) {
     console.error("Error in createOppositeVersion:", error);
-    // Fallback to placeholder for demo purposes
-    const oppositeType =
-      type === "human" ? targetAnimalType || "animal" : "human";
-    return `/placeholder.svg?height=400&width=400&query=${oppositeType} version of ${imageUrl}`;
+    throw error;
   }
 }
 
@@ -219,18 +193,22 @@ export async function saveImageData(
   animatedUrl: string,
   oppositeUrl: string | null, // Can be null initially for human uploads
   imageType: string,
-  confidence: number,
   targetAnimalType?: string // New optional parameter
 ) {
   try {
     console.log("Saving image data to Supabase with params:", {
-      originalUrl: originalUrl?.substring(0, 50) + "...",
-      animatedUrl: animatedUrl?.substring(0, 50) + "...",
-      oppositeUrl: oppositeUrl ? oppositeUrl.substring(0, 50) + "..." : "null",
+      originalUrl: `${originalUrl?.substring(0, 50)}...`,
+      animatedUrl: `${animatedUrl?.substring(0, 50)}...`,
+      oppositeUrl: oppositeUrl ? `${oppositeUrl.substring(0, 50)}...` : "null",
       imageType,
-      confidence,
       targetAnimalType,
     });
+
+    // Validate image type against allowed values
+    const validImageTypes = [...ANIMAL_TYPES, "human", "other"];
+    if (!validImageTypes.includes(imageType)) {
+      throw new Error(`Invalid image type: ${imageType}`);
+    }
 
     const supabase = createServerClient();
     if (!supabase) {
@@ -251,60 +229,7 @@ export async function saveImageData(
     const safeAnimatedUrl = animatedUrl?.substring(0, MAX_URL_LENGTH) || "";
     const safeOppositeUrl = oppositeUrl?.substring(0, MAX_URL_LENGTH) || "";
 
-    // Ensure confidence is a valid number
-    const safeConfidence =
-      typeof confidence === "number" && !isNaN(confidence) ? confidence : 60.0;
-
-    // Validate image type against allowed values
-    const validImageTypes = [
-      "cat",
-      "dog",
-      "bird",
-      "horse",
-      "elephant",
-      "lion",
-      "tiger",
-      "bear",
-      "deer",
-      "wolf",
-      "dolphin",
-      "whale",
-      "monkey",
-      "giraffe",
-      "zebra",
-      "penguin",
-      "fox",
-      "rabbit",
-      "squirrel",
-      "koala",
-      "human",
-      "other",
-    ];
-
-    let safeImageType = "other";
-    if (validImageTypes.includes(imageType)) {
-      safeImageType = imageType;
-    } else {
-      console.log(`Invalid image type "${imageType}", defaulting to "other"`);
-    }
-
-    // Validate target animal type if provided
-    let safeTargetAnimalType = null;
-    if (targetAnimalType) {
-      if (
-        validImageTypes.includes(targetAnimalType) &&
-        targetAnimalType !== "human" &&
-        targetAnimalType !== "other"
-      ) {
-        safeTargetAnimalType = targetAnimalType;
-      } else {
-        console.log(
-          `Invalid target animal type "${targetAnimalType}", ignoring`
-        );
-      }
-    }
-
-    console.log(`Attempting to save with image_type: ${safeImageType}`);
+    console.log(`Attempting to save with image_type: ${imageType}`);
 
     // Now attempt the insert
     const { data, error } = await supabase
@@ -314,10 +239,10 @@ export async function saveImageData(
         original_url: safeOriginalUrl,
         animated_url: safeAnimatedUrl,
         opposite_url: safeOppositeUrl,
-        image_type: safeImageType,
-        confidence: safeConfidence,
+        image_type: imageType,
         uploader_id: visitorId,
-        target_animal_type: safeTargetAnimalType, // New field
+        target_animal_type:
+          imageType === "human" ? targetAnimalType || "cat" : "human",
       })
       .select()
       .single();
@@ -402,97 +327,89 @@ export async function getImageById(id: string) {
   }
 }
 
-// Function to save a vote
-export async function saveVote(imageId: string, vote: "pet" | "human") {
-  try {
-    console.log(`Saving vote: ${vote} for image: ${imageId}`);
-
-    // During transition period, we'll accept any ID format
-    // but log a warning for non-UUID formats
-    const isValidUUID =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        imageId
-      );
-
-    if (!isValidUUID) {
-      console.warn(
-        `Non-UUID format ID detected: ${imageId}. Future versions will require UUID format.`
-      );
-    }
-
-    const supabase = createServerClient();
-    const visitorId = await getVisitorId();
-
-    const { error } = await supabase.from("votes").insert({
-      image_id: imageId,
-      vote: vote,
-      voter_id: visitorId,
-    });
-
-    if (error) {
-      console.error("Error saving vote:", error);
-      throw new Error(`Failed to save vote: ${error.message}`);
-    }
-
-    return true;
-  } catch (error) {
-    console.error("Error in saveVote:", error);
-    throw new Error(
-      `Failed to save vote: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
-  }
+// Update the vote stats interface
+export interface VoteStats {
+  animalVotes: number;
+  humanVotes: number;
+  animalPercentage: number;
+  humanPercentage: number;
 }
 
-// Function to get vote statistics for an image
-export async function getVoteStats(imageId: string) {
+// Update the vote function
+export async function recordVote(
+  imageId: string,
+  vote: "animal" | "human"
+): Promise<{
+  voteStats: VoteStats;
+  originalType: string;
+}> {
   try {
-    console.log(`Getting vote stats for image: ${imageId}`);
-
-    // During transition period, we'll accept any ID format
-    // but log a warning for non-UUID formats
-    const isValidUUID =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        imageId
-      );
-
-    if (!isValidUUID) {
-      console.warn(
-        `Non-UUID format ID detected: ${imageId}. Future versions will require UUID format.`
-      );
+    console.log(`Recording vote for image ${imageId}: ${vote}`);
+    const supabase = createServerClient();
+    if (!supabase) {
+      throw new Error("Failed to create Supabase client");
     }
 
-    const supabase = createServerClient();
+    // Get visitor ID
+    const visitorId = await getVisitorId();
 
-    const { data, error } = await supabase
+    // Get the image data to check the original type
+    const { data: imageData, error: imageError } = await supabase
+      .from("images")
+      .select("*")
+      .eq("id", imageId)
+      .single();
+
+    if (imageError) {
+      console.error("Error fetching image:", imageError);
+      throw new Error(`Failed to fetch image: ${imageError.message}`);
+    }
+
+    // Record the vote
+    const { error: voteError } = await supabase.from("votes").insert({
+      image_id: imageId,
+      voter_id: visitorId,
+      vote_type: vote,
+    });
+
+    if (voteError) {
+      console.error("Error recording vote:", voteError);
+      throw new Error(`Failed to record vote: ${voteError.message}`);
+    }
+
+    // Get updated vote counts
+    const { data: voteData, error: statsError } = await supabase
       .from("votes")
-      .select("vote")
+      .select("vote_type")
       .eq("image_id", imageId);
 
-    if (error) {
-      console.error("Error getting vote stats:", error);
-      throw new Error(`Failed to get vote stats: ${error.message}`);
+    if (statsError) {
+      console.error("Error fetching vote stats:", statsError);
+      throw new Error(`Failed to fetch vote stats: ${statsError.message}`);
     }
 
-    const petVotes = data.filter((vote) => vote.vote === "pet").length;
-    const humanVotes = data.filter((vote) => vote.vote === "human").length;
-    const totalVotes = data.length;
+    // Calculate vote statistics
+    const animalVotes = voteData.filter((v) => v.vote_type === "animal").length;
+    const humanVotes = voteData.filter((v) => v.vote_type === "human").length;
+    const totalVotes = animalVotes + humanVotes;
+
+    const animalPercentage =
+      totalVotes > 0 ? (animalVotes / totalVotes) * 100 : 0;
+    const humanPercentage =
+      totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0;
 
     return {
-      petVotes,
-      humanVotes,
-      totalVotes,
-      petPercentage: totalVotes > 0 ? (petVotes / totalVotes) * 100 : 0,
-      humanPercentage: totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0,
+      voteStats: {
+        animalVotes,
+        humanVotes,
+        animalPercentage,
+        humanPercentage,
+      },
+      originalType: imageData.image_type,
     };
   } catch (error) {
-    console.error("Error in getVoteStats:", error);
-    throw new Error(
-      `Failed to get vote stats: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+    console.error("Error in recordVote:", error);
+    throw error;
   }
 }
 

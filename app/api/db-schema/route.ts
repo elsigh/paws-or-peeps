@@ -1,48 +1,54 @@
-import { NextResponse } from "next/server"
-import { createServerClient } from "@/lib/supabase"
+import { NextResponse } from "next/server";
+import { createServerClient } from "@/lib/supabase";
 
 export async function GET() {
   try {
-    const supabase = createServerClient()
+    const supabase = createServerClient();
     if (!supabase) {
-      return NextResponse.json({ error: "Failed to create Supabase client" }, { status: 500 })
+      return NextResponse.json(
+        { error: "Failed to create Supabase client" },
+        { status: 500 }
+      );
     }
 
     // Check the schema of the images table
     const { data: columns, error: columnsError } = await supabase
       .from("information_schema.columns")
       .select("column_name, data_type, is_nullable, column_default")
-      .eq("table_name", "images")
+      .eq("table_name", "images");
 
     if (columnsError) {
       return NextResponse.json({
         status: "error",
         message: `Error checking columns: ${columnsError.message}`,
-      })
+      });
     }
 
     // Check for constraints on the images table
     const { data: constraints, error: constraintsError } = await supabase
       .from("information_schema.table_constraints")
       .select("constraint_name, constraint_type")
-      .eq("table_name", "images")
+      .eq("table_name", "images");
 
     // Try to get check constraint details
-    let checkConstraints = []
+    let checkConstraints = [];
     try {
-      const { data: checks, error: checksError } = await supabase.rpc("get_check_constraints", {
-        table_name: "images",
-      })
+      const { data: checks, error: checksError } = await supabase.rpc(
+        "get_check_constraints",
+        {
+          table_name: "images",
+        }
+      );
 
       if (!checksError && checks) {
-        checkConstraints = checks
+        checkConstraints = checks;
       }
     } catch (e) {
-      console.error("Error getting check constraints:", e)
+      console.error("Error getting check constraints:", e);
     }
 
     // Try a test insert with different image_type values
-    const testResults = {}
+    const testResults = {};
 
     for (const type of ["pet", "human", "cat", "dog", "person"]) {
       try {
@@ -53,19 +59,20 @@ export async function GET() {
             animated_url: "test-animated-url",
             opposite_url: "test-opposite-url",
             image_type: type,
-            confidence: 85.0,
             uploader_id: "test-user",
           })
-          .select()
+          .select();
 
         // Immediately delete the test row to clean up
         if (data && data[0] && data[0].id) {
-          await supabase.from("images").delete().eq("id", data[0].id)
+          await supabase.from("images").delete().eq("id", data[0].id);
         }
 
-        testResults[type] = error ? `Error: ${error.message}` : "Success"
+        testResults[type] = error ? `Error: ${error.message}` : "Success";
       } catch (e) {
-        testResults[type] = `Exception: ${e instanceof Error ? e.message : String(e)}`
+        testResults[type] = `Exception: ${
+          e instanceof Error ? e.message : String(e)
+        }`;
       }
     }
 
@@ -75,14 +82,16 @@ export async function GET() {
       constraints,
       checkConstraints,
       testResults,
-    })
+    });
   } catch (error) {
     return NextResponse.json(
       {
         status: "error",
-        message: `Unexpected error: ${error instanceof Error ? error.message : String(error)}`,
+        message: `Unexpected error: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
       },
-      { status: 500 },
-    )
+      { status: 500 }
+    );
   }
 }

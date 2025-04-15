@@ -8,7 +8,8 @@ import { ThemeProvider } from "@/components/theme-provider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "🐾 Paws or Peeps 💁 - Transform Cats to Humans and Humans to Cats",
+  title:
+    "🐾 Paws or Peeps 💁 - Transform Animals to Humans and Humans to Animals",
   description:
     "Upload a photo of a cat or human and see the magical transformation!",
   generator: "v0.dev",

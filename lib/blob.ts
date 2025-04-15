@@ -34,8 +34,10 @@ export async function uploadToBlob(file: File) {
     const uploadPromise = new Promise(async (resolve, reject) => {
       try {
         console.log("Starting Blob upload...");
+        const startTime = Date.now();
         const blob = await put(filename, file, { access: "public" });
-        console.log("Blob upload completed:", blob.url);
+        const uploadTime = Date.now() - startTime;
+        console.log(`Blob upload completed in ${uploadTime}ms:`, blob.url);
         resolve(blob);
       } catch (error) {
         console.error("Error in Blob upload promise:", error);
@@ -43,12 +45,12 @@ export async function uploadToBlob(file: File) {
       }
     });
 
-    // Set a timeout for the upload (30 seconds)
+    // Set a timeout for the upload (120 seconds)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        console.error("Blob upload timed out after 60 seconds");
-        reject(new Error("Upload timed out after 60 seconds"));
-      }, 60000);
+        console.error("Blob upload timed out after 120 seconds");
+        reject(new Error("Upload timed out after 120 seconds"));
+      }, 120000);
     });
 
     // Race the upload against the timeout
@@ -56,8 +58,7 @@ export async function uploadToBlob(file: File) {
 
     if (!blob || !blob.url) {
       console.error("Blob upload returned empty result");
-      // Return a placeholder instead of failing
-      return `/placeholder.svg?height=400&width=400&query=original image placeholder`;
+      throw new Error("Failed to upload image to Blob storage");
     }
 
     console.log(`Successfully uploaded to Blob storage: ${blob.url}`);
