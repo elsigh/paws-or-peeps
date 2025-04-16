@@ -5,7 +5,7 @@ import { RandomCat } from "@/components/random-cat";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ImageIcon } from "lucide-react";
-import { DatabaseStatus } from "@/components/database-status";
+//import { DatabaseStatus } from "@/components/database-status";
 
 export default function Home() {
   return (
@@ -52,7 +52,7 @@ export default function Home() {
           <Link href="/gallery">
             <Button variant="outline" className="gap-2 border-rose-200">
               <ImageIcon className="h-4 w-4" />
-              View Transformation Gallery
+              View Gallery
             </Button>
           </Link>
         </div>

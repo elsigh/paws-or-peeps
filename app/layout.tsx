@@ -47,9 +47,7 @@ export default async function RootLayout({
                   </div>
                 </div>
               </header>
-              <main className="flex-1">
-                <ViewTransition>{children}</ViewTransition>
-              </main>
+              <main className="flex-1">{children}</main>
             </div>
             <Toaster />
           </AuthProvider>
