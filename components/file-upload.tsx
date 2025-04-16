@@ -439,47 +439,125 @@ export default function FileUpload() {
       reader.readAsDataURL(file);
       reader.onload = (event) => {
         const img = new Image();
+
+        // Add error handling for image loading
+        img.onerror = () => {
+          console.error("Failed to load image for compression");
+          // Fall back to original file instead of failing
+          resolve(file);
+        };
+
         img.src = event.target?.result as string;
         img.onload = () => {
-          const canvas = document.createElement("canvas");
-          let width = img.width;
-          let height = img.height;
+          try {
+            // iOS Safari has memory limits for canvas
+            // Progressively reduce size for very large images
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
 
-          // Calculate scaling factor to get under 4MB
-          const maxSize = 1600; // Max dimension
-          if (width > height && width > maxSize) {
-            height = (height / width) * maxSize;
-            width = maxSize;
-          } else if (height > maxSize) {
-            width = (width / height) * maxSize;
-            height = maxSize;
+            // Handle HEIC/HEIF images from iPhones which may not be properly recognized
+            const isLargeImage = width * height > 5000000; // 5MP threshold
+
+            // Calculate scaling factor to get under 4MB
+            let maxSize = 1600; // Default max dimension
+
+            // For very large images, use more aggressive scaling
+            if (isLargeImage) {
+              maxSize = 1200;
+            }
+
+            if (width > height && width > maxSize) {
+              height = Math.floor((height / width) * maxSize);
+              width = maxSize;
+            } else if (height > maxSize) {
+              width = Math.floor((width / height) * maxSize);
+              height = maxSize;
+            }
+
+            // Set dimensions
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              throw new Error("Could not get canvas context");
+            }
+
+            // Draw with image smoothing for better quality
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = "high";
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Use lower quality for larger images
+            const quality = isLargeImage ? 0.6 : 0.7;
+
+            // Add timeout to prevent UI freezing on large images
+            setTimeout(() => {
+              // Convert to blob with reduced quality
+              canvas.toBlob(
+                (blob) => {
+                  if (blob) {
+                    // Create new file from blob
+                    const compressedFile = new File([blob], file.name, {
+                      type: "image/jpeg",
+                      lastModified: Date.now(),
+                    });
+
+                    console.log(
+                      `Original size: ${file.size}, Compressed size: ${blob.size}`
+                    );
+
+                    // If compression didn't help much, try again with more aggressive settings
+                    if (
+                      blob.size > MAX_FILE_SIZE &&
+                      blob.size > file.size * 0.8
+                    ) {
+                      console.log(
+                        "First compression not effective, trying more aggressive settings"
+                      );
+                      // Try again with more aggressive compression
+                      canvas.toBlob(
+                        (aggressiveBlob) => {
+                          if (aggressiveBlob) {
+                            const aggressiveFile = new File(
+                              [aggressiveBlob],
+                              file.name,
+                              {
+                                type: "image/jpeg",
+                                lastModified: Date.now(),
+                              }
+                            );
+                            resolve(aggressiveFile);
+                          } else {
+                            resolve(compressedFile); // Fall back to first attempt
+                          }
+                        },
+                        "image/jpeg",
+                        0.5 // More aggressive quality reduction
+                      );
+                    } else {
+                      resolve(compressedFile);
+                    }
+                  } else {
+                    console.error("Canvas to Blob conversion failed");
+                    resolve(file); // Fall back to original instead of failing
+                  }
+                },
+                "image/jpeg",
+                quality
+              );
+            }, 0);
+          } catch (err) {
+            console.error("Error during image compression:", err);
+            resolve(file); // Fall back to original file on error
           }
-
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext("2d");
-          ctx?.drawImage(img, 0, 0, width, height);
-
-          // Convert to blob with reduced quality
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                // Create new file from blob
-                const compressedFile = new File([blob], file.name, {
-                  type: "image/jpeg",
-                  lastModified: Date.now(),
-                });
-                resolve(compressedFile);
-              } else {
-                reject(new Error("Canvas to Blob conversion failed"));
-              }
-            },
-            "image/jpeg",
-            0.7
-          ); // Adjust quality (0.7 = 70%)
         };
       };
-      reader.onerror = () => reject(new Error("FileReader failed"));
+      reader.onerror = () => {
+        console.error("FileReader failed");
+        resolve(file); // Fall back to original file instead of rejecting
+      };
     });
   };
 
