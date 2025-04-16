@@ -27,7 +27,9 @@ export const metadata: Metadata = {
       "Transform humans into animals and animals into humans with AI. Vote on which image is the original!",
     images: [
       {
-        url: "/api/og",
+        url: `${
+          process.env.NEXT_PUBLIC_BASE_URL || "https://pawsorpeeps.com"
+        }/api/og`,
         width: 1200,
         height: 630,
         alt: "Paws or Peeps",
@@ -39,7 +41,9 @@ export const metadata: Metadata = {
     title: "Paws or Peeps | Human to Animal AI Transformations",
     description:
       "Transform humans into animals and animals into humans with AI. Vote on which image is the original!",
-    images: ["/api/og"],
+    images: [
+      `${process.env.NEXT_PUBLIC_BASE_URL || "https://pawsorpeeps.com"}/api/og`,
+    ],
   },
   icons: {
     icon: [
