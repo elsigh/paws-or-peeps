@@ -81,7 +81,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   }
 
   return (
-    <div className="container relative mx-auto px-4 py-12">
+    <div className="container relative mx-auto px-4 py-8">
       {/* Decorative paw prints */}
       <div className="pointer-events-none absolute left-4 top-20 opacity-20">
         <PawPrint size="lg" rotation={-15} />
@@ -108,16 +108,6 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
       </div>
 
       <div className="text-center mb-8">
-        <div className="flex justify-center mb-4 relative">
-          <div className="absolute left-0 top-1/2 transform -translate-y-1/2">
-            <RandomCat size="tiny" index={2} className="opacity-90" />
-          </div>
-          <CatLogo size="lg" />
-          {/* Tiny cat peeking from behind the logo */}
-          <div className="absolute -right-10 top-1/2 transform -translate-y-1/2">
-            <RandomCat size="tiny" index={2} className="opacity-90" />
-          </div>
-        </div>
         <p className="text-xl text-gray-600 relative inline-block">
           Check out the transformation!
           <span className="absolute -right-8 -top-4 text-2xl">😸</span>

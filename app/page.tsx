@@ -36,13 +36,6 @@ export default function Home() {
       </div>
 
       <div className="text-center mb-8">
-        <div className="flex justify-center mb-4 relative">
-          <CatLogo size="lg" />
-          {/* Tiny cat peeking from behind the logo */}
-          <div className="absolute -right-10 top-1/2 transform -translate-y-1/2">
-            <RandomCat size="tiny" index={2} className="opacity-90" />
-          </div>
-        </div>
         <p className="text-base md:text-xl text-gray-600 text-pretty">
           Upload a photo of a pet or person and watch the transformation!
         </p>
