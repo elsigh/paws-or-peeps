@@ -9,6 +9,7 @@ import { nanoid } from "nanoid";
 import getVisitorId from "./get-visitor-id";
 import { ANIMAL_TYPES } from "./constants";
 import type { ImageData, VoteStats } from "./types";
+import { google } from "@ai-sdk/google";
 
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
@@ -73,24 +74,53 @@ export async function createAnimatedVersion(imageUrl: string) {
       throw new Error(`Invalid image URL: ${imageUrl}`);
     }
 
-    const { image } = await generateImage({
-      model: luma.image("photon-flash-1"),
-      prompt: "light cartoon style",
-      aspectRatio: "1:1",
-      providerOptions: {
-        luma: {
-          image_ref: [
+    // const { image } = await generateImage({
+    //   model: luma.image("photon-flash-1"),
+    //   prompt: "light cartoon style",
+    //   aspectRatio: "1:1",
+    //   providerOptions: {
+    //     luma: {
+    //       image_ref: [
+    //         {
+    //           url: imageUrl,
+    //           weight: 1.0,
+    //         },
+    //       ],
+    //     },
+    //   },
+    // });
+
+    const result = await generateText({
+      model: google("gemini-2.0-flash-exp"),
+      messages: [
+        {
+          role: "user",
+          content: "render this image in a light cartoon style",
+        },
+        {
+          role: "user",
+          content: [
             {
-              url: imageUrl,
-              weight: 1.0,
+              type: "image",
+              image: imageUrl,
             },
           ],
         },
+      ],
+      providerOptions: {
+        google: { responseModalities: ["TEXT", "IMAGE"] },
       },
     });
 
+    console.log("Google AI response received");
+    console.log(JSON.stringify(result, null, 2));
+
+    if (!result.files || result.files.length === 0) {
+      throw new Error("No image files returned from Google AI");
+    }
+
     console.log("Luma model response received");
-    return imageToBlobUrl(image);
+    return imageToBlobUrl(result.files[0]);
   } catch (error) {
     console.error("Error in createAnimatedVersion:", error);
     throw error;
@@ -128,21 +158,47 @@ export async function createOppositeVersion(
 
     console.debug("Prompt:", prompt);
 
-    const { image } = await generateImage({
-      model: luma.image("photon-flash-1"),
-      prompt,
-      providerOptions: {
-        luma: {
-          modify_image_ref: {
-            url: imageUrl,
-            weight: 1.0,
-          },
+    // const { image } = await generateImage({
+    //   model: luma.image("photon-flash-1"),
+    //   prompt,
+    //   providerOptions: {
+    //     luma: {
+    //       modify_image_ref: {
+    //         url: imageUrl,
+    //         weight: 1.0,
+    //       },
+    //     },
+    //   },
+    // });
+
+    const result = await generateText({
+      model: google("gemini-2.0-flash-exp"),
+      messages: [
+        {
+          role: "user",
+          content: prompt,
         },
+        {
+          role: "user",
+          content: [
+            {
+              type: "image",
+              image: imageUrl,
+            },
+          ],
+        },
+      ],
+      providerOptions: {
+        google: { responseModalities: ["TEXT", "IMAGE"] },
       },
     });
 
-    console.log("Luma model response received");
-    return imageToBlobUrl(image);
+    if (!result.files || result.files.length === 0) {
+      throw new Error("No image files returned from Google AI");
+    }
+
+    console.log("Google AI response received");
+    return imageToBlobUrl(result.files[0]);
   } catch (error) {
     console.error("Error in createOppositeVersion:", error);
     throw error;
