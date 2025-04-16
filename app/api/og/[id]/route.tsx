@@ -81,23 +81,6 @@ export async function GET(
                   objectFit: "cover",
                 }}
               />
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  position: "absolute",
-                  bottom: "0",
-                  left: "0",
-                  right: "0",
-                  padding: "10px",
-                  backgroundColor: "rgba(0,0,0,0.6)",
-                  color: "white",
-                  textAlign: "center",
-                  fontSize: "24px",
-                }}
-              >
-                Human 👤
-              </div>
             </div>
 
             {/* Right image */}
@@ -122,23 +105,6 @@ export async function GET(
                   objectFit: "cover",
                 }}
               />
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  position: "absolute",
-                  bottom: "0",
-                  left: "0",
-                  right: "0",
-                  padding: "10px",
-                  backgroundColor: "rgba(0,0,0,0.6)",
-                  color: "white",
-                  textAlign: "center",
-                  fontSize: "24px",
-                }}
-              >
-                {imageData.target_animal_type || "Cat"} 🐾
-              </div>
             </div>
           </div>
 
