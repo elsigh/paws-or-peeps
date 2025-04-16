@@ -120,9 +120,10 @@ export async function createOppositeVersion(
     // Create a specific prompt based on the detected animal type
     let prompt = "";
     if (type === "human") {
-      prompt = `Transform this ${type} into a light cartoon-style ${targetAnimalType}, retaining realism. Do not put clothes on the ${targetAnimalType}.`;
+      //prompt = `Transform this ${type} into a light cartoon-style ${targetAnimalType}, retaining realism. Do not put clothes on the ${targetAnimalType}.`;
+      prompt = `Create a portrait of a ${targetAnimalType} character inspired by the mood and expression of the input ${type} image. The style should be stylized realism (similar to modern 3D animation like Pixar or Dreamworks). Ensure the final image depicts a ${targetAnimalType} with standard ${targetAnimalType} anatomy and facial features, with no ${type} characteristics (like clothes or human features).`;
     } else {
-      prompt = `Transform this ${type} into a human, subtly cartoonish, retaining realism and making sure that the final image is definitively human and not a ${type}.`;
+      prompt = `Create a portrait of a human character inspired by the mood and expression of the input ${type} image. The style should be stylized realism (similar to modern 3D animation like Pixar or Dreamworks). Ensure the final image depicts a person with standard human anatomy and facial features, with no ${type} characteristics (like a snout, animal ears, or fur).`;
     }
 
     console.debug("Prompt:", prompt);

@@ -396,11 +396,23 @@ export default function FileUpload() {
 
   // Handle paste from clipboard
   useEffect(() => {
-    const handlePaste = (e: ClipboardEvent) => {
+    const handlePaste = async (e: ClipboardEvent) => {
       if (e.clipboardData && e.clipboardData.files.length > 0) {
         const pastedFile = e.clipboardData.files[0];
         if (pastedFile.type.startsWith("image/")) {
-          processFile(pastedFile);
+          // Check if file is too large and needs compression
+          if (pastedFile.size > MAX_FILE_SIZE) {
+            setProgressMessage("Compressing large image...");
+            try {
+              const compressedFile = await compressImage(pastedFile);
+              processFile(compressedFile);
+            } catch (err) {
+              console.error("Compression failed:", err);
+              processFile(pastedFile); // Fall back to original file
+            }
+          } else {
+            processFile(pastedFile);
+          }
         }
       }
     };
@@ -413,6 +425,57 @@ export default function FileUpload() {
       document.removeEventListener("paste", handlePaste);
     };
   }, [processFile]);
+
+  // Image compression function
+  const compressImage = async (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target?.result as string;
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+
+          // Calculate scaling factor to get under 4MB
+          const maxSize = 1600; // Max dimension
+          if (width > height && width > maxSize) {
+            height = (height / width) * maxSize;
+            width = maxSize;
+          } else if (height > maxSize) {
+            width = (width / height) * maxSize;
+            height = maxSize;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx?.drawImage(img, 0, 0, width, height);
+
+          // Convert to blob with reduced quality
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                // Create new file from blob
+                const compressedFile = new File([blob], file.name, {
+                  type: "image/jpeg",
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              } else {
+                reject(new Error("Canvas to Blob conversion failed"));
+              }
+            },
+            "image/jpeg",
+            0.7
+          ); // Adjust quality (0.7 = 70%)
+        };
+      };
+      reader.onerror = () => reject(new Error("FileReader failed"));
+    });
+  };
 
   // Handle click on the drop zone to trigger file input
   const handleDropZoneClick = () => {
@@ -712,7 +775,7 @@ export default function FileUpload() {
               <Progress
                 value={uploadProgress}
                 className="h-2 bg-gray-100"
-                indicatorClassName="bg-rose-500"
+                indicatorClassName="bg-rose-300"
               />
             </div>
           )}

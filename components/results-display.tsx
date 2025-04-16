@@ -51,6 +51,9 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
   const shareUrlRef = useRef<HTMLInputElement>(null);
   const [regenerating, setRegenerating] = useState(false);
   const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
+  const [humanImageLoaded, setHumanImageLoaded] = useState(false);
+  const [animalImageLoaded, setAnimalImageLoaded] = useState(false);
+  const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
 
   const { requireAuth } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -211,10 +214,14 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
         <Card className="relative border-rose-200 overflow-hidden">
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
-              <img
+              <Image
                 src={type === "human" ? animatedUrl : oppositeUrl}
                 alt=""
-                className="object-cover w-full h-full"
+                className={`object-cover w-full h-full transition-opacity duration-300 ${
+                  humanImageLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                fill
+                onLoad={() => setHumanImageLoaded(true)}
               />
             </div>
             <div className="mt-4 text-center">
@@ -239,10 +246,14 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
 
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
-              <img
+              <Image
                 src={type === "human" ? oppositeUrl : animatedUrl}
                 alt=""
-                className="object-cover w-full h-full"
+                className={`object-cover w-full h-full transition-opacity duration-300 ${
+                  animalImageLoaded ? "opacity-100" : "opacity-0"
+                }`}
+                fill
+                onLoad={() => setAnimalImageLoaded(true)}
               />
               {regenerating && (
                 <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
@@ -497,10 +508,14 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
               {(isUploader || voted) && (
                 <CardContent className="pt-2">
                   <div className="aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg relative">
-                    <img
+                    <Image
                       src={originalUrl}
                       alt="Original"
-                      className="object-cover w-full h-full"
+                      className={`object-cover w-full h-full transition-opacity duration-500 ${
+                        originalImageLoaded ? "opacity-100" : "opacity-0"
+                      }`}
+                      fill
+                      onLoad={() => setOriginalImageLoaded(true)}
                     />
                     {/* Add a tiny cat in the corner of the original image */}
                     <div className="absolute right-2 bottom-2 z-10">
