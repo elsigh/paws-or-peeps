@@ -87,7 +87,7 @@ async function testInsert(supabase: SupabaseClient) {
         original_url: `https://test-url.com/${testId}`,
         animated_url: `https://test-url.com/animated-${testId}`,
         opposite_url: `https://test-url.com/opposite-${testId}`,
-        image_type: "human", /
+        image_type: "human",
         uploader_id: `test-${testId}`,
       })
       .select()

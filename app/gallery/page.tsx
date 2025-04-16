@@ -131,34 +131,7 @@ export default async function GalleryPage({
         <PawPrint size="md" rotation={-30} />
       </div>
 
-      {/* Random cat images */}
-      <div className="pointer-events-none absolute left-8 top-32 opacity-80 hidden md:block">
-        <RandomCat size="tiny" index={0} rotate={-10} />
-      </div>
-      <div className="pointer-events-none absolute right-12 bottom-40 opacity-80 hidden md:block">
-        <RandomCat size="tiny" index={1} rotate={15} />
-      </div>
-      <div className="pointer-events-none absolute left-1/3 bottom-20 opacity-80 hidden md:block">
-        <RandomCat size="tiny" index={2} rotate={-5} />
-      </div>
-
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <Link href="/">
-            <Button variant="ghost" className="gap-1">
-              <ArrowLeft className="h-4 w-4" />
-              Home
-            </Button>
-          </Link>
-          <div className="flex justify-center relative">
-            <CatLogo size="md" />
-            {/* Tiny cat peeking from behind the logo */}
-            <div className="absolute -right-8 top-1/2 transform -translate-y-1/2">
-              <RandomCat size="tiny" index={2} className="opacity-90" />
-            </div>
-          </div>
-        </div>
-
         <h1 className="text-3xl font-bold text-center mb-2">
           Transformation Gallery
         </h1>
