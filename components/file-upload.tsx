@@ -676,11 +676,6 @@ export default function FileUpload() {
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="image" className="flex items-center">
-              <span>Upload an image</span>
-              <span className="ml-2 text-lg">🐱</span>
-            </Label>
-
             {/* Hidden file input */}
             <Input
               id="image"
@@ -789,8 +784,7 @@ export default function FileUpload() {
             )}
 
             <p className="text-sm text-gray-500">
-              Upload a photo of a pet or a human. AI processing may take up to
-              30 seconds.{" "}
+              AI processing may take up to 30 seconds.{" "}
               {detectedType && <b>{`Detected: ${detectedType as string}`}</b>}
             </p>
           </div>

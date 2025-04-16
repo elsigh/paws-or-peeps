@@ -37,7 +37,7 @@ export default function Home() {
 
       <div className="text-center mb-8">
         <p className="text-base md:text-xl text-gray-600 text-pretty">
-          Upload a photo of a pet or person and watch the transformation!
+          Upload the photo of pet or human and be amazed.
         </p>
       </div>
 
@@ -77,7 +77,7 @@ export default function Home() {
           <li>Our AI detects if it's a pet or human</li>
           <li>We transform it into an animated version</li>
           <li>Then we create its opposite (pet to human or human to pet)</li>
-          <li>Vote on which one you think is the original!</li>
+          <li>Get your pals to vote on which one is the original!</li>
         </ol>
       </div>
 
