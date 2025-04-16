@@ -40,6 +40,8 @@ export async function GET(
         >
           <div
             style={{
+              display: "flex",
+              justifyContent: "center",
               fontSize: "48px",
               fontWeight: "bold",
               marginBottom: "40px",
@@ -60,6 +62,8 @@ export async function GET(
             {/* Left image */}
             <div
               style={{
+                display: "flex",
+                flexDirection: "column",
                 width: "45%",
                 height: "400px",
                 position: "relative",
@@ -79,6 +83,8 @@ export async function GET(
               />
               <div
                 style={{
+                  display: "flex",
+                  justifyContent: "center",
                   position: "absolute",
                   bottom: "0",
                   left: "0",
@@ -97,6 +103,8 @@ export async function GET(
             {/* Right image */}
             <div
               style={{
+                display: "flex",
+                flexDirection: "column",
                 width: "45%",
                 height: "400px",
                 position: "relative",
@@ -116,6 +124,8 @@ export async function GET(
               />
               <div
                 style={{
+                  display: "flex",
+                  justifyContent: "center",
                   position: "absolute",
                   bottom: "0",
                   left: "0",
@@ -134,6 +144,8 @@ export async function GET(
 
           <div
             style={{
+              display: "flex",
+              justifyContent: "center",
               marginTop: "30px",
               fontSize: "28px",
               color: "#666",
