@@ -70,8 +70,8 @@ export function UserMenu() {
     </DropdownMenu>
   ) : (
     <Button variant="outline" size="sm" onClick={handleSignInClick}>
-      <User className="mr-2 h-4 w-4" />
-      Sign In
+      <User className="h-4 w-4" />
+      Sign in
     </Button>
   );
 }

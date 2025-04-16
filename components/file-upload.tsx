@@ -21,7 +21,8 @@ import { RandomCat } from "@/components/random-cat";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
-import router from "next/router";
+
+import type { ANIMAL_TYPES } from "@/lib/constants";
 
 // Pet facts about similarities and differences between pets and humans
 const PET_FACTS = [
@@ -65,6 +66,9 @@ export default function FileUpload() {
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
+  const [detectedType, setDetectedType] = useState<
+    keyof typeof ANIMAL_TYPES | "human" | "other" | null
+  >(null);
   const [systemStatus, setSystemStatus] = useState<
     "ok" | "warning" | "error" | "unknown"
   >("unknown");
@@ -168,7 +172,7 @@ export default function FileUpload() {
             clearInterval(progressInterval);
             return prev;
           }
-          return prev + 5;
+          return prev + 1;
         });
       }, 1000);
 
@@ -319,8 +323,14 @@ export default function FileUpload() {
 
               // Handle different status types
               if (data.status === "progress") {
-                setUploadProgress((prev) => Math.min(prev + 10, 90));
+                setUploadProgress(data.progress || 0);
                 setProgressMessage(data.message);
+                if (data.message.indexOf("Detected: ") > -1) {
+                  const bits = data.message.split("Detected: ");
+                  if (bits.length > 1) {
+                    setDetectedType(bits[1]);
+                  }
+                }
               } else if (data.status === "complete") {
                 // Redirect to the results page if we have an ID
                 if (data.id) {
@@ -575,6 +585,7 @@ export default function FileUpload() {
                     onClick={(e) => {
                       e.stopPropagation(); // Prevent triggering the drop zone click
                       clearSelectedFile();
+                      setError(null);
                     }}
                     className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
                     aria-label="Remove image"
@@ -622,16 +633,15 @@ export default function FileUpload() {
                 <Progress
                   value={fileSizePercentage}
                   className="h-1 bg-gray-100"
-                  indicatorClassName={
-                    isFileTooLarge ? "bg-red-500" : "bg-green-500"
-                  }
+                  indicatorClassName={"bg-green-500"}
                 />
               </div>
             )}
 
             <p className="text-sm text-gray-500">
               Upload a photo of a pet or a human. AI processing may take up to
-              30 seconds.
+              30 seconds.{" "}
+              {detectedType && <b>{`Detected: ${detectedType as string}`}</b>}
             </p>
           </div>
 
@@ -670,7 +680,9 @@ export default function FileUpload() {
           <CatButton
             type="submit"
             className="w-full bg-rose-500 hover:bg-rose-600"
-            disabled={loading || !file || Boolean(isFileTooLarge)}
+            disabled={
+              loading || !file || Boolean(isFileTooLarge) || Boolean(error)
+            }
           >
             {loading ? (
               <span className="flex items-center gap-2">

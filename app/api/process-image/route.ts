@@ -41,6 +41,7 @@ export async function POST(request: NextRequest) {
               status: "progress",
               step: "starting",
               message: "Processing started...",
+              progress: 5,
             })}\n`
           )
         );
@@ -52,6 +53,7 @@ export async function POST(request: NextRequest) {
               status: "progress",
               step: "uploading",
               message: "Uploading image...",
+              progress: 10,
             })}\n`
           )
         );
@@ -68,6 +70,7 @@ export async function POST(request: NextRequest) {
                 status: "progress",
                 step: "uploaded",
                 message: "Image uploaded successfully",
+                progress: 20,
               })}\n`
             )
           );
@@ -109,6 +112,7 @@ export async function POST(request: NextRequest) {
               status: "progress",
               step: "detecting",
               message: "Detecting image content...",
+              progress: 25,
             })}\n`
           )
         );
@@ -125,6 +129,7 @@ export async function POST(request: NextRequest) {
                 status: "progress",
                 step: "detected",
                 message: `Detected: ${detectionResult}`,
+                progress: 35,
               })}\n`
             )
           );
@@ -148,6 +153,7 @@ export async function POST(request: NextRequest) {
               status: "progress",
               step: "animating",
               message: "Creating animated version...",
+              progress: 40,
             })}\n`
           )
         );
@@ -162,6 +168,7 @@ export async function POST(request: NextRequest) {
                 status: "progress",
                 step: "animated",
                 message: "Animated version created",
+                progress: 60,
               })}\n`
             )
           );
@@ -190,6 +197,7 @@ export async function POST(request: NextRequest) {
               status: "progress",
               step: "transforming",
               message: "Creating opposite version...",
+              progress: 75,
             })}\n`
           )
         );
@@ -209,6 +217,7 @@ export async function POST(request: NextRequest) {
                 status: "progress",
                 step: "transformed",
                 message: "Opposite version created",
+                progress: 85,
               })}\n`
             )
           );
@@ -224,6 +233,7 @@ export async function POST(request: NextRequest) {
               status: "progress",
               step: "saving",
               message: "Saving to database...",
+              progress: 90,
             })}\n`
           )
         );
@@ -246,6 +256,7 @@ export async function POST(request: NextRequest) {
                 status: "progress",
                 step: "saved",
                 message: "Data saved successfully",
+                progress: 95,
               })}\n`
             )
           );

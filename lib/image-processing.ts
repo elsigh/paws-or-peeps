@@ -1,18 +1,14 @@
 import { createClient } from "./supabase-server";
 import { experimental_generateImage as generateImage, generateText } from "ai";
+import type { GeneratedFile } from "ai";
 import { luma } from "@ai-sdk/luma";
 import { v4 as uuidv4 } from "uuid";
 import { openai } from "@ai-sdk/openai";
 import { put } from "@vercel/blob";
 import { nanoid } from "nanoid";
-import type { GeneratedFile } from "ai";
 import getVisitorId from "./get-visitor-id";
 import { ANIMAL_TYPES } from "./constants";
 import type { ImageData, VoteStats } from "./types";
-
-// Export ANIMAL_TYPES for backward compatibility
-export { ANIMAL_TYPES };
-export type { ImageData, VoteStats };
 
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
