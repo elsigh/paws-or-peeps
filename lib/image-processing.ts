@@ -364,8 +364,6 @@ export async function getImageById(id: string): Promise<ImageData> {
   }
 }
 
-// Update the vote stats interface
-
 // Update the vote function
 export async function recordVote(
   imageId: string,

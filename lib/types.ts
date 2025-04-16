@@ -21,4 +21,5 @@ export interface VoteStats {
   humanVotes: number;
   animalPercentage: number;
   humanPercentage: number;
+  totalVotes: number;
 }
