@@ -1,13 +1,10 @@
 import { Suspense } from "react";
 import Link from "next/link";
 import { getRecentTransformations } from "@/lib/image-processing";
-import { CatLogo } from "@/components/cat-logo";
 import { PawPrint } from "@/components/paw-print";
-import { RandomCat } from "@/components/random-cat";
 import { GalleryCard } from "@/components/gallery-card";
 import { GalleryFilter } from "@/components/gallery-filter";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
 import { createClient } from "@/lib/supabase-server";
 
 export const dynamic = "force-dynamic";
@@ -51,7 +48,7 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
     if (type === "mine" && currentUserId) {
       // Filter by uploader_id for "mine" filter
       transformations = transformations.filter(
-        (item) => item.uploader_id === currentUserId
+        (item) => String(item.uploader_id) === String(currentUserId)
       );
     } else if (type !== "all" && type !== "mine") {
       // Apply regular type filter

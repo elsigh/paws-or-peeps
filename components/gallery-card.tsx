@@ -84,10 +84,13 @@ export function GalleryCard({
         </div>
 
         <CardContent className="p-3">
-          <div className="text-xs text-gray-500 mb-2">{formattedDate}</div>
+          <div className="flex justify-between">
+            <div className="text-xs text-gray-500 mb-2">{formattedDate}</div>
+            <div className="text-xs text-gray-500 mb-2" />
+          </div>
 
           {voteStats.totalVotes > 0 && (
-            <div className="space-y-1">
+            <div className="space-y-1 mt-2">
               <div className="flex justify-between text-xs">
                 <span className="flex items-center gap-1">
                   <span>Animal</span>

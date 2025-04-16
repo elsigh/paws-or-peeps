@@ -210,7 +210,8 @@ export async function saveImageData(
   animatedUrl: string,
   oppositeUrl: string | null, // Can be null initially for human uploads
   imageType: string,
-  targetAnimalType: string
+  targetAnimalType: string,
+  isPrivate = false
 ) {
   try {
     console.log("Saving image data to Supabase with params:", {
@@ -219,6 +220,7 @@ export async function saveImageData(
       oppositeUrl: oppositeUrl ? `${oppositeUrl.substring(0, 50)}...` : "null",
       imageType,
       targetAnimalType,
+      isPrivate,
     });
 
     // Validate image type against allowed values
@@ -271,6 +273,7 @@ export async function saveImageData(
         image_type: imageType,
         uploader_id: userId,
         target_animal_type: targetAnimalType,
+        private: isPrivate,
       })
       .select()
       .single();
@@ -448,13 +451,18 @@ export async function recordVote(
 }
 
 // Function to get recent transformations
-export async function getRecentTransformations(limit = 12) {
+export async function getRecentTransformations(limit = 100) {
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("images")
-    .select(
-      `
+  // Get current user ID if available
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  const currentUserId = session?.user?.id;
+
+  // Base query
+  let query = supabase.from("images").select(
+    `
       id,
       original_url,
       animated_url,
@@ -462,11 +470,21 @@ export async function getRecentTransformations(limit = 12) {
       image_type,
       created_at,
       uploader_id,
+      private,
       votes (
         vote
       )
     `
-    )
+  );
+
+  // Filter out private images unless they belong to the current user
+  if (currentUserId) {
+    query = query.or(`private.eq.false,uploader_id.eq.${currentUserId}`);
+  } else {
+    query = query.eq("private", false);
+  }
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .limit(limit);
 
@@ -657,5 +675,60 @@ export async function hasUserVoted(imageId: string): Promise<boolean> {
         error instanceof Error ? error.message : String(error)
       }`
     );
+  }
+}
+
+// Function to toggle private status of an image
+export async function toggleImagePrivacy(imageId: string): Promise<boolean> {
+  try {
+    console.log(`Toggling privacy for image ${imageId}`);
+    const supabase = await createClient();
+    if (!supabase) {
+      throw new Error("Failed to create Supabase client");
+    }
+
+    // Get current user's ID from session
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const currentUserId = session?.user?.id;
+
+    if (!currentUserId) {
+      throw new Error("User must be authenticated to change privacy settings");
+    }
+
+    // Get the current image data
+    const { data: imageData, error: getError } = await supabase
+      .from("images")
+      .select("private, uploader_id")
+      .eq("id", imageId)
+      .single();
+
+    if (getError) {
+      throw new Error(`Failed to get image data: ${getError.message}`);
+    }
+
+    // Check if user is the uploader
+    if (imageData.uploader_id !== currentUserId) {
+      throw new Error("Only the uploader can change privacy settings");
+    }
+
+    // Toggle the private status
+    const newPrivateStatus = !imageData.private;
+
+    // Update the image
+    const { error: updateError } = await supabase
+      .from("images")
+      .update({ private: newPrivateStatus })
+      .eq("id", imageId);
+
+    if (updateError) {
+      throw new Error(`Failed to update privacy: ${updateError.message}`);
+    }
+
+    return newPrivateStatus;
+  } catch (error) {
+    console.error("Error in toggleImagePrivacy:", error);
+    throw error;
   }
 }

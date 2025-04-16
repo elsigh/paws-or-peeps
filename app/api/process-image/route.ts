@@ -20,6 +20,7 @@ export async function POST(request: NextRequest) {
         // Parse the form data
         const formData = await request.formData();
         const file = formData.get("image") as File;
+        const isPrivate = formData.get("private") === "true";
 
         if (!file) {
           controller.enqueue(
@@ -247,7 +248,8 @@ export async function POST(request: NextRequest) {
             animatedUrl,
             oppositeUrl,
             detectionResult,
-            targetAnimalType
+            targetAnimalType,
+            isPrivate
           );
 
           controller.enqueue(

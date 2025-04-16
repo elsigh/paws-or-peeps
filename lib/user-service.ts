@@ -38,7 +38,7 @@ export async function getUserProfile(
     }
 
     if (!user) return null;
-    console.log("User data:", user);
+    //console.log("User data:", user);
 
     return {
       id: user.id,

@@ -12,6 +12,7 @@ import {
   Copy,
   Check,
   Trash2,
+  LockIcon,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CatButton } from "@/components/cat-button";
@@ -39,7 +40,8 @@ import { createClient } from "@/lib/supabase-client";
 import { useAuth } from "@/lib/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserIcon } from "lucide-react";
-import { getUserProfile, type UserProfile } from "@/lib/user-service";
+import type { UserProfile } from "@/lib/user-service";
+import { toast } from "sonner";
 
 interface ResultsDisplayProps {
   imageData: ImageData;
@@ -69,9 +71,8 @@ export default function ResultsDisplay({
   const [animalImageLoaded, setAnimalImageLoaded] = useState(false);
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
   const [userVote, setUserVote] = useState<"animal" | "human" | null>(null);
-  // Remove the uploaderProfile state and loading state
-  // const [uploaderProfile, setUploaderProfile] = useState<UserProfile | null>(null);
-  // const [loadingProfile, setLoadingProfile] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(imageData?.private || false);
+  const [privacyLoading, setPrivacyLoading] = useState(false);
 
   const { requireAuth } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -112,26 +113,6 @@ export default function ResultsDisplay({
     hasVotes,
     isUploader,
   } = imageData;
-
-  // Remove the effect that fetches uploader profile
-  // useEffect(() => {
-  //   const fetchUploaderProfile = async () => {
-  //     if (!uploaderId) return;
-  //
-  //     try {
-  //       setLoadingProfile(true);
-  //       const profile = await getUserProfile(uploaderId);
-  //       console.debug("uploader Profile", { profile });
-  //       setUploaderProfile(profile);
-  //     } catch (err) {
-  //       console.error("Failed to fetch uploader profile:", err);
-  //     } finally {
-  //       setLoadingProfile(false);
-  //     }
-  //   };
-  //
-  //   fetchUploaderProfile();
-  // }, [uploaderId]);
 
   const handleVote = async (vote: "animal" | "human") => {
     setLoading(true);
@@ -303,6 +284,49 @@ export default function ResultsDisplay({
     return "Anonymous";
   };
 
+  const handleTogglePrivacy = async () => {
+    if (!imageId) return;
+
+    setPrivacyLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/toggle-privacy", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageId }),
+      });
+
+      const data = await response.json();
+      console.log("handleTogglePrivacy response:", { data });
+
+      if (!response.ok) {
+        if (data.requireAuth) {
+          // Redirect to login if authentication is required
+          router.push(
+            `/login?redirect=${encodeURIComponent(window.location.pathname)}`
+          );
+          return;
+        }
+        throw new Error(data.error || "Failed to update privacy settings");
+      }
+
+      // Update the local state with the new privacy status
+      setIsPrivate(data.private);
+
+      // Show a toast or notification
+      toast("Privacy updated");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+    } finally {
+      setPrivacyLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-8">
       {/* Add uploader info at the top */}
@@ -324,6 +348,15 @@ export default function ResultsDisplay({
         </div>
       )}
 
+      {isPrivate && (
+        <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-md">
+          <LockIcon className="h-4 w-4" />
+          <span className="text-sm font-medium">
+            This image is private and only visible to you
+          </span>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Human Card - Always on the left */}
         <Card className="relative border-rose-200 overflow-hidden">
@@ -336,6 +369,8 @@ export default function ResultsDisplay({
                   humanImageLoaded ? "opacity-100" : "opacity-0"
                 }`}
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
                 onLoad={() => setHumanImageLoaded(true)}
               />
             </div>
@@ -368,6 +403,8 @@ export default function ResultsDisplay({
                   animalImageLoaded ? "opacity-100" : "opacity-0"
                 }`}
                 fill
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority
                 onLoad={() => setAnimalImageLoaded(true)}
               />
               {regenerating && (
@@ -544,6 +581,26 @@ export default function ResultsDisplay({
                 {isUploader && (
                   <Button
                     variant="outline"
+                    className="border-red-200 hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
+                    onClick={handleTogglePrivacy}
+                    disabled={loading || privacyLoading}
+                  >
+                    <label
+                      htmlFor="private"
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                      {privacyLoading
+                        ? "Loading..."
+                        : isPrivate
+                        ? "Make Public"
+                        : "Make Private"}
+                    </label>
+                  </Button>
+                )}
+
+                {isUploader && (
+                  <Button
+                    variant="outline"
                     className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
                     onClick={handleDeleteImage}
                     disabled={loading}
@@ -685,6 +742,7 @@ export default function ResultsDisplay({
                         originalImageLoaded ? "opacity-100" : "opacity-0"
                       }`}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       onLoad={() => setOriginalImageLoaded(true)}
                     />
                     {/* Add a tiny cat in the corner of the original image */}

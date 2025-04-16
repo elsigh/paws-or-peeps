@@ -84,7 +84,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   let uploaderProfile: UserProfile | null = null;
   if (imageData.uploader_id) {
     uploaderProfile = await getUserProfile(imageData.uploader_id);
-    console.log("Uploader profile fetched on server", { uploaderProfile });
+    //console.log("Uploader profile fetched on server", { uploaderProfile });
   }
 
   return (

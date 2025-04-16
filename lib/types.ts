@@ -13,6 +13,7 @@ export interface ImageData {
   updated_at?: string;
   hasVotes: boolean;
   isUploader: boolean;
+  private: boolean;
 }
 
 // Update the vote stats interface

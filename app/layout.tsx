@@ -12,6 +12,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { CatLogo } from "@/components/cat-logo";
 import { HomeIcon } from "lucide-react";
 import { HomePageLink } from "@/components/site-header";
+import { Footer } from "@/components/footer";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -89,6 +90,7 @@ export default async function RootLayout({
               <main className="flex-1">
                 <ViewTransition>{children}</ViewTransition>
               </main>
+              <Footer />
             </div>
             <Toaster />
           </AuthProvider>

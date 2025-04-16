@@ -71,8 +71,14 @@ export function GalleryFilter() {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="all" id="all" />
-                    <Label htmlFor="all">All Transformations</Label>
+                    <Label htmlFor="all">All</Label>
                   </div>
+                  {user && (
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="mine" id="mine" />
+                      <Label htmlFor="mine">Mine</Label>
+                    </div>
+                  )}
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="pet" id="pet" />
                     <Label htmlFor="pet">Pet to Human</Label>
@@ -81,12 +87,6 @@ export function GalleryFilter() {
                     <RadioGroupItem value="human" id="human" />
                     <Label htmlFor="human">Human to Pet</Label>
                   </div>
-                  {user && (
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="mine" id="mine" />
-                      <Label htmlFor="mine">My Transformations</Label>
-                    </div>
-                  )}
                 </RadioGroup>
               </div>
 
