@@ -145,10 +145,7 @@ export default async function GalleryPage({
           <Suspense
             fallback={
               <div className="text-center py-12">
-                <div className="inline-block animate-bounce mb-4">
-                  <RandomCat size="medium" index={1} />
-                </div>
-                <p className="text-gray-500">Loading transformations...</p>
+                <p className="text-gray-500">Loading ...</p>
               </div>
             }
           >
