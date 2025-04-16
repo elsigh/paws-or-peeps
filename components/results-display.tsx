@@ -5,7 +5,14 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle, ThumbsUp, ImageIcon, Copy, Check } from "lucide-react";
+import {
+  AlertCircle,
+  ThumbsUp,
+  ImageIcon,
+  Copy,
+  Check,
+  Trash2,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CatButton } from "@/components/cat-button";
 import { PawPrint } from "@/components/paw-print";
@@ -212,6 +219,44 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
   // Add a function to check if this card represents the user's vote
   const isUserVote = (cardType: "human" | "animal") => {
     return voted && userVote === cardType;
+  };
+
+  const handleDeleteImage = async () => {
+    // Confirm before deletion
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this image? This action cannot be undone."
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/delete-image", {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ imageId }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to delete image");
+      }
+
+      // Redirect to homepage after successful deletion
+      router.push("/");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "An unknown error occurred"
+      );
+      setLoading(false);
+    }
   };
 
   return (
@@ -432,6 +477,18 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
                     View Gallery
                   </Button>
                 </Link>
+
+                {isUploader && (
+                  <Button
+                    variant="outline"
+                    className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
+                    onClick={handleDeleteImage}
+                    disabled={loading}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete Image
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
