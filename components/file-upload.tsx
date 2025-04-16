@@ -207,42 +207,48 @@ export default function FileUpload() {
 
   // Process the file regardless of source (input, paste, or drop)
   // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
-  const processFile = useCallback((selectedFile: File | null) => {
-    setFile(selectedFile);
-    setError(null);
-    setErrorDetails(null);
-    setDebugInfo(null);
+  const processFile = useCallback(
+    (selectedFile: File | null) => {
+      setFile(selectedFile);
+      setError(null);
+      setErrorDetails(null);
+      setDebugInfo(null);
 
-    if (selectedFile) {
-      // Set file size for display
-      setFileSize(selectedFile.size);
+      if (selectedFile) {
+        // Check if user is authenticated first
+        requireAuth(() => {
+          // Set file size for display
+          setFileSize(selectedFile.size);
 
-      // Validate file type
-      if (!selectedFile.type.startsWith("image/")) {
-        setError("Please select an image file");
-        return;
+          // Validate file type
+          if (!selectedFile.type.startsWith("image/")) {
+            setError("Please select an image file");
+            return;
+          }
+
+          // Add file size validation (limit to 4MB)
+          if (selectedFile.size > MAX_FILE_SIZE) {
+            setError(
+              `Image size (${formatFileSize(
+                selectedFile.size
+              )}) exceeds the 4MB limit. Please select a smaller image.`
+            );
+            return;
+          }
+
+          const reader = new FileReader();
+          reader.onload = () => {
+            setPreview(reader.result as string);
+          };
+          reader.readAsDataURL(selectedFile);
+        });
+      } else {
+        setPreview(null);
+        setFileSize(0);
       }
-
-      // Add file size validation (limit to 4MB)
-      if (selectedFile.size > MAX_FILE_SIZE) {
-        setError(
-          `Image size (${formatFileSize(
-            selectedFile.size
-          )}) exceeds the 4MB limit. Please select a smaller image.`
-        );
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreview(reader.result as string);
-      };
-      reader.readAsDataURL(selectedFile);
-    } else {
-      setPreview(null);
-      setFileSize(0);
-    }
-  }, []);
+    },
+    [requireAuth]
+  );
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -479,9 +485,12 @@ export default function FileUpload() {
 
   // Handle click on the drop zone to trigger file input
   const handleDropZoneClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
+    // Check if user is authenticated first
+    requireAuth(() => {
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
+    });
   };
 
   // Calculate file size percentage of max
