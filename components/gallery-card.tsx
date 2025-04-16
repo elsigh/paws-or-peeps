@@ -32,7 +32,13 @@ export function GalleryCard({
   createdAt,
 }: GalleryCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const formattedDate = new Date(createdAt).toLocaleDateString();
+  const formattedDate = new Date(createdAt).toLocaleString("en-US", {
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
 
   return (
     <Link href={`/results/${id}`}>
