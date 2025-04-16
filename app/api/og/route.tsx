@@ -8,8 +8,8 @@ export async function GET(request: NextRequest) {
     // Use static images for the homepage OG image
     const baseUrl =
       process.env.NEXT_PUBLIC_BASE_URL || "https://pawsorpeeps.com";
-    const leftImage = `${baseUrl}/images/human.webp`;
-    const rightImage = `${baseUrl}/images/animal.webp`;
+    const leftImage = `${baseUrl}/images/human.jpeg`;
+    const rightImage = `${baseUrl}/images/animal.jpeg`;
 
     return new ImageResponse(
       (
