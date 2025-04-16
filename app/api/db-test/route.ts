@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { nanoid } from "nanoid";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { error } from "console";
 
 export async function GET() {
   try {

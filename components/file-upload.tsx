@@ -12,7 +12,7 @@ import {
   ImageIcon,
   FileWarning,
   Info,
-  X, // Add X icon import
+  X,
 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CatButton } from "@/components/cat-button";
@@ -77,75 +77,75 @@ export default function FileUpload() {
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Check system status on component mount
-  useEffect(() => {
-    const checkSystemStatus = async () => {
-      try {
-        //console.log("Checking system status...");
-        const response = await fetch("/api/health");
+  // // Check system status on component mount
+  // useEffect(() => {
+  //   const checkSystemStatus = async () => {
+  //     try {
+  //       //console.log("Checking system status...");
+  //       const response = await fetch("/api/health");
 
-        if (!response.ok) {
-          console.error(
-            "Health check returned non-OK status:",
-            response.status
-          );
-          setSystemStatus("error");
-          setSystemStatusDetails({
-            message: `Health API returned status ${response.status}`,
-            status: response.status,
-          });
-          setHasRealError(true);
-          setStatusChecked(true);
-          return;
-        }
+  //       if (!response.ok) {
+  //         console.error(
+  //           "Health check returned non-OK status:",
+  //           response.status
+  //         );
+  //         setSystemStatus("error");
+  //         setSystemStatusDetails({
+  //           message: `Health API returned status ${response.status}`,
+  //           status: response.status,
+  //         });
+  //         setHasRealError(true);
+  //         setStatusChecked(true);
+  //         return;
+  //       }
 
-        const data = await response.json();
-        console.log("Health check response:", data);
+  //       const data = await response.json();
+  //       console.log("Health check response:", data);
 
-        setSystemStatus(data.status);
+  //       setSystemStatus(data.status);
 
-        // Check if there's a real database error with a specific message
-        const hasDbError =
-          data.checks.database.status === "error" &&
-          data.checks.database.message &&
-          data.checks.database.message !== "Database error:" &&
-          !data.checks.database.message.includes("undefined");
+  //       // Check if there's a real database error with a specific message
+  //       const hasDbError =
+  //         data.checks.database.status === "error" &&
+  //         data.checks.database.message &&
+  //         data.checks.database.message !== "Database error:" &&
+  //         !data.checks.database.message.includes("undefined");
 
-        if (hasDbError) {
-          setSystemStatusDetails({
-            database: data.checks.database,
-            environment: data.environment,
-            timestamp: data.timestamp,
-          });
-          setHasRealError(true);
-        } else {
-          setHasRealError(false);
-        }
-      } catch (err) {
-        console.error("Error checking system status:", err);
-        setSystemStatus("error");
+  //       if (hasDbError) {
+  //         setSystemStatusDetails({
+  //           database: data.checks.database,
+  //           environment: data.environment,
+  //           timestamp: data.timestamp,
+  //         });
+  //         setHasRealError(true);
+  //       } else {
+  //         setHasRealError(false);
+  //       }
+  //     } catch (err) {
+  //       console.error("Error checking system status:", err);
+  //       setSystemStatus("error");
 
-        const errorMessage = err instanceof Error ? err.message : String(err);
-        if (
-          errorMessage &&
-          errorMessage !== "undefined" &&
-          errorMessage !== "[object Object]"
-        ) {
-          setSystemStatusDetails({
-            message: errorMessage,
-            error: err,
-          });
-          setHasRealError(true);
-        } else {
-          setHasRealError(false);
-        }
-      } finally {
-        setStatusChecked(true);
-      }
-    };
+  //       const errorMessage = err instanceof Error ? err.message : String(err);
+  //       if (
+  //         errorMessage &&
+  //         errorMessage !== "undefined" &&
+  //         errorMessage !== "[object Object]"
+  //       ) {
+  //         setSystemStatusDetails({
+  //           message: errorMessage,
+  //           error: err,
+  //         });
+  //         setHasRealError(true);
+  //       } else {
+  //         setHasRealError(false);
+  //       }
+  //     } finally {
+  //       setStatusChecked(true);
+  //     }
+  //   };
 
-    checkSystemStatus();
-  }, []);
+  //   checkSystemStatus();
+  // }, []);
 
   // Cycle through pet facts during loading
   useEffect(() => {
