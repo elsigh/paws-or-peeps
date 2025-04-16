@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { RandomCat } from "@/components/random-cat";
@@ -27,6 +28,7 @@ export function GalleryCard({
   animatedUrl,
   oppositeUrl,
   type,
+
   voteStats,
   createdAt,
 }: GalleryCardProps) {
@@ -42,10 +44,11 @@ export function GalleryCard({
       >
         <div className="relative aspect-square overflow-hidden">
           {/* Show animated image by default, opposite on hover */}
-          <img
+          <Image
             src={isHovered ? oppositeUrl : animatedUrl}
             alt={`${type} transformation`}
             className="object-cover w-full h-full transition-transform duration-500 hover:scale-110"
+            fill
           />
 
           <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm rounded-full px-2 py-1 text-xs font-medium flex items-center gap-1">

@@ -54,6 +54,7 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
   const [humanImageLoaded, setHumanImageLoaded] = useState(false);
   const [animalImageLoaded, setAnimalImageLoaded] = useState(false);
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
+  const [userVote, setUserVote] = useState<"animal" | "human" | null>(null);
 
   const { requireAuth } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -137,6 +138,7 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
         throw new Error(data.error || "Failed to submit vote");
       }
 
+      setUserVote(vote);
       setVoted(true);
       setVoteStats(data.voteStats);
       setShowCelebration(true);
@@ -206,6 +208,11 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
 
   // if the image_type is human then the animated_url is a human
   // otherwise
+
+  // Add a function to check if this card represents the user's vote
+  const isUserVote = (cardType: "human" | "animal") => {
+    return voted && userVote === cardType;
+  };
 
   return (
     <div className="space-y-8">
@@ -471,10 +478,21 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
             <div className="space-y-4">
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="flex items-center gap-1">
-                    Human <span className="text-sm">👤</span>
+                  <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-1">
+                      Human <span className="text-sm">👤</span>
+                    </span>
+                    {userVote === "human" && (
+                      <span className="px-2 py-0.5 text-xs font-medium bg-rose-100 text-rose-600 rounded-full">
+                        Your Vote
+                      </span>
+                    )}
                   </span>
-                  <span>{voteStats?.humanPercentage.toFixed(1)}%</span>
+                  <span>
+                    {voteStats?.humanVotes || 0}{" "}
+                    {voteStats?.humanVotes === 1 ? "vote" : "votes"} (
+                    {voteStats?.humanPercentage.toFixed(1)}%)
+                  </span>
                 </div>
                 <Progress
                   value={voteStats?.humanPercentage || 0}
@@ -484,10 +502,21 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
               </div>
               <div>
                 <div className="flex justify-between mb-1">
-                  <span className="flex items-center gap-1">
-                    Animal <span className="text-sm">🐾</span>
+                  <span className="flex items-center gap-2">
+                    <span className="flex items-center gap-1">
+                      Animal <span className="text-sm">🐾</span>
+                    </span>
+                    {userVote === "animal" && (
+                      <span className="px-2 py-0.5 text-xs font-medium bg-rose-100 text-rose-600 rounded-full">
+                        Your Vote
+                      </span>
+                    )}
                   </span>
-                  <span>{voteStats?.animalPercentage.toFixed(1)}%</span>
+                  <span>
+                    {voteStats?.animalVotes || 0}{" "}
+                    {voteStats?.animalVotes === 1 ? "vote" : "votes"} (
+                    {voteStats?.animalPercentage.toFixed(1)}%)
+                  </span>
                 </div>
                 <Progress
                   value={voteStats?.animalPercentage || 0}
