@@ -124,7 +124,7 @@ export async function createOppositeVersion(
     // Create a specific prompt based on the detected animal type
     let prompt = "";
     if (type === "human") {
-      prompt = `Transform this ${type} into a light cartoon-style animal: ${targetAnimalType}, Retain realism. Do not put clothes on the ${targetAnimalType}.`;
+      prompt = `Transform this ${type} into a light cartoon-style ${targetAnimalType}, retaining realism. Do not put clothes on the ${targetAnimalType}.`;
     } else {
       prompt = `Transform this ${type} into a human, subtly cartoonish, retaining realism and making sure that the final image is definitively human and not a ${type}.`;
     }
