@@ -20,10 +20,6 @@ export function CatLogo({ className, size = "md" }: CatLogoProps) {
         className
       )}
     >
-      {/* Cat ears */}
-      <div className="absolute -top-5 left-1/4 h-6 w-6 rotate-45 rounded-t-full bg-black" />
-      <div className="absolute -top-5 right-1/4 h-6 w-6 -rotate-45 rounded-t-full bg-black" />
-
       {/* Logo text */}
       <span className="relative z-10">
         <span className="text-black">🐾 Paws</span>
