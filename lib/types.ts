@@ -8,7 +8,7 @@ export interface ImageData {
   image_type: "human" | (typeof ANIMAL_TYPES)[number];
   original_url: string;
   uploader_id: string;
-  target_animal_type?: string;
+  target_animal_type: string;
   created_at: string;
   updated_at?: string;
   hasVotes: boolean;

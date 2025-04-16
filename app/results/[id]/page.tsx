@@ -74,7 +74,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
   //console.log("Results page loading for ID:", id);
 
   const imageData = await getImageById(id);
-  //console.log("Image data retrieved successfully", { id, imageData });
+  console.log("Image data retrieved successfully", { id, imageData });
 
   if (!imageData) {
     notFound();

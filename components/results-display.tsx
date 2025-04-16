@@ -87,6 +87,7 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
     image_type: type,
     original_url: originalUrl,
     uploader_id: uploaderId,
+    target_animal_type: targetAnimalType,
     hasVotes,
     isUploader,
   } = imageData;
@@ -200,10 +201,8 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
     }
   };
 
-  let targetAnimalType = imageData.target_animal_type;
-  if (!targetAnimalType && type === "human") {
-    targetAnimalType = "cat";
-  }
+  // if the image_type is human then the animated_url is a human
+  // otherwise
 
   return (
     <div className="space-y-8">
@@ -254,9 +253,10 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
             <div className="mt-4 text-center">
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
                 <span>
-                  {targetAnimalType &&
-                    targetAnimalType?.charAt(0).toUpperCase() +
-                      targetAnimalType?.slice(1)}
+                  {type === "human"
+                    ? targetAnimalType.charAt(0).toUpperCase() +
+                      targetAnimalType?.slice(1)
+                    : type.charAt(0).toUpperCase() + type.slice(1)}
                 </span>
                 <span className="text-xl">🐾</span>
               </h3>
