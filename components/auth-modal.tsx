@@ -14,7 +14,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { Github, Mail } from "lucide-react";
-// import { createBrowserClient } from "@supabase/ssr";
+import Image from "next/image";
+import type { Provider } from "@supabase/supabase-js";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -33,7 +34,7 @@ export function AuthModal({
   const { toast } = useToast();
   const supabase = createClient();
 
-  const handleSocialSignIn = async (provider: "google" | "github") => {
+  const handleSocialSignIn = async (provider: Provider) => {
     setLoading(true);
     const redirectTo = `${window.location.origin}/auth/callback?next=${window.location.pathname}`;
     console.debug("handleSocialSignIn:", redirectTo);
@@ -74,17 +75,37 @@ export function AuthModal({
               onClick={() => handleSocialSignIn("google")}
               disabled={loading}
             >
-              Continue with Google
+              <Image
+                src="/images/google-logo.png"
+                alt="Google Logo"
+                width={20}
+                height={20}
+              />
+              Sign in with Google
             </Button>
-            {/* <Button
+            <Button
               variant="outline"
               className="w-full"
               onClick={() => handleSocialSignIn("github")}
-              disabled={loading}
+              disabled={true || loading}
             >
               <Github className="mr-2 h-4 w-4" />
-              Continue with GitHub
-            </Button> */}
+              Sign in with Github
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => handleSocialSignIn("twitter")}
+              disabled={true || loading}
+            >
+              <Image
+                src="/images/x-logo.png"
+                alt="X Logo"
+                width={20}
+                height={20}
+              />
+              Sign in with X
+            </Button>
           </div>
         </div>
       </DialogContent>
