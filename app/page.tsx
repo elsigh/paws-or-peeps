@@ -9,7 +9,7 @@ import { ImageIcon } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="container relative mx-auto px-4 py-12">
+    <div className="container relative mx-auto px-4 py-8">
       {/* Decorative paw prints */}
       <div className="pointer-events-none absolute left-4 top-20 opacity-20">
         <PawPrint size="lg" rotation={-15} />
@@ -43,19 +43,9 @@ export default function Home() {
             <RandomCat size="tiny" index={2} className="opacity-90" />
           </div>
         </div>
-        <p className="text-xl text-gray-600">
-          Upload a photo of a pet or human and see the magical transformation!
+        <p className="text-base md:text-xl text-gray-600 text-pretty">
+          Upload a photo of a pet or person and watch the transformation!
         </p>
-
-        {/* Gallery link */}
-        <div className="mt-4">
-          <Link href="/gallery">
-            <Button variant="outline" className="gap-2 border-rose-200">
-              <ImageIcon className="h-4 w-4" />
-              View Gallery
-            </Button>
-          </Link>
-        </div>
       </div>
 
       <div className="max-w-md mx-auto">
@@ -68,6 +58,16 @@ export default function Home() {
         </div>
         <div className="absolute -right-12 top-1/2 -translate-y-1/2 opacity-20">
           <PawPrint size="md" rotation={15} />
+        </div>
+
+        {/* Gallery link */}
+        <div className="text-center mt-4 mb-8">
+          <Link href="/gallery">
+            <Button variant="outline" className="gap-2 border-rose-200">
+              <ImageIcon className="h-4 w-4" />
+              View Gallery
+            </Button>
+          </Link>
         </div>
 
         <h2 className="text-xl font-semibold text-center mb-4 relative">

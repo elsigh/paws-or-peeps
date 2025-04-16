@@ -8,8 +8,8 @@ interface CatLogoProps {
 export function CatLogo({ className, size = "md" }: CatLogoProps) {
   const sizeClasses = {
     sm: "text-xl",
-    md: "text-3xl",
-    lg: "text-5xl",
+    md: "text-2xl md:text-3xl",
+    lg: "text-3xl md:text-5xl",
   };
 
   return (
