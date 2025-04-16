@@ -95,7 +95,8 @@ export async function createAnimatedVersion(imageUrl: string) {
       messages: [
         {
           role: "user",
-          content: "render this image in a light cartoon style",
+          content:
+            "render this image with stylized photorealism (similar to modern 3D animation like Pixar or Dreamworks)",
         },
         {
           role: "user",
