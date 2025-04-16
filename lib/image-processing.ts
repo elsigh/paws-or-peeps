@@ -67,7 +67,7 @@ async function imageToBlobUrl(image: GeneratedFile) {
 // Function to create an animated version of the image using Replicate API
 export async function createAnimatedVersion(imageUrl: string) {
   try {
-    console.log("Starting animated version creation with SDXL model...");
+    console.log("Starting animated version creation...");
 
     // Check if the image URL is valid
     if (!imageUrl || typeof imageUrl !== "string") {
@@ -113,14 +113,12 @@ export async function createAnimatedVersion(imageUrl: string) {
       },
     });
 
-    console.log("Google AI response received");
-    console.log(JSON.stringify(result, null, 2));
+    console.log("Animated image response received");
 
     if (!result.files || result.files.length === 0) {
-      throw new Error("No image files returned from Google AI");
+      throw new Error("No image files returned");
     }
 
-    console.log("Luma model response received");
     return imageToBlobUrl(result.files[0]);
   } catch (error) {
     console.error("Error in createAnimatedVersion:", error);
@@ -195,10 +193,10 @@ export async function createOppositeVersion(
     });
 
     if (!result.files || result.files.length === 0) {
-      throw new Error("No image files returned from Google AI");
+      throw new Error("No image files returned");
     }
 
-    console.log("Google AI response received");
+    console.log("Opposite version image response received");
     return imageToBlobUrl(result.files[0]);
   } catch (error) {
     console.error("Error in createOppositeVersion:", error);
