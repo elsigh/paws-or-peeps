@@ -439,6 +439,7 @@ export async function recordVote(
         humanVotes,
         animalPercentage,
         humanPercentage,
+        totalVotes,
       },
       originalType: imageData.image_type,
     };
@@ -480,7 +481,7 @@ export async function getRecentTransformations(limit = 12) {
   const processedData = data.map((item) => {
     // @ts-ignore
     const votes = (item.votes as { vote: "animal" | "human" }[]) || [];
-    const petVotes = votes.filter((v) => v.vote === "animal").length;
+    const animalVotes = votes.filter((v) => v.vote === "animal").length;
     const humanVotes = votes.filter((v) => v.vote === "human").length;
     const totalVotes = votes.length;
 
@@ -488,10 +489,10 @@ export async function getRecentTransformations(limit = 12) {
       ...item,
       votes: undefined, // Remove the raw votes array
       voteStats: {
-        petVotes,
+        animalVotes,
         humanVotes,
         totalVotes,
-        petPercentage: totalVotes > 0 ? (petVotes / totalVotes) * 100 : 0,
+        animalPercentage: totalVotes > 0 ? (animalVotes / totalVotes) * 100 : 0,
         humanPercentage: totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0,
       },
     };
@@ -613,6 +614,7 @@ export async function getVoteStats(imageId: string): Promise<VoteStats> {
       humanVotes,
       animalPercentage,
       humanPercentage,
+      totalVotes,
     };
   } catch (error) {
     console.error("Error in getVoteStats:", error);

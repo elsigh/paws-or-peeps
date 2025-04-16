@@ -14,11 +14,11 @@ interface GalleryCardProps {
   oppositeUrl: string;
   type: "human" | (typeof ANIMAL_TYPES)[number];
   voteStats: {
-    petVotes: number;
+    animalVotes: number;
     humanVotes: number;
-    totalVotes: number;
-    petPercentage: number;
+    animalPercentage: number;
     humanPercentage: number;
+    totalVotes: number;
   };
   createdAt: string;
 }
@@ -28,7 +28,6 @@ export function GalleryCard({
   animatedUrl,
   oppositeUrl,
   type,
-
   voteStats,
   createdAt,
 }: GalleryCardProps) {
@@ -85,13 +84,34 @@ export function GalleryCard({
             <div className="space-y-1">
               <div className="flex justify-between text-xs">
                 <span className="flex items-center gap-1">
-                  <span>Pet</span>
+                  <span>Animal</span>
                   <span>🐾</span>
                 </span>
-                <span>{voteStats.petPercentage.toFixed(0)}%</span>
+                <span>
+                  {voteStats.animalVotes || 0}{" "}
+                  {voteStats.animalVotes === 1 ? "vote" : "votes"}
+                </span>
+                <span>{voteStats.animalPercentage.toFixed(0)}%</span>
               </div>
               <Progress
-                value={voteStats.petPercentage}
+                value={voteStats.animalPercentage}
+                className="h-1 bg-rose-100"
+                indicatorClassName="bg-rose-500"
+              />
+
+              <div className="flex justify-between text-xs mt-1">
+                <span className="flex items-center gap-1">
+                  <span>Human</span>
+                  <span>👤</span>
+                </span>
+                <span>
+                  {voteStats.humanVotes || 0}{" "}
+                  {voteStats.humanVotes === 1 ? "vote" : "votes"}
+                </span>
+                <span>{voteStats.humanPercentage.toFixed(0)}%</span>
+              </div>
+              <Progress
+                value={voteStats.humanPercentage}
                 className="h-1 bg-rose-100"
                 indicatorClassName="bg-rose-500"
               />
