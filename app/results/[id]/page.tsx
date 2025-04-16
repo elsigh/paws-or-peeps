@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase-server";
 import { Button } from "@/components/ui/button";
 import { Home } from "lucide-react";
 import Link from "next/link";
+import { getUserProfile, type UserProfile } from "@/lib/user-service";
 
 interface ResultsPageProps {
   params: Promise<{
@@ -71,13 +72,19 @@ export async function generateMetadata(
 
 export default async function ResultsPage({ params }: ResultsPageProps) {
   const { id } = await params;
-  //console.log("Results page loading for ID:", id);
 
   const imageData = await getImageById(id);
   console.log("Image data retrieved successfully", { id, imageData });
 
   if (!imageData) {
     notFound();
+  }
+
+  // Fetch uploader profile on the server
+  let uploaderProfile: UserProfile | null = null;
+  if (imageData.uploader_id) {
+    uploaderProfile = await getUserProfile(imageData.uploader_id);
+    console.log("Uploader profile fetched on server", { uploaderProfile });
   }
 
   return (
@@ -116,7 +123,10 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
       <div className="max-w-4xl mx-auto">
         <Suspense fallback={<div>Loading results...</div>}>
-          <ResultsDisplay imageData={imageData} />
+          <ResultsDisplay
+            imageData={imageData}
+            uploaderProfile={uploaderProfile}
+          />
         </Suspense>
       </div>
     </div>

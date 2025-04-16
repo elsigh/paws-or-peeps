@@ -37,12 +37,19 @@ import {
 import { RefreshCw } from "lucide-react";
 import { createClient } from "@/lib/supabase-client";
 import { useAuth } from "@/lib/auth-context";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserIcon } from "lucide-react";
+import { getUserProfile, type UserProfile } from "@/lib/user-service";
 
 interface ResultsDisplayProps {
   imageData: ImageData;
+  uploaderProfile: UserProfile | null;
 }
 
-export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
+export default function ResultsDisplay({
+  imageData,
+  uploaderProfile,
+}: ResultsDisplayProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -62,6 +69,9 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
   const [animalImageLoaded, setAnimalImageLoaded] = useState(false);
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
   const [userVote, setUserVote] = useState<"animal" | "human" | null>(null);
+  // Remove the uploaderProfile state and loading state
+  // const [uploaderProfile, setUploaderProfile] = useState<UserProfile | null>(null);
+  // const [loadingProfile, setLoadingProfile] = useState(false);
 
   const { requireAuth } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -102,6 +112,26 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
     hasVotes,
     isUploader,
   } = imageData;
+
+  // Remove the effect that fetches uploader profile
+  // useEffect(() => {
+  //   const fetchUploaderProfile = async () => {
+  //     if (!uploaderId) return;
+  //
+  //     try {
+  //       setLoadingProfile(true);
+  //       const profile = await getUserProfile(uploaderId);
+  //       console.debug("uploader Profile", { profile });
+  //       setUploaderProfile(profile);
+  //     } catch (err) {
+  //       console.error("Failed to fetch uploader profile:", err);
+  //     } finally {
+  //       setLoadingProfile(false);
+  //     }
+  //   };
+  //
+  //   fetchUploaderProfile();
+  // }, [uploaderId]);
 
   const handleVote = async (vote: "animal" | "human") => {
     setLoading(true);
@@ -259,8 +289,41 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
     }
   };
 
+  const getDisplayName = () => {
+    if (!uploaderProfile) return "Anonymous";
+
+    if (uploaderProfile.display_name) return uploaderProfile.display_name;
+
+    if (uploaderProfile.email) {
+      // Extract first part of email before @ symbol
+      const emailName = uploaderProfile.email.split("@")[0];
+      return emailName;
+    }
+
+    return "Anonymous";
+  };
+
   return (
     <div className="space-y-8">
+      {/* Add uploader info at the top */}
+      {uploaderProfile && (
+        <div className="flex items-center gap-2 text-sm text-gray-500">
+          <span>Uploaded by:</span>
+          <div className="flex items-center gap-2">
+            <Avatar className="h-6 w-6">
+              <AvatarImage
+                src={uploaderProfile.avatar_url || undefined}
+                alt={getDisplayName()}
+              />
+              <AvatarFallback>
+                <UserIcon className="h-4 w-4" />
+              </AvatarFallback>
+            </Avatar>
+            <span className="font-medium">{getDisplayName()}</span>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Human Card - Always on the left */}
         <Card className="relative border-rose-200 overflow-hidden">
@@ -527,10 +590,31 @@ export default function ResultsDisplay({ imageData }: ResultsDisplayProps) {
           )}
 
           <CardContent className="pt-6">
-            <h3 className="text-lg font-semibold text-center mb-4 flex items-center justify-center">
-              <span>Vote Results</span>
-              <span className="ml-2 text-xl">📊</span>
-            </h3>
+            <div className="flex flex-col items-center mb-4">
+              <h3 className="text-lg font-semibold text-center flex items-center justify-center">
+                <span>Vote Results</span>
+                <span className="ml-2 text-xl">📊</span>
+              </h3>
+
+              {/* Add uploader info here */}
+              {uploaderProfile && !isUploader && (
+                <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                  <span>Uploaded by:</span>
+                  <div className="flex items-center gap-2">
+                    <Avatar className="h-6 w-6">
+                      <AvatarImage
+                        src={uploaderProfile.avatar_url || undefined}
+                        alt={getDisplayName()}
+                      />
+                      <AvatarFallback>
+                        <UserIcon className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="font-medium">{getDisplayName()}</span>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-4">
               <div>
