@@ -1,26 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { saveVote, getVoteStats, getImageById } from "@/lib/image-processing";
+import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
+import { revalidatePath } from "next/cache";
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    const { imageId, vote } = await request.json();
-
-    if (!imageId || !vote) {
-      return NextResponse.json(
-        { error: "Image ID and vote are required" },
-        { status: 400 }
-      );
-    }
-
-    if (vote !== "animal" && vote !== "human") {
-      return NextResponse.json(
-        { error: 'Vote must be either "animal" or "human"' },
-        { status: 400 }
-      );
-    }
-
-    // Check if user is authenticated
     const supabase = await createClient();
     if (!supabase) {
       return NextResponse.json(
@@ -29,33 +12,93 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { imageId, vote } = await request.json();
 
-    if (!session?.user?.id) {
+    // Get the current user
+    const { data: session } = await supabase.auth.getSession();
+    if (!session.session?.user?.id) {
       return NextResponse.json(
-        { error: "Authentication required to vote", requireAuth: true },
+        { error: "User must be logged in to vote" },
         { status: 401 }
       );
     }
 
-    // Save the vote
-    await saveVote(imageId, vote);
+    const userId = session.session.user.id;
 
-    // Get updated vote statistics
-    const voteStats = await getVoteStats(imageId);
+    // Get the image details to check if the user is voting on their own image
+    const { data: imageData, error: imageError } = await supabase
+      .from("images")
+      .select("uploader_id")
+      .eq("id", imageId)
+      .single();
 
-    // Get the image data
-    const imageData = await getImageById(imageId);
+    if (imageError) {
+      return NextResponse.json(
+        { error: "Failed to fetch image details" },
+        { status: 500 }
+      );
+    }
 
-    return NextResponse.json({
-      success: true,
-      voteStats,
-      originalType: imageData.image_type,
+    // Check if user has already voted on this image
+    const { data: existingVote, error: voteCheckError } = await supabase
+      .from("votes")
+      .select("id")
+      .eq("image_id", imageId)
+      .eq("user_id", userId)
+      .single();
+
+    if (voteCheckError && voteCheckError.code !== "PGRST116") {
+      return NextResponse.json(
+        { error: "Failed to check existing vote" },
+        { status: 500 }
+      );
+    }
+
+    if (existingVote) {
+      return NextResponse.json(
+        { error: "User has already voted on this image" },
+        { status: 400 }
+      );
+    }
+
+    // Insert the vote
+    const { error: voteError } = await supabase.from("votes").insert({
+      image_id: imageId,
+      user_id: userId,
+      vote: vote,
     });
+
+    if (voteError) {
+      return NextResponse.json(
+        { error: "Failed to submit vote" },
+        { status: 500 }
+      );
+    }
+
+    // Create notification for the uploader if different from voter
+    if (imageData.uploader_id !== userId) {
+      try {
+        const voteType = vote === "animal" ? "🐾 Animal" : "👤 Human";
+        await supabase.from("notifications").insert({
+          user_id: imageData.uploader_id,
+          type: "vote",
+          message: `Someone voted "${voteType}" on your upload!`,
+          image_id: imageId,
+          read: false,
+        });
+      } catch (notificationError) {
+        console.error("Failed to create notification:", notificationError);
+        // Don't fail the request if notification creation fails
+      }
+    }
+
+    revalidatePath("/results/[id]", "page");
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Error saving vote:", error);
-    return NextResponse.json({ error: "Failed to save vote" }, { status: 500 });
+    console.error("Error in vote route:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

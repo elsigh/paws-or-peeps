@@ -13,6 +13,7 @@ import { CatLogo } from "@/components/cat-logo";
 import { HomeIcon } from "lucide-react";
 import { HomePageLink } from "@/components/site-header";
 import { Footer } from "@/components/footer";
+import { NotificationBell } from "@/components/notification-bell";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -82,7 +83,8 @@ export default async function RootLayout({
                     <CatLogo size="sm" />
                   </div>
 
-                  <div className="flex items-center">
+                  <div className="flex items-center gap-2">
+                    <NotificationBell />
                     <UserMenu />
                   </div>
                 </div>

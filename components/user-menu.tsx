@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, User } from "lucide-react";
+import { BarChart3, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -56,6 +56,15 @@ export function UserMenu() {
             className="flex w-full cursor-pointer items-center"
           >
             <span>My Submissions</span>
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link
+            href="/analytics"
+            className="flex w-full cursor-pointer items-center"
+          >
+            <BarChart3 className="mr-2 h-4 w-4" />
+            <span>Analytics</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
