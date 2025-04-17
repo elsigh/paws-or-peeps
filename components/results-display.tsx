@@ -435,7 +435,7 @@ export default function ResultsDisplay({
                       <SelectValue placeholder="Regenerate as ..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {ANIMAL_TYPES.map((animalType) => (
+                      {[...ANIMAL_TYPES].sort().map((animalType) => (
                         <SelectItem key={animalType} value={animalType}>
                           {animalType.charAt(0).toUpperCase() +
                             animalType.slice(1)}

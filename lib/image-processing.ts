@@ -96,7 +96,7 @@ export async function createAnimatedVersion(imageUrl: string) {
         {
           role: "user",
           content:
-            "Render this image with subtle, stylized photorealism (like Pixar or Dreamworks) with shot-on-iPhone level quality. Maintain the essential features and overall composition of the original photo.",
+            "Render this image with a subtle, stylized photorealism (like 3D animated Pixar or Dreamworks). Maintain the essential features and overall composition of the original photo.",
         },
         {
           role: "user",
@@ -159,7 +159,7 @@ Core Task: * Analyze: Carefully examine the input human image to identify and ex
 * Translate: Translate this specific emotional state onto the face of the ${targetAnimalType} in a manner that feels natural and believable for that species. Consider how this particular emotion would be expressed through the animal's unique facial features, body language (if applicable within the portrait), and eye movements.
 
 Crucial Constraints:
-* Focus: The final image must depict only the ${targetAnimalType} head or head and shoulders. No full-body shots unless necessary for conveying the specific emotion.
+* Focus: The final image must depict only the ${targetAnimalType} and ideally match the original image's composition and distance/focus level. No full-body shots unless necessary for conveying the specific emotion.
 * Accuracy: Maintain the ${targetAnimalType}'s natural anatomy and facial features with high fidelity. Avoid any human-like features, including but not limited to:
 * Clothing, accessories (jewelry, glasses, hats)
 * Human-like hands, posture, or body proportions
