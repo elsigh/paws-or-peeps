@@ -385,15 +385,6 @@ export default function ResultsDisplay({
 
         {/* Animal Card - Always on the right */}
         <Card className="relative border-rose-200 overflow-hidden">
-          {/* Cat ears for animal image */}
-          <div className="absolute -top-3 left-1/4 h-6 w-6 rotate-45 rounded-t-full bg-rose-200 z-10" />
-          <div className="absolute -top-3 right-1/4 h-6 w-6 -rotate-45 rounded-t-full bg-rose-200 z-10" />
-
-          {/* Tiny cat peeking from corner */}
-          <div className="absolute -right-2 -top-2 z-10 transform rotate-12">
-            <RandomCat size="tiny" index={2} />
-          </div>
-
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
               <Image

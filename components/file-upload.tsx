@@ -785,7 +785,11 @@ export default function FileUpload() {
 
             <p className="text-sm text-gray-500">
               AI processing may take up to 30 seconds.{" "}
-              {detectedType && <b>{`Detected: ${detectedType as string}`}</b>}
+              {detectedType && (
+                <b className="text-nowrap">{`Detected: ${
+                  detectedType as string
+                }`}</b>
+              )}
             </p>
           </div>
 
