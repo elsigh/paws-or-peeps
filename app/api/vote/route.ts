@@ -44,7 +44,7 @@ export async function POST(request: Request) {
       .from("votes")
       .select("id")
       .eq("image_id", imageId)
-      .eq("user_id", userId)
+      .eq("voter_id", userId)
       .single();
 
     if (voteCheckError && voteCheckError.code !== "PGRST116") {
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     // Insert the vote
     const { error: voteError } = await supabase.from("votes").insert({
       image_id: imageId,
-      user_id: userId,
+      voter_id: userId,
       vote: vote,
     });
 
