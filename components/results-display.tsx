@@ -520,15 +520,26 @@ export default function ResultsDisplay({
         <Card className="border-rose-200 relative">
           <CardContent className="pt-6">
             <div className="text-center space-y-4">
-              <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
+              <h3
+                className={`text-lg font-semibold flex items-center justify-center gap-2 ${
+                  isPrivate ? "line-through text-gray-400" : ""
+                }`}
+              >
                 <span>Share with Friends</span>
                 <span className="text-xl">🔗</span>
               </h3>
 
-              <p className="text-gray-600">
+              <p className={`text-gray-600 ${isPrivate ? "line-through" : ""}`}>
                 This is your upload! Share this link with friends so they can
                 vote on which image they think is the original.
               </p>
+
+              {isPrivate && (
+                <p className="text-amber-600 text-sm font-medium flex items-center justify-center gap-2">
+                  <LockIcon className="h-4 w-4" />
+                  Make this image public to enable sharing
+                </p>
+              )}
 
               <div className="flex items-center gap-2 mt-4">
                 <input
@@ -536,8 +547,13 @@ export default function ResultsDisplay({
                   type="text"
                   value={shareUrl}
                   readOnly
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm"
-                  onClick={(e) => e.currentTarget.select()}
+                  disabled={isPrivate}
+                  className={`flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm ${
+                    isPrivate
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : ""
+                  }`}
+                  onClick={(e) => !isPrivate && e.currentTarget.select()}
                 />
                 <TooltipProvider>
                   <Tooltip>
@@ -546,7 +562,12 @@ export default function ResultsDisplay({
                         variant="outline"
                         size="icon"
                         onClick={copyShareLink}
-                        className="border-rose-200 hover:bg-rose-50"
+                        disabled={isPrivate}
+                        className={`border-rose-200 ${
+                          isPrivate
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-rose-50"
+                        }`}
                       >
                         {copied ? (
                           <Check className="h-4 w-4 text-green-500" />
@@ -556,7 +577,13 @@ export default function ResultsDisplay({
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>{copied ? "Copied!" : "Copy link"}</p>
+                      <p>
+                        {isPrivate
+                          ? "Sharing disabled"
+                          : copied
+                          ? "Copied!"
+                          : "Copy link"}
+                      </p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -592,8 +619,8 @@ export default function ResultsDisplay({
                       {privacyLoading
                         ? "Loading..."
                         : isPrivate
-                        ? "Make Public"
-                        : "Make Private"}
+                        ? "Make Public 📢"
+                        : "Make Private 🔐"}
                     </label>
                   </Button>
                 )}

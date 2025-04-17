@@ -11,8 +11,7 @@ export async function uploadToBlob(file: File) {
     // Check if the Blob token is available
     if (!process.env.BLOB_READ_WRITE_TOKEN) {
       console.error("BLOB_READ_WRITE_TOKEN is not set");
-      // Instead of failing, return a placeholder URL for development/testing
-      return `/placeholder.svg?height=400&width=400&query=original image placeholder`;
+      throw new Error("BLOB_READ_WRITE_TOKEN is not set");
     }
 
     // Clean the filename to avoid issues
@@ -30,39 +29,43 @@ export async function uploadToBlob(file: File) {
     );
     console.log("Blob token available:", !!process.env.BLOB_READ_WRITE_TOKEN);
 
-    // Try to upload to Vercel Blob with timeout
-    const uploadPromise = new Promise(async (resolve, reject) => {
-      try {
-        console.log("Starting Blob upload...");
-        const startTime = Date.now();
-        const blob = await put(filename, file, { access: "public" });
-        const uploadTime = Date.now() - startTime;
-        console.log(`Blob upload completed in ${uploadTime}ms:`, blob.url);
-        resolve(blob);
-      } catch (error) {
-        console.error("Error in Blob upload promise:", error);
-        reject(error);
-      }
-    });
-
-    // Set a timeout for the upload (120 seconds)
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        console.error("Blob upload timed out after 120 seconds");
+    // Create a timeout controller
+    let timeoutId: NodeJS.Timeout | undefined = undefined;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
         reject(new Error("Upload timed out after 120 seconds"));
       }, 120000);
     });
 
-    // Race the upload against the timeout
-    const blob = (await Promise.race([uploadPromise, timeoutPromise])) as any;
+    try {
+      // Start the upload
+      console.log("Starting Blob upload...");
+      const startTime = Date.now();
 
-    if (!blob || !blob.url) {
-      console.error("Blob upload returned empty result");
-      throw new Error("Failed to upload image to Blob storage");
+      // Race the upload against the timeout
+      const blob = await Promise.race([
+        put(filename, file, { access: "public" }),
+        timeoutPromise,
+      ]);
+
+      // Clear the timeout since upload succeeded
+      clearTimeout(timeoutId);
+
+      const uploadTime = Date.now() - startTime;
+      console.log(`Blob upload completed in ${uploadTime}ms:`, blob.url);
+
+      if (!blob || !blob.url) {
+        console.error("Blob upload returned empty result");
+        throw new Error("Failed to upload image to Blob storage");
+      }
+
+      console.log(`Successfully uploaded to Blob storage: ${blob.url}`);
+      return blob.url;
+    } catch (error) {
+      // Clear the timeout to prevent memory leaks
+      clearTimeout(timeoutId);
+      throw error; // Re-throw to be handled by the outer catch
     }
-
-    console.log(`Successfully uploaded to Blob storage: ${blob.url}`);
-    return blob.url;
   } catch (error) {
     console.error("Error uploading to Vercel Blob:", error);
 
@@ -80,8 +83,6 @@ export async function uploadToBlob(file: File) {
       }
     }
 
-    // Instead of failing the whole process, return a placeholder URL
-    // This allows the rest of the flow to continue even if Blob storage fails
-    return `/placeholder.svg?height=400&width=400&query=original image placeholder`;
+    throw error;
   }
 }

@@ -63,7 +63,6 @@ export async function POST(request: NextRequest) {
         let originalUrl = "";
         try {
           originalUrl = await uploadToBlob(file);
-          console.log("Upload successful:", originalUrl);
 
           controller.enqueue(
             encoder.encode(

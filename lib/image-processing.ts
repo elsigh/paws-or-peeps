@@ -96,7 +96,7 @@ export async function createAnimatedVersion(imageUrl: string) {
         {
           role: "user",
           content:
-            "render this image with stylized photorealism (similar to modern 3D animation like Pixar or Dreamworks)",
+            "render this image with stylized photorealism (similar to modern 3D animation like Pixar or Dreamworks - shot on iPhone)",
         },
         {
           role: "user",
@@ -150,12 +150,21 @@ export async function createOppositeVersion(
     let prompt = "";
     if (type === "human") {
       //prompt = `Transform this ${type} into a light cartoon-style ${targetAnimalType}, retaining realism. Do not put clothes on the ${targetAnimalType}.`;
-      prompt = `Create a portrait of a ${targetAnimalType} character inspired by the mood and expression of the input ${type} image. The style should be stylized realism (similar to modern 3D animation like Pixar or Dreamworks). Ensure the final image depicts a ${targetAnimalType} with standard ${targetAnimalType} anatomy and facial features, with no ${type} characteristics (like clothes or human features).`;
+      prompt = `Generate a portrait of a ${targetAnimalType}.
+
+**Style:** Stylized realism, similar to modern 3D animation (e.g., Pixar, Dreamworks).
+
+**Core Task:** Analyze the input human image **only** for its **facial expression and emotional mood**. Translate *this specific expression and mood* onto the face of the ${targetAnimalType}.
+
+**Crucial Constraints:**
+* The final image must depict **only** the ${targetAnimalType} with its natural, standard anatomy and facial features.
+* **Strictly non-anthropomorphic:** Ensure the ${targetAnimalType} has NO human characteristics whatsoever. This includes, but is not limited to: clothing, glasses, hats, accessories, human-like hands/posture, or unnatural facial structures.
+* Ignore all other visual elements from the human input image (like clothing, background, objects). Focus *solely* on replicating the expression and mood.`;
     } else {
-      prompt = `Create a portrait of a human character inspired by the mood and expression of the input ${type} image. The style should be stylized realism (similar to modern 3D animation like Pixar or Dreamworks). Ensure the final image depicts a person with standard human anatomy and facial features, with no ${type} characteristics (like a snout, animal ears, or fur).`;
+      prompt = `Create a portrait of a human character inspired by the mood and expression of the input ${type} image. The style should be stylized realism (similar to modern 3D animation like Pixar or Dreamworks - shot on iPhone). Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics like fur, feathers, tails, claws, or animal-like features.`;
     }
 
-    console.debug("Prompt:", prompt);
+    console.debug("createOppositeVersion prompt:", prompt);
 
     // const { image } = await generateImage({
     //   model: luma.image("photon-flash-1"),
