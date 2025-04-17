@@ -59,8 +59,6 @@ export async function GET() {
           healthChecks.database = {
             status: "error",
             message: "Failed to create Supabase client",
-            // details:
-            //   "The createServerClient function returned null or undefined",
           };
           throw new Error("Failed to create Supabase client");
         }

@@ -35,6 +35,20 @@ export interface Notification {
   image_id?: string;
 }
 
+export interface UserAnalyticsDetail {
+  id: string;
+  created_at: string;
+  image_type: string;
+  target_animal_type: string;
+  private: boolean;
+  votes: {
+    total: number;
+    animal: number;
+    human: number;
+    animalPercentage: number;
+    humanPercentage: number;
+  };
+}
 export interface UserAnalytics {
   summary: {
     totalUploads: number;
@@ -43,24 +57,17 @@ export interface UserAnalytics {
     totalHumanVotes: number;
     averageVotesPerUpload: number;
   };
-  details: Array<{
-    id: string;
-    created_at: string;
-    image_type: string;
-    target_animal_type: string;
-    private: boolean;
-    votes: {
-      total: number;
-      animal: number;
-      human: number;
-      animalPercentage: number;
-      humanPercentage: number;
-    };
-  }>;
+  details: Array<UserAnalyticsDetail>;
   trends: Array<{
     date: string;
     animal: number;
     human: number;
     total: number;
   }>;
+}
+
+export interface Vote {
+  image_id: string;
+  vote: "animal" | "human";
+  created_at: string;
 }

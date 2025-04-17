@@ -1,34 +1,20 @@
-// filepath: /Users/elsigh/src/elsigh/paws-or-peeps/lib/notification-service.ts
-import { createClient } from "./supabase-server";
-import type { UserAnalytics, Vote } from "./types";
-
-export interface Notification {
-  id: number;
-  user_id: string;
-  type: string;
-  message: string;
-  read: boolean;
-  created_at: string;
-  image_id?: string;
-}
+import { createClient } from "./supabase-browser";
+import type { Notification, UserAnalytics, Vote } from "./types";
 
 // Get all notifications for the current user
 export async function getUserNotifications(): Promise<Notification[]> {
   try {
     const supabase = await createClient();
-    if (!supabase) {
-      throw new Error("Failed to create Supabase client");
-    }
 
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session?.user?.id) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) {
       return [];
     }
 
     const { data, error } = await supabase
       .from("notifications")
       .select("*")
-      .eq("user_id", session.session.user.id)
+      .eq("user_id", session.user.id)
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -49,9 +35,6 @@ export async function markNotificationAsRead(
 ): Promise<boolean> {
   try {
     const supabase = await createClient();
-    if (!supabase) {
-      throw new Error("Failed to create Supabase client");
-    }
 
     const { error } = await supabase
       .from("notifications")
@@ -74,19 +57,16 @@ export async function markNotificationAsRead(
 export async function markAllNotificationsAsRead(): Promise<boolean> {
   try {
     const supabase = await createClient();
-    if (!supabase) {
-      throw new Error("Failed to create Supabase client");
-    }
 
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session?.user?.id) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) {
       return false;
     }
 
     const { error } = await supabase
       .from("notifications")
       .update({ read: true })
-      .eq("user_id", session.session.user.id)
+      .eq("user_id", session.user.id)
       .eq("read", false);
 
     if (error) {
@@ -105,19 +85,16 @@ export async function markAllNotificationsAsRead(): Promise<boolean> {
 export async function getUnreadNotificationCount(): Promise<number> {
   try {
     const supabase = await createClient();
-    if (!supabase) {
-      throw new Error("Failed to create Supabase client");
-    }
 
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session?.user?.id) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) {
       return 0;
     }
 
     const { count, error } = await supabase
       .from("notifications")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", session.session.user.id)
+      .eq("user_id", session.user.id)
       .eq("read", false);
 
     if (error) {
@@ -136,12 +113,9 @@ export async function getUnreadNotificationCount(): Promise<number> {
 export async function getUserAnalytics(): Promise<UserAnalytics> {
   try {
     const supabase = await createClient();
-    if (!supabase) {
-      throw new Error("Failed to create Supabase client");
-    }
 
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session?.user?.id) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user?.id) {
       throw new Error("User is not authenticated");
     }
 
@@ -149,7 +123,7 @@ export async function getUserAnalytics(): Promise<UserAnalytics> {
     const { data: images, error: imagesError } = await supabase
       .from("images")
       .select("id, created_at, image_type, target_animal_type, private")
-      .eq("uploader_id", session.session.user.id);
+      .eq("uploader_id", session.user.id);
 
     if (imagesError) {
       console.error("Error fetching user images:", imagesError);
@@ -210,7 +184,7 @@ export async function getUserAnalytics(): Promise<UserAnalytics> {
     ).length;
 
     // Group by date for trend analysis
-    const votesByDate = votes.reduce<Record<string, { animal: number; human: number; total: number }>>((acc, vote) => {
+    const votesByDate = votes.reduce((acc, vote) => {
       const date = new Date(vote.created_at).toISOString().split("T")[0];
       if (!acc[date]) acc[date] = { animal: 0, human: 0, total: 0 };
 
@@ -218,7 +192,7 @@ export async function getUserAnalytics(): Promise<UserAnalytics> {
       acc[date].total++;
 
       return acc;
-    }, {});
+    }, {} as Record<string, { animal: number; human: number; total: number }>);
 
     // Convert to array for easier consumption in frontend
     const voteTrends = Object.entries(votesByDate)
@@ -243,4 +217,4 @@ export async function getUserAnalytics(): Promise<UserAnalytics> {
     console.error("Error in getUserAnalytics:", error);
     throw error;
   }
-}
+} 
