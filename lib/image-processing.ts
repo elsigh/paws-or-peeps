@@ -96,7 +96,7 @@ export async function createAnimatedVersion(imageUrl: string) {
         {
           role: "user",
           content:
-            "Render this image with a subtle, stylized photorealism (like 3D animated Pixar or Dreamworks). Maintain the essential features and overall composition of the original photo.",
+            "Render this image with a subtle, stylized photorealism (like 3D animated Pixar or Dreamworks). Maintain the essential features and overall composition of the original photo in terms of the direction that the subject is facing and the focus-length of the shot.",
         },
         {
           role: "user",
@@ -156,15 +156,15 @@ Style: * Stylized realism, similar to modern 3D animation (e.g., Pixar, Dreamwor
 * Emphasize expressive eyes and subtle shifts in muscle tension to convey the animal's emotional state.
 
 Core Task: * Analyze: Carefully examine the input human image to identify and extract the primary facial expression and emotional mood (e.g., happiness, sadness, anger, surprise).
-* Translate: Translate this specific emotional state onto the face of the ${targetAnimalType} in a manner that feels natural and believable for that species. Consider how this particular emotion would be expressed through the animal's unique facial features, body language (if applicable within the portrait), and eye movements.
+* Translate: Translate this specific emotional state onto the face of the ${targetAnimalType} in a manner that feels natural and believable for that species. Consider how this particular emotion would be expressed through the animal's unique facial features.
 
 Crucial Constraints:
-* Focus: The final image must depict only the ${targetAnimalType} and ideally match the original image's composition and distance/focus level. No full-body shots unless necessary for conveying the specific emotion.
+* Focus: The final image must depict only the ${targetAnimalType} and maintain the overall composition of the original photo in terms of the direction that the subject is facing and the focus-length of the shot. No full-body shots unless necessary for conveying the specific emotion.
 * Accuracy: Maintain the ${targetAnimalType}'s natural anatomy and facial features with high fidelity. Avoid any human-like features, including but not limited to:
-* Clothing, accessories (jewelry, glasses, hats)
-* Human-like hands, posture, or body proportions
-* Unnatural or exaggerated facial features (e.g., human-like smiles on animals that don't smile)
-* Emotional Focus: Prioritize accurately conveying the human's emotional state through the animal's expressive capabilities. Minor stylistic liberties are acceptable as long as they serve to enhance the emotional expression and remain within the bounds of the animal's natural appearance.`;
+  * Clothing, accessories (jewelry, glasses, hats)
+  * Human-like hands, posture, or body proportions
+  * Unnatural or exaggerated facial features (e.g., human-like smiles on animals that don't smile)
+  * Emotional Focus: Prioritize accurately conveying the human's emotional state through the animal's expressive capabilities. Minor stylistic liberties are acceptable as long as they serve to enhance the emotional expression and remain within the bounds of the animal's natural appearance.`;
     } else {
       prompt = `Render this image of a ${type} as a human with subtle, stylized photorealism (like Pixar or Dreamworks) with shot-on-iPhone level quality. Maintain the essential features and overall composition of the original photo. Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics like fur, feathers, tails, claws, or animal-like features.`;
     }
