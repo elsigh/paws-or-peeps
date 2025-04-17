@@ -96,7 +96,7 @@ export async function createAnimatedVersion(imageUrl: string) {
         {
           role: "user",
           content:
-            "render this image with stylized photorealism (similar to modern 3D animation like Pixar or Dreamworks - shot on iPhone)",
+            "Render this image with subtle, stylized photorealism (like Pixar or Dreamworks) with shot-on-iPhone level quality. Maintain the essential features and overall composition of the original photo.",
         },
         {
           role: "user",
@@ -152,16 +152,21 @@ export async function createOppositeVersion(
       //prompt = `Transform this ${type} into a light cartoon-style ${targetAnimalType}, retaining realism. Do not put clothes on the ${targetAnimalType}.`;
       prompt = `Generate a portrait of a ${targetAnimalType}.
 
-**Style:** Stylized realism, similar to modern 3D animation (e.g., Pixar, Dreamworks).
+Style: * Stylized realism, similar to modern 3D animation (e.g., Pixar, Dreamworks).
+* Emphasize expressive eyes and subtle shifts in muscle tension to convey the animal's emotional state.
 
-**Core Task:** Analyze the input human image **only** for its **facial expression and emotional mood**. Translate *this specific expression and mood* onto the face of the ${targetAnimalType}.
+Core Task: * Analyze: Carefully examine the input human image to identify and extract the primary facial expression and emotional mood (e.g., happiness, sadness, anger, surprise).
+* Translate: Translate this specific emotional state onto the face of the ${targetAnimalType} in a manner that feels natural and believable for that species. Consider how this particular emotion would be expressed through the animal's unique facial features, body language (if applicable within the portrait), and eye movements.
 
-**Crucial Constraints:**
-* The final image must depict **only** the ${targetAnimalType} with its natural, standard anatomy and facial features.
-* **Strictly non-anthropomorphic:** Ensure the ${targetAnimalType} has NO human characteristics whatsoever. This includes, but is not limited to: clothing, glasses, hats, accessories, human-like hands/posture, or unnatural facial structures.
-* Ignore all other visual elements from the human input image (like clothing, background, objects). Focus *solely* on replicating the expression and mood.`;
+Crucial Constraints:
+* Focus: The final image must depict only the ${targetAnimalType} head or head and shoulders. No full-body shots unless necessary for conveying the specific emotion.
+* Accuracy: Maintain the ${targetAnimalType}'s natural anatomy and facial features with high fidelity. Avoid any human-like features, including but not limited to:
+* Clothing, accessories (jewelry, glasses, hats)
+* Human-like hands, posture, or body proportions
+* Unnatural or exaggerated facial features (e.g., human-like smiles on animals that don't smile)
+* Emotional Focus: Prioritize accurately conveying the human's emotional state through the animal's expressive capabilities. Minor stylistic liberties are acceptable as long as they serve to enhance the emotional expression and remain within the bounds of the animal's natural appearance.`;
     } else {
-      prompt = `Create a portrait of a human character inspired by the mood and expression of the input ${type} image. The style should be stylized realism (similar to modern 3D animation like Pixar or Dreamworks - shot on iPhone). Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics like fur, feathers, tails, claws, or animal-like features.`;
+      prompt = `Render this image of a ${type} as a human with subtle, stylized photorealism (like Pixar or Dreamworks) with shot-on-iPhone level quality. Maintain the essential features and overall composition of the original photo. Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics like fur, feathers, tails, claws, or animal-like features.`;
     }
 
     console.debug("createOppositeVersion prompt:", prompt);
