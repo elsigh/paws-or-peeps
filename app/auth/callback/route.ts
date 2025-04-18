@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase-server";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
@@ -16,7 +16,6 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      // @ts-ignore
       await supabase.auth.exchangeCodeForSession(code);
     } catch (error) {
       console.error("Error exchanging code for session:", error);

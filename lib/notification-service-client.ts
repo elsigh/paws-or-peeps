@@ -1,8 +1,9 @@
+import { createClient } from "./supabase-client";
 import type { Notification } from "./types";
-import supabase from "./supabase-client";
 
 // Get all notifications for the current user
 export async function getUserNotifications(userId: string): Promise<Notification[]> {
+  const supabase = createClient();
   try {
     const { data: notifications, error } = await supabase
       .from("notifications")
@@ -24,6 +25,7 @@ export async function getUserNotifications(userId: string): Promise<Notification
 
 // Mark a notification as read
 export async function markNotificationAsRead(notificationId: string): Promise<void> {
+  const supabase = createClient();
   try {
     const { error } = await supabase
       .from("notifications")
@@ -42,6 +44,7 @@ export async function markNotificationAsRead(notificationId: string): Promise<vo
 
 // Mark all notifications as read for the current user
 export async function markAllNotificationsAsRead(userId: string): Promise<void> {
+  const supabase = createClient();
   try {
     const { error } = await supabase
       .from("notifications")
@@ -61,6 +64,7 @@ export async function markAllNotificationsAsRead(userId: string): Promise<void> 
 
 // Get unread notification count for the current user
 export async function getUnreadNotificationCount(userId: string): Promise<number> {
+  const supabase = createClient();
   try {
     const { count, error } = await supabase
       .from("notifications")

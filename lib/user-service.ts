@@ -1,5 +1,5 @@
-import supabase from "@/lib/supabase-client";
-import { createClient as createAdminClient, createClient } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase-client";
+import { createClient as createAdminClient } from "@supabase/supabase-js";
 
 export interface UserProfile {
   id: string;
@@ -54,8 +54,7 @@ export async function getUserProfile(
 }
 
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
-  if (!supabase) throw new Error("No supabase client");
-
+  const supabase = createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();

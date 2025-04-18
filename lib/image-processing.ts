@@ -1,16 +1,13 @@
-import { createClient } from "./supabase-server";
-import { experimental_generateImage as generateImage, generateText } from "ai";
-import type { GeneratedFile } from "ai";
-import { luma } from "@ai-sdk/luma";
-import { v4 as uuidv4 } from "uuid";
+import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { put } from "@vercel/blob";
+import { generateText } from "ai";
+import type { GeneratedFile } from "ai";
 import { nanoid } from "nanoid";
-import getVisitorId from "./get-visitor-id";
 import { ANIMAL_TYPES } from "./constants";
+import getVisitorId from "./get-visitor-id";
+import { createClient } from "./supabase-server";
 import type { ImageData, VoteStats } from "./types";
-import { google } from "@ai-sdk/google";
-import supabase from "./supabase-client";
 
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
@@ -245,6 +242,7 @@ export async function saveImageData(
     }
 
     // Get the current user's ID
+    const supabase = await createClient();
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user?.id) {
       throw new Error("User must be authenticated to save image data");
@@ -768,7 +766,7 @@ export async function getVoteInfo(imageId: string): Promise<{
     console.error("Error in getVoteInfo:", error);
     throw new Error(
       `Failed to get vote info: ${
-        error instanceof Error ? error.message : String(error)
+      error instanceof Error ? error.message : String(error)
       }`
     );
   }
