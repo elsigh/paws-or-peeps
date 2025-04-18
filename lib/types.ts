@@ -26,13 +26,20 @@ export interface VoteStats {
 }
 
 export interface Notification {
-  id: number;
+  id: string;
   user_id: string;
   type: string;
   message: string;
   is_read: boolean;
   created_at: string;
   image_id?: string;
+}
+
+export interface Settings {
+  user_id: string;
+  last_notified_id: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface UserAnalyticsDetail {
@@ -49,6 +56,7 @@ export interface UserAnalyticsDetail {
     humanPercentage: number;
   };
 }
+
 export interface UserAnalytics {
   summary: {
     totalUploads: number;

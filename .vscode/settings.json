@@ -12,5 +12,8 @@
   "typescript.enablePromptUseWorkspaceTsdk": true,
   "[jsonc]": {
     "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
   }
 }

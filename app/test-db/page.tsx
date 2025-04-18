@@ -1,6 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase-server";
+import type { Settings } from "@/lib/types";
 import type { Session } from "@supabase/supabase-js";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { ClientTest } from "./client-test";
@@ -13,6 +14,7 @@ export default async function TestDbPage() {
   let recentImages: { id: number; original_url: string; created_at: string }[] =
     [];
   let serverSession: Session | null = null;
+  let userSettings: Settings | null = null;
 
   try {
     // Test database connection
@@ -29,6 +31,19 @@ export default async function TestDbPage() {
         } = await supabase.auth.getSession();
         serverSession = session;
         //console.debug("serverSession:", serverSession);
+
+        // Get user settings if logged in
+        if (session?.user?.id) {
+          const { data: settings, error: settingsError } = await supabase
+            .from("settings")
+            .select("*")
+            .eq("user_id", session.user.id)
+            .single();
+
+          if (!settingsError && settings) {
+            userSettings = settings;
+          }
+        }
 
         // Test simple query
         const { error } = await supabase
@@ -110,6 +125,26 @@ export default async function TestDbPage() {
                       : "No active session found"}
                   </AlertDescription>
                 </Alert>
+
+                {userSettings && (
+                  <div className="mt-4">
+                    <h3 className="font-medium mb-2">User Settings</h3>
+                    <div className="space-y-2 text-sm">
+                      <p>
+                        <strong>Last Notified ID:</strong>{" "}
+                        {userSettings.last_notified_id || "None"}
+                      </p>
+                      <p>
+                        <strong>Created:</strong>{" "}
+                        {new Date(userSettings.created_at).toLocaleString()}
+                      </p>
+                      <p>
+                        <strong>Updated:</strong>{" "}
+                        {new Date(userSettings.updated_at).toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
             <Card>
