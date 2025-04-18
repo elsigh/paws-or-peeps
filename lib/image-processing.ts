@@ -10,6 +10,7 @@ import getVisitorId from "./get-visitor-id";
 import { ANIMAL_TYPES } from "./constants";
 import type { ImageData, VoteStats } from "./types";
 import { google } from "@ai-sdk/google";
+import supabase from "./supabase-client";
 
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
@@ -243,73 +244,39 @@ export async function saveImageData(
       throw new Error(`Invalid image type: ${imageType}`);
     }
 
-    const supabase = await createClient();
-    if (!supabase) {
-      throw new Error(
-        "Failed to create Supabase client - check environment variables"
-      );
-    }
-
-    // Get the current user's ID from the session
-    const {
-      data: { session },
-      // @ts-ignore
-    } = await supabase.auth.getSession();
-
+    // Get the current user's ID
+    const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user?.id) {
-      throw new Error("User must be authenticated to save images");
+      throw new Error("User must be authenticated to save image data");
     }
 
     const userId = session.user.id;
-    console.log(`Using authenticated user ID: ${userId}`);
 
-    // Generate a UUID for this image if needed
-    const imageId = uuidv4();
-
-    // Truncate URLs if they're too long
-    const MAX_URL_LENGTH = 1000;
-    const safeOriginalUrl = originalUrl?.substring(0, MAX_URL_LENGTH) || "";
-    const safeAnimatedUrl = animatedUrl?.substring(0, MAX_URL_LENGTH) || "";
-    const safeOppositeUrl = oppositeUrl?.substring(0, MAX_URL_LENGTH) || "";
-
-    console.log(
-      `Attempting to save with image_type: ${imageType} and uploader_id: ${userId}`
-    );
-
-    // Now attempt the insert
+    // Insert the image data
     const { data, error } = await supabase
       .from("images")
       .insert({
-        id: imageId,
-        original_url: safeOriginalUrl,
-        animated_url: safeAnimatedUrl,
-        opposite_url: safeOppositeUrl,
+        original_url: originalUrl,
+        animated_url: animatedUrl,
+        opposite_url: oppositeUrl,
         image_type: imageType,
-        uploader_id: userId,
         target_animal_type: targetAnimalType,
+        uploader_id: userId,
         private: isPrivate,
       })
       .select()
       .single();
 
     if (error) {
-      console.error("Supabase insert error:", error);
-      if (error.code) {
-        console.error(`Error code: ${error.code}, Message: ${error.message}`);
-        if (error.details) console.error("Error details:", error.details);
-      }
-      throw error;
+      console.error("Error saving image data:", error);
+      throw new Error(`Failed to save image data: ${error.message}`);
     }
 
-    console.log("Image data saved successfully with ID:", data.id);
+    console.log("Successfully saved image data:", data);
     return data;
   } catch (error) {
     console.error("Error in saveImageData:", error);
-    throw new Error(
-      `Failed to save image data: ${
-        error instanceof Error ? error.message : String(error)
-      }`
-    );
+    throw error;
   }
 }
 
