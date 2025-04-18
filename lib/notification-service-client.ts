@@ -1,101 +1,72 @@
-import { createClient } from "./supabase-browser";
-import type { Notification, UserAnalytics, Vote } from "./types";
+import type { Notification } from "./types";
+import supabase from "./supabase-client";
 
 // Get all notifications for the current user
-export async function getUserNotifications(): Promise<Notification[]> {
+export async function getUserNotifications(userId: string): Promise<Notification[]> {
   try {
-    const supabase = await createClient();
-
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
-      return [];
-    }
-
-    const { data, error } = await supabase
+    const { data: notifications, error } = await supabase
       .from("notifications")
       .select("*")
-      .eq("user_id", session.user.id)
+      .eq("user_id", userId)
       .order("created_at", { ascending: false });
 
     if (error) {
       console.error("Error fetching notifications:", error);
-      throw new Error(`Failed to fetch notifications: ${error.message}`);
+      return [];
     }
 
-    return data || [];
+    return notifications || [];
   } catch (error) {
-    console.error("Error in getUserNotifications:", error);
+    console.error("Unexpected error fetching notifications:", error);
     return [];
   }
 }
 
 // Mark a notification as read
-export async function markNotificationAsRead(
-  notificationId: number
-): Promise<boolean> {
+export async function markNotificationAsRead(notificationId: string): Promise<void> {
   try {
-    const supabase = await createClient();
-
     const { error } = await supabase
       .from("notifications")
-      .update({ read: true })
+      .update({ is_read: true })
       .eq("id", notificationId);
 
     if (error) {
       console.error("Error marking notification as read:", error);
-      return false;
+      throw error;
     }
-
-    return true;
   } catch (error) {
-    console.error("Error in markNotificationAsRead:", error);
-    return false;
+    console.error("Unexpected error marking notification as read:", error);
+    throw error;
   }
 }
 
 // Mark all notifications as read for the current user
-export async function markAllNotificationsAsRead(): Promise<boolean> {
+export async function markAllNotificationsAsRead(userId: string): Promise<void> {
   try {
-    const supabase = await createClient();
-
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
-      return false;
-    }
-
     const { error } = await supabase
       .from("notifications")
-      .update({ read: true })
-      .eq("user_id", session.user.id)
-      .eq("read", false);
+      .update({ is_read: true })
+      .eq("user_id", userId)
+      .is("is_read", false);
 
     if (error) {
       console.error("Error marking all notifications as read:", error);
-      return false;
+      throw error;
     }
-
-    return true;
   } catch (error) {
-    console.error("Error in markAllNotificationsAsRead:", error);
-    return false;
+    console.error("Unexpected error marking all notifications as read:", error);
+    throw error;
   }
 }
 
 // Get unread notification count for the current user
-export async function getUnreadNotificationCount(): Promise<number> {
+export async function getUnreadNotificationCount(userId: string): Promise<number> {
   try {
-    const supabase = await createClient();
-
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
-      return 0;
-    }
-
     const { count, error } = await supabase
       .from("notifications")
       .select("*", { count: "exact", head: true })
-      .eq("user_id", session.user.id)
-      .eq("read", false);
+      .eq("user_id", userId)
+      .is("is_read", false);
 
     if (error) {
       console.error("Error getting unread notification count:", error);
@@ -104,117 +75,7 @@ export async function getUnreadNotificationCount(): Promise<number> {
 
     return count || 0;
   } catch (error) {
-    console.error("Error in getUnreadNotificationCount:", error);
+    console.error("Unexpected error getting unread notification count:", error);
     return 0;
-  }
-}
-
-// Get user analytics data
-export async function getUserAnalytics(): Promise<UserAnalytics> {
-  try {
-    const supabase = await createClient();
-
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session?.user?.id) {
-      throw new Error("User is not authenticated");
-    }
-
-    // Get all images uploaded by the user
-    const { data: images, error: imagesError } = await supabase
-      .from("images")
-      .select("id, created_at, image_type, target_animal_type, private")
-      .eq("uploader_id", session.user.id);
-
-    if (imagesError) {
-      console.error("Error fetching user images:", imagesError);
-      throw new Error(`Failed to fetch user images: ${imagesError.message}`);
-    }
-
-    // Get all votes for the user's images
-    const imageIds = images?.map((image) => image.id) || [];
-    let votes: Vote[] = [];
-
-    if (imageIds.length > 0) {
-      const { data: votesData, error: votesError } = await supabase
-        .from("votes")
-        .select("image_id, vote, created_at")
-        .in("image_id", imageIds);
-
-      if (votesError) {
-        console.error("Error fetching votes:", votesError);
-      } else {
-        votes = votesData || [];
-      }
-    }
-
-    // Process the data to create analytics
-    const imagesWithVotes =
-      images?.map((image) => {
-        const imageVotes = votes.filter((vote) => vote.image_id === image.id);
-        const animalVotes = imageVotes.filter(
-          (vote) => vote.vote === "animal"
-        ).length;
-        const humanVotes = imageVotes.filter(
-          (vote) => vote.vote === "human"
-        ).length;
-        const totalVotes = animalVotes + humanVotes;
-
-        return {
-          ...image,
-          votes: {
-            total: totalVotes,
-            animal: animalVotes,
-            human: humanVotes,
-            animalPercentage:
-              totalVotes > 0 ? (animalVotes / totalVotes) * 100 : 0,
-            humanPercentage:
-              totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0,
-          },
-        };
-      }) || [];
-
-    // Calculate total stats
-    const totalUploads = imagesWithVotes.length;
-    const totalVotes = votes.length;
-    const totalAnimalVotes = votes.filter(
-      (vote) => vote.vote === "animal"
-    ).length;
-    const totalHumanVotes = votes.filter(
-      (vote) => vote.vote === "human"
-    ).length;
-
-    // Group by date for trend analysis
-    const votesByDate = votes.reduce((acc, vote) => {
-      const date = new Date(vote.created_at).toISOString().split("T")[0];
-      if (!acc[date]) acc[date] = { animal: 0, human: 0, total: 0 };
-
-      acc[date][vote.vote]++;
-      acc[date].total++;
-
-      return acc;
-    }, {} as Record<string, { animal: number; human: number; total: number }>);
-
-    // Convert to array for easier consumption in frontend
-    const voteTrends = Object.entries(votesByDate)
-      .map(([date, counts]) => ({
-        date,
-        ...counts,
-      }))
-      .sort((a, b) => a.date.localeCompare(b.date));
-
-    return {
-      summary: {
-        totalUploads,
-        totalVotes,
-        totalAnimalVotes,
-        totalHumanVotes,
-        averageVotesPerUpload: totalUploads > 0 ? totalVotes / totalUploads : 0,
-      },
-      details: imagesWithVotes,
-      trends: voteTrends,
-    };
-  } catch (error) {
-    console.error("Error in getUserAnalytics:", error);
-    throw error;
   }
 } 

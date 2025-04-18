@@ -27,7 +27,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ANIMAL_TYPES } from "@/lib/constants";
-import type { ImageData } from "@/lib/types";
+import type { ImageData, VoteStats } from "@/lib/types";
 import {
 	Select,
 	SelectContent,
@@ -36,32 +36,38 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { RefreshCw } from "lucide-react";
-import { createClient } from "@/lib/supabase-client";
+import supabase from "@/lib/supabase-client";
 import { useAuth } from "@/lib/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserIcon } from "lucide-react";
 import type { UserProfile } from "@/lib/user-service";
 import { toast } from "sonner";
+import { id } from "date-fns/locale";
 
 interface ResultsDisplayProps {
 	imageData: ImageData;
 	uploaderProfile: UserProfile | null;
+	initialVote?: "animal" | "human" | null;
+	initialVoteStats?: VoteStats;
 }
 
 export default function ResultsDisplay({
 	imageData,
 	uploaderProfile,
+	initialVote = null,
+	initialVoteStats = {
+		animalVotes: 0,
+		humanVotes: 0,
+		animalPercentage: 0,
+		humanPercentage: 0,
+		totalVotes: 0,
+	},
 }: ResultsDisplayProps) {
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
-	const [voted, setVoted] = useState(false);
-	const [voteStats, setVoteStats] = useState<{
-		animalVotes: number;
-		humanVotes: number;
-		animalPercentage: number;
-		humanPercentage: number;
-	} | null>(null);
+	const [voted, setVoted] = useState(!!initialVote);
+	const [voteStats, setVoteStats] = useState<VoteStats>(initialVoteStats);
 	const [showCelebration, setShowCelebration] = useState(false);
 	const [copied, setCopied] = useState(false);
 	const shareUrlRef = useRef<HTMLInputElement>(null);
@@ -70,7 +76,9 @@ export default function ResultsDisplay({
 	const [humanImageLoaded, setHumanImageLoaded] = useState(false);
 	const [animalImageLoaded, setAnimalImageLoaded] = useState(false);
 	const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
-	const [userVote, setUserVote] = useState<"animal" | "human" | null>(null);
+	const [userVote, setUserVote] = useState<"animal" | "human" | null>(
+		initialVote,
+	);
 	const [isPrivate, setIsPrivate] = useState(imageData?.private || false);
 	const [privacyLoading, setPrivacyLoading] = useState(false);
 
@@ -80,9 +88,6 @@ export default function ResultsDisplay({
 	// Check authentication status on component mount
 	useEffect(() => {
 		const checkAuth = async () => {
-			const supabase = createClient();
-			if (!supabase) return;
-
 			const { data } = await supabase.auth.getSession();
 			setIsAuthenticated(!!data.session);
 
@@ -100,6 +105,28 @@ export default function ResultsDisplay({
 
 		checkAuth();
 	}, []);
+
+	// Check if user has already voted when component mounts
+	useEffect(() => {
+		const checkExistingVote = async () => {
+			if (!isAuthenticated) return;
+
+			try {
+				const response = await fetch(`/api/vote?imageId=${imageData.id}`);
+				const data = await response.json();
+
+				if (response.ok && data.vote) {
+					setUserVote(data.vote);
+					setVoted(true);
+					setVoteStats(data.voteStats);
+				}
+			} catch (err) {
+				console.error("Error checking existing vote:", err);
+			}
+		};
+
+		checkExistingVote();
+	}, [isAuthenticated, imageData.id]);
 
 	// Request notification permission when component mounts for the uploader
 	useEffect(() => {

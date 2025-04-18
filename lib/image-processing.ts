@@ -746,3 +746,63 @@ export async function toggleImagePrivacy(imageId: string): Promise<boolean> {
     throw error;
   }
 }
+
+// Function to check if user has voted on an image and get vote stats
+export async function getVoteInfo(imageId: string): Promise<{
+  userVote: "animal" | "human" | null;
+  voteStats: VoteStats;
+}> {
+  try {
+    const supabase = await createClient();
+    if (!supabase) {
+      throw new Error("Failed to create Supabase client");
+    }
+
+    // Get current user's ID from session
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const currentUserId = session?.user?.id;
+
+    // Get all votes for this image
+    const { data: votes, error: statsError } = await supabase
+      .from("votes")
+      .select("vote, voter_id")
+      .eq("image_id", imageId);
+
+    if (statsError) {
+      console.error("Error fetching votes:", statsError);
+      throw new Error(`Failed to fetch votes: ${statsError.message}`);
+    }
+
+    // Calculate vote statistics
+    const animalVotes = votes.filter((v) => v.vote === "animal").length;
+    const humanVotes = votes.filter((v) => v.vote === "human").length;
+    const totalVotes = animalVotes + humanVotes;
+
+    const voteStats = {
+      animalVotes,
+      humanVotes,
+      animalPercentage: totalVotes > 0 ? (animalVotes / totalVotes) * 100 : 0,
+      humanPercentage: totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0,
+      totalVotes,
+    };
+
+    // Check if current user has voted
+    const userVote = currentUserId
+      ? votes.find((v) => v.voter_id === currentUserId)?.vote || null
+      : null;
+
+    return {
+      userVote,
+      voteStats,
+    };
+  } catch (error) {
+    console.error("Error in getVoteInfo:", error);
+    throw new Error(
+      `Failed to get vote info: ${
+        error instanceof Error ? error.message : String(error)
+      }`
+    );
+  }
+}
