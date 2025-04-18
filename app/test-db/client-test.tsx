@@ -3,7 +3,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase-client";
-import type { Session } from "@supabase/supabase-js";
+import type { Session, SupabaseClient } from "@supabase/supabase-js";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -12,12 +12,14 @@ export function ClientTest() {
   const [connectionError, setConnectionError] = useState<string | null>(null);
   const [tableStatus, setTableStatus] = useState("Unknown");
   const [tableError, setTableError] = useState<string | null>(null);
+  const [supabase, setSupabase] = useState<SupabaseClient | null>(null);
   const [recentImages, setRecentImages] = useState<
     { id: number; original_url: string; created_at: string }[]
   >([]);
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
+    if (supabase || session) return;
     const testConnection = async () => {
       try {
         // Test database connection
@@ -27,64 +29,13 @@ export function ClientTest() {
           setConnectionError("Failed to create Supabase client");
           return;
         }
+        setSupabase(supabase);
 
-        // Get current session
         const {
           data: { session },
         } = await supabase.auth.getSession();
         setSession(session);
-
-        try {
-          // Test simple query
-          const { error } = await supabase
-            .from("images")
-            .select("count(*)", { count: "exact", head: true });
-
-          if (error) {
-            setConnectionStatus("Failed");
-            setConnectionError(error.message);
-          } else {
-            setConnectionStatus("Success");
-          }
-        } catch (error) {
-          setConnectionStatus("Failed");
-          setConnectionError(
-            error instanceof Error ? error.message : String(error),
-          );
-        }
-
-        // Check if tables exist
-        if (connectionStatus === "Success") {
-          try {
-            const { error } = await supabase
-              .from("images")
-              .select("id")
-              .limit(1);
-
-            if (error) {
-              setTableStatus("Failed");
-              setTableError(error.message);
-            } else {
-              setTableStatus("Success");
-
-              // Get recent images
-              const { data: recentData, error: recentError } = await supabase
-                .from("images")
-                .select("id, original_url, created_at")
-                .order("created_at", { ascending: false })
-                .limit(5);
-
-              if (!recentError && recentData) {
-                setRecentImages(recentData);
-              }
-            }
-          } catch (error) {
-            setTableStatus("Failed");
-            setTableError(
-              error instanceof Error ? error.message : String(error),
-            );
-          }
-        }
+        //console.debug("client session:", session);
       } catch (error) {
         setConnectionStatus("Failed");
         setConnectionError(
@@ -92,12 +43,98 @@ export function ClientTest() {
         );
       }
     };
-
     testConnection();
-  }, []);
+  });
+
+  useEffect(() => {
+    if (!supabase || connectionStatus !== "Success") {
+      //console.debug("no reasong to testTables in client:", {
+      //  connectionStatus,
+      //  supabase,
+      //});
+    }
+    const testTables = async () => {
+      // Test database connection
+      const supabase = createClient();
+      try {
+        // Test simple query
+        const { data, error } = await supabase
+          .from("images")
+          .select("*", { count: "exact", head: true });
+        //console.debug("client fetch:", { error, data });
+
+        if (error) {
+          setConnectionStatus("Failed");
+          setConnectionError(error.message);
+        } else {
+          setConnectionStatus("Success");
+        }
+      } catch (error) {
+        setConnectionStatus("Failed");
+        setConnectionError(
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+
+      // Check if tables exist
+      //console.debug("connectionStatus:", connectionStatus);
+      if (connectionStatus === "Success") {
+        try {
+          const { data, error } = await supabase
+            .from("images")
+            .select("id")
+            .limit(1);
+          //console.debug("2nd client fetch:", { error, data });
+          if (error) {
+            setTableStatus("Failed");
+            setTableError(error.message);
+          } else {
+            setTableStatus("Success");
+
+            // Get recent images
+            const { data: recentData, error: recentError } = await supabase
+              .from("images")
+              .select("id, original_url, created_at")
+              .order("created_at", { ascending: false })
+              .limit(1);
+
+            if (!recentError && recentData) {
+              setRecentImages(recentData);
+            }
+          }
+        } catch (error) {
+          setTableStatus("Failed");
+          setTableError(error instanceof Error ? error.message : String(error));
+        }
+      }
+    };
+
+    testTables();
+  }, [connectionStatus, supabase]);
 
   return (
-    <div className="space-y-6">
+    <div className="grid gap-6 md:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle>Client-Side Session Info</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant={session ? "default" : "destructive"}>
+            {session ? (
+              <CheckCircle className="h-4 w-4" />
+            ) : (
+              <AlertCircle className="h-4 w-4" />
+            )}
+            <AlertTitle>{session ? "Session Active" : "No Session"}</AlertTitle>
+            <AlertDescription>
+              {session
+                ? `User ID: ${session.user.id}`
+                : "No active session found"}
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Client-Side Database Connection</CardTitle>
@@ -145,27 +182,6 @@ export function ClientTest() {
               {tableStatus === "Success"
                 ? "Required tables exist and are accessible"
                 : `Tables error: ${tableError}`}
-            </AlertDescription>
-          </Alert>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Client-Side Session Info</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Alert variant={session ? "default" : "destructive"}>
-            {session ? (
-              <CheckCircle className="h-4 w-4" />
-            ) : (
-              <AlertCircle className="h-4 w-4" />
-            )}
-            <AlertTitle>{session ? "Session Active" : "No Session"}</AlertTitle>
-            <AlertDescription>
-              {session
-                ? `User ID: ${session.user.id}`
-                : "No active session found"}
             </AlertDescription>
           </Alert>
         </CardContent>

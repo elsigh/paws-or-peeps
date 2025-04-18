@@ -21,18 +21,19 @@ export default async function TestDbPage() {
       connectionStatus = "Failed";
       connectionError = "Failed to create Supabase client";
     } else {
-      console.debug("supabase:", supabase);
+      //console.debug("supabase:", supabase);
       try {
         // Get server session
         const {
           data: { session },
         } = await supabase.auth.getSession();
         serverSession = session;
-        console.debug("serverSession:", serverSession);
+        //console.debug("serverSession:", serverSession);
+
         // Test simple query
         const { error } = await supabase
           .from("images")
-          .select("count(*)", { count: "exact", head: true });
+          .select("*", { count: "exact", head: true });
 
         if (error) {
           connectionStatus = "Failed";
@@ -63,7 +64,7 @@ export default async function TestDbPage() {
             .from("images")
             .select("id, original_url, created_at")
             .order("created_at", { ascending: false })
-            .limit(5);
+            .limit(1);
 
           if (!recentError && recentData) {
             // @ts-ignore
@@ -87,7 +88,30 @@ export default async function TestDbPage() {
       <div className="space-y-8">
         <div>
           <h2 className="text-xl font-semibold mb-4">Server-Side Tests</h2>
+
           <div className="grid gap-6 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Server Session Info</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Alert variant={serverSession ? "default" : "destructive"}>
+                  {serverSession ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4" />
+                  )}
+                  <AlertTitle>
+                    {serverSession ? "Session Active" : "No Session"}
+                  </AlertTitle>
+                  <AlertDescription>
+                    {serverSession
+                      ? `User ID: ${serverSession.user.id}`
+                      : "No active session found"}
+                  </AlertDescription>
+                </Alert>
+              </CardContent>
+            </Card>
             <Card>
               <CardHeader>
                 <CardTitle>Database Connection</CardTitle>
@@ -116,7 +140,6 @@ export default async function TestDbPage() {
                 </Alert>
               </CardContent>
             </Card>
-
             <Card>
               <CardHeader>
                 <CardTitle>Tables Status</CardTitle>
@@ -143,56 +166,32 @@ export default async function TestDbPage() {
                 </Alert>
               </CardContent>
             </Card>
+            {recentImages.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recent Images</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {recentImages.map((image) => (
+                      <div key={image.id} className="border p-4 rounded-md">
+                        <p>
+                          <strong>ID:</strong> {image.id}
+                        </p>
+                        <p>
+                          <strong>Created:</strong>{" "}
+                          {new Date(image.created_at).toLocaleString()}
+                        </p>
+                        <p className="truncate">
+                          <strong>URL:</strong> {image.original_url}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
-
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Server Session Info</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Alert variant={serverSession ? "default" : "destructive"}>
-                {serverSession ? (
-                  <CheckCircle className="h-4 w-4" />
-                ) : (
-                  <AlertCircle className="h-4 w-4" />
-                )}
-                <AlertTitle>
-                  {serverSession ? "Session Active" : "No Session"}
-                </AlertTitle>
-                <AlertDescription>
-                  {serverSession
-                    ? `User ID: ${serverSession.user.id}`
-                    : "No active session found"}
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
-
-          {recentImages.length > 0 && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Recent Images</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {recentImages.map((image) => (
-                    <div key={image.id} className="border p-4 rounded-md">
-                      <p>
-                        <strong>ID:</strong> {image.id}
-                      </p>
-                      <p>
-                        <strong>Created:</strong>{" "}
-                        {new Date(image.created_at).toLocaleString()}
-                      </p>
-                      <p className="truncate">
-                        <strong>URL:</strong> {image.original_url}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         <div>
