@@ -160,6 +160,7 @@ export async function POST(request: Request) {
     if (imageData.uploader_id !== userId) {
       try {
         const voteType = vote === "animal" ? "🐾 Animal" : "👤 Human";
+        const notificationMessage = `Someone voted "${voteType}" on your upload!`;
         console.log("Creating notification for user:", {
           uploaderId: imageData.uploader_id,
           voterId: userId,
@@ -172,7 +173,7 @@ export async function POST(request: Request) {
           .insert({
             user_id: imageData.uploader_id,
             type: "vote",
-            message: `Someone voted "${voteType}" on your upload!`,
+            message: notificationMessage,
             image_id: imageId,
             is_read: false,
           });
@@ -185,8 +186,6 @@ export async function POST(request: Request) {
             imageId,
             voteType
           });
-        } else {
-          console.log("Successfully created notification");
         }
       } catch (notificationError) {
         console.error("Unexpected error creating notification:", {

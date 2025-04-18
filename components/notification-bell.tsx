@@ -21,6 +21,7 @@ import {
 	getUnreadNotificationCount,
 } from "@/lib/notification-service-client";
 import type { Notification } from "@/lib/types";
+import { showWebNotification } from "@/lib/web-notification-service";
 
 export function NotificationBell() {
 	const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -39,11 +40,36 @@ export function NotificationBell() {
 				notifications,
 				count,
 			});
+
+			// Check for new unread notifications
+			const newUnreadNotifications = notifications.filter(
+				(n) =>
+					!n.is_read &&
+					!notifications.some((oldN) => oldN.id === n.id && oldN.is_read),
+			);
+
+			// Show web notification for each new unread notification
+			if (newUnreadNotifications.length > 0) {
+				for (const notification of newUnreadNotifications) {
+					showWebNotification("New Vote!", {
+						body: notification.message,
+						icon: "/favicon.ico",
+					});
+				}
+			}
+
 			setNotifications(notifications);
 			setUnreadCount(count);
 		};
 
+		// Initial fetch
 		fetchNotifications();
+
+		// Set up polling interval
+		const intervalId = setInterval(fetchNotifications, 30000);
+
+		// Cleanup interval on unmount
+		return () => clearInterval(intervalId);
 	}, [user?.id]);
 
 	const handleMarkAsRead = async (id: number, e: React.MouseEvent) => {

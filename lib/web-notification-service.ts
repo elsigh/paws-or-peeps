@@ -15,7 +15,15 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 export function showWebNotification(title: string, options?: NotificationOptions) {
-  if (!("Notification" in window)) {
+  const hasNotificationCapability = "Notification" in window;
+  const hasPermission = Notification.permission === "granted";
+  console.debug("showWebNotification:", {title, options, hasNotificationCapability, hasPermission});
+  if (!hasNotificationCapability) {
+    console.debug("showWebNotification: No notification capability");
+    return;
+  }
+  if (!hasPermission) {
+    console.debug("showWebNotification: No permission");
     return;
   }
 
