@@ -7,6 +7,14 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import {
   Select,
@@ -81,6 +89,7 @@ export default function ResultsDisplay({
   );
   const [isPrivate, setIsPrivate] = useState(imageData?.private || false);
   const [privacyLoading, setPrivacyLoading] = useState(false);
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   const { requireAuth } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -129,7 +138,7 @@ export default function ResultsDisplay({
     checkExistingVote();
   }, [isAuthenticated, imageData.id]);
 
-  // Request notification permission when component mounts for the uploader
+  // Update the notification permission request
   useEffect(() => {
     const requestNotificationPermission = async () => {
       // Only request for the uploader
@@ -152,22 +161,73 @@ export default function ResultsDisplay({
         return;
       }
 
-      // Request permission
-      try {
-        const permission = await Notification.requestPermission();
-        if (permission === "granted") {
-          console.log("Notification permission granted");
-          toast.success(
-            "You'll get notified when someone votes on your image!",
-          );
-        }
-      } catch (err) {
-        console.error("Error requesting notification permission:", err);
-      }
+      // Show the explanation modal first
+      setShowNotificationModal(true);
     };
 
     requestNotificationPermission();
   }, [imageData.isUploader, isAuthenticated]);
+
+  const handleEnableNotifications = async () => {
+    try {
+      const permission = await Notification.requestPermission();
+      setShowNotificationModal(false);
+
+      if (permission === "granted") {
+        console.log("Notification permission granted");
+        toast.success("You'll get notified when someone votes on your image!");
+      }
+    } catch (err) {
+      console.error("Error requesting notification permission:", err);
+      toast.error("Failed to enable notifications");
+    }
+  };
+
+  // Add the modal component before the return statement
+  const NotificationModal = () => (
+    <Dialog
+      open={showNotificationModal}
+      onOpenChange={setShowNotificationModal}
+    >
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            Enable Vote Notifications 🔔
+          </DialogTitle>
+          <DialogDescription className="space-y-2 pt-4">
+            <p>
+              Would you like to receive notifications when others vote on your
+              uploads?
+            </p>
+            <p className="font-medium text-rose-600">
+              You'll only get notifications for:
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-sm">
+              <li>New votes on your uploaded images</li>
+              <li>No spam or marketing messages</li>
+              <li>You can disable notifications anytime</li>
+            </ul>
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter className="flex justify-between sm:justify-between">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowNotificationModal(false)}
+          >
+            Maybe Later
+          </Button>
+          <Button
+            type="button"
+            className="bg-rose-500 hover:bg-rose-600"
+            onClick={handleEnableNotifications}
+          >
+            Enable Notifications
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
 
   // Destructure imageData for easier access
   const {
@@ -259,47 +319,39 @@ export default function ResultsDisplay({
       : `/results/${imageId}`;
 
   // Add a function to handle regeneration
-  const handleRegenerate = async () => {
-    if (!selectedAnimal) return;
-
-    setRegenerating(true);
-    setError(null);
-
+  const handleRegenerate = async (selectedAnimal: string) => {
     try {
+      setRegenerating(true);
       const response = await fetch("/api/regenerate-opposite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          imageId,
+          imageId: imageData.id,
           newType: selectedAnimal,
         }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
-        throw new Error(data.error || "Failed to regenerate image");
+        throw new Error("Failed to regenerate image");
       }
 
-      // Refresh the page to show the new image
-      router.refresh();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred",
-      );
+      const data = await response.json();
+
+      // Check if we have a valid image ID in the response
+      if (!data.image?.id) {
+        throw new Error("No image ID received from server");
+      }
+
+      // Redirect to the new results page with the image ID
+      router.push(`/results/${data.image.id}`);
+    } catch (error) {
+      console.error("Error regenerating image:", error);
+      toast.error("Failed to regenerate image");
     } finally {
       setRegenerating(false);
     }
-  };
-
-  // if the image_type is human then the animated_url is a human
-  // otherwise
-
-  // Add a function to check if this card represents the user's vote
-  const isUserVote = (cardType: "human" | "animal") => {
-    return voted && userVote === cardType;
   };
 
   const handleDeleteImage = async () => {
@@ -325,13 +377,14 @@ export default function ResultsDisplay({
       });
 
       const data = await response.json();
+      console.debug("DELETE images", data);
 
       if (!response.ok) {
         throw new Error(data.error || "Failed to delete image");
       }
 
       // Redirect to homepage after successful deletion
-      router.push("/");
+      router.push("/gallery?deleted=1");
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred",
@@ -399,6 +452,7 @@ export default function ResultsDisplay({
 
   return (
     <div className="space-y-8">
+      <NotificationModal />
       {/* Add uploader info at the top */}
       {uploaderProfile && (
         <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -429,7 +483,14 @@ export default function ResultsDisplay({
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Human Card - Always on the left */}
-        <Card className="relative border-rose-200 overflow-hidden">
+        <Card
+          className={`relative border-rose-200 overflow-hidden ${
+            !isUploader && !voted
+              ? "cursor-pointer hover:border-rose-400 transition-colors"
+              : ""
+          } ${userVote === "human" ? "bg-rose-50" : ""}`}
+          onClick={() => !isUploader && !voted && handleVote("human")}
+        >
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
               <Image
@@ -448,13 +509,25 @@ export default function ResultsDisplay({
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
                 <span>Human</span>
                 <span className="text-xl">👤</span>
+                {userVote === "human" && (
+                  <span className="text-sm font-medium text-rose-600 ml-2">
+                    (I voted)
+                  </span>
+                )}
               </h3>
             </div>
           </CardContent>
         </Card>
 
         {/* Animal Card - Always on the right */}
-        <Card className="relative border-rose-200 overflow-hidden">
+        <Card
+          className={`relative border-rose-200 overflow-hidden ${
+            !isUploader && !voted
+              ? "cursor-pointer hover:border-rose-400 transition-colors"
+              : ""
+          } ${userVote === "animal" ? "bg-rose-50" : ""}`}
+          onClick={() => !isUploader && !voted && handleVote("animal")}
+        >
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
               <Image
@@ -483,6 +556,11 @@ export default function ResultsDisplay({
                     : type.charAt(0).toUpperCase() + type.slice(1)}
                 </span>
                 <span className="text-xl">🐾</span>
+                {userVote === "animal" && (
+                  <span className="text-sm font-medium text-rose-600 ml-2">
+                    (I voted)
+                  </span>
+                )}
               </h3>
 
               {/* Add regeneration controls for uploaders of human images with no votes */}
@@ -506,7 +584,7 @@ export default function ResultsDisplay({
                   </Select>
                   <Button
                     size="sm"
-                    onClick={handleRegenerate}
+                    onClick={() => handleRegenerate(selectedAnimal || "")}
                     disabled={!selectedAnimal || regenerating}
                     className="bg-rose-500 hover:bg-rose-600 flex-shrink-0"
                   >
@@ -650,7 +728,7 @@ export default function ResultsDisplay({
                 </TooltipProvider>
               </div>
 
-              <div className="flex justify-center gap-4 mt-4">
+              <div className="flex flex-wrap justify-center items-center gap-4 mt-4">
                 <Link href="/">
                   <CatButton className="bg-rose-500 hover:bg-rose-600">
                     <span className="flex items-center gap-2">

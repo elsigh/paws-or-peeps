@@ -1,6 +1,7 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase-server";
 import { createOppositeVersion } from "@/lib/image-processing";
+import { createClient } from "@/lib/supabase-server";
+import { revalidatePath } from "next/cache";
+import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +10,7 @@ export async function POST(request: NextRequest) {
     if (!imageId || !newType) {
       return NextResponse.json(
         { error: "Image ID and new type are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     if (!currentUserId) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest) {
       console.error("Error fetching image:", imageError);
       return NextResponse.json(
         { error: "Failed to fetch image data" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     if (imageData.uploader_id !== currentUserId) {
       return NextResponse.json(
         { error: "Only the uploader can regenerate this image" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -61,14 +62,14 @@ export async function POST(request: NextRequest) {
       console.error("Error checking votes:", voteError);
       return NextResponse.json(
         { error: "Failed to check votes" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (count && count > 0) {
       return NextResponse.json(
         { error: "Cannot regenerate an image that has votes" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -76,7 +77,7 @@ export async function POST(request: NextRequest) {
     const oppositeUrl = await createOppositeVersion(
       imageData.original_url,
       imageData.image_type,
-      newType
+      newType,
     );
 
     // Update the image in the database
@@ -93,20 +94,39 @@ export async function POST(request: NextRequest) {
       console.error("Error updating image:", updateError);
       return NextResponse.json(
         { error: "Failed to update image" },
-        { status: 500 }
+        { status: 500 },
       );
     }
+
+    // Get the updated image data
+    const { data: updatedImage, error: fetchError } = await supabase
+      .from("images")
+      .select("*")
+      .eq("id", imageId)
+      .single();
+
+    if (fetchError) {
+      console.error("Error fetching updated image:", fetchError);
+      return NextResponse.json(
+        { error: "Failed to fetch updated image" },
+        { status: 500 },
+      );
+    }
+
+    // Revalidate the page
+    revalidatePath(`/results/${imageId}`);
 
     return NextResponse.json({
       success: true,
       message: "Image regenerated successfully",
       oppositeUrl,
+      image: updatedImage,
     });
   } catch (error) {
     console.error("Error in regenerate-opposite API:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

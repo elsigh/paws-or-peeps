@@ -1,3 +1,5 @@
+import { createClient } from "@/lib/supabase-server";
+import type { ImageData, VoteStats } from "@/lib/types";
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { put } from "@vercel/blob";
@@ -6,8 +8,26 @@ import type { GeneratedFile } from "ai";
 import { nanoid } from "nanoid";
 import { ANIMAL_TYPES } from "./constants";
 import getVisitorId from "./get-visitor-id";
-import { createClient } from "./supabase-server";
-import type { ImageData, VoteStats } from "./types";
+
+// Define the database types inline since we don't have access to the generated types
+type ImageRow = {
+  id: string;
+  original_url: string;
+  animated_url?: string;
+  opposite_url?: string;
+  image_type: string;
+  created_at: string;
+  uploader_id?: string;
+  private: boolean;
+};
+
+type VoteRow = {
+  vote: "animal" | "human";
+};
+
+type ImageWithVotes = ImageRow & {
+  votes: VoteRow[];
+};
 
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
@@ -293,7 +313,6 @@ export async function getImageById(id: string): Promise<ImageData> {
     // Get current user's ID from session
     const {
       data: { session },
-      // @ts-ignore
     } = await supabase.auth.getSession();
     const currentUserId = session?.user?.id;
 
@@ -433,69 +452,85 @@ export async function recordVote(
 
 // Function to get recent transformations
 export async function getRecentTransformations(limit = 100) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    const userId = user?.id;
 
-  // Get current user ID if available
-  const {
-    data: { session },
-  } = await supabase.auth.getSession();
-  const currentUserId = session?.user?.id;
+    // Base query to get images
+    let query = supabase.from("images").select(
+      `
+        id,
+        original_url,
+        animated_url,
+        opposite_url,
+        image_type,
+        created_at,
+        uploader_id,
+        private,
+        votes (
+          vote
+        )
+      `,
+    );
 
-  // Base query
-  let query = supabase.from("images").select(
-    `
-      id,
-      original_url,
-      animated_url,
-      opposite_url,
-      image_type,
-      created_at,
-      uploader_id,
-      private,
-      votes (
-        vote
-      )
-    `,
-  );
+    // Only show private images to their owners
+    if (userId) {
+      query = query.or(`private.eq.false,uploader_id.eq.${userId}`);
+    } else {
+      query = query.eq("private", false);
+    }
 
-  // Filter out private images unless they belong to the current user
-  if (currentUserId) {
-    query = query.or(`private.eq.false,uploader_id.eq.${currentUserId}`);
-  } else {
-    query = query.eq("private", false);
+    const { data: images, error } = await query
+      .order("created_at", { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error("Error fetching recent transformations:", error);
+      return [];
+    }
+
+    // Process and validate each image
+    const validImages = (images as ImageWithVotes[]).filter((image) => {
+      // Check if required URLs exist
+      const hasRequiredUrls =
+        image.original_url && (image.animated_url || image.opposite_url);
+
+      // Validate URLs are still accessible
+      const urlsAreValid = true; // We don't want to make HTTP requests here for performance
+
+      return hasRequiredUrls && urlsAreValid;
+    });
+
+    return validImages.map((image) => {
+      const votes = image.votes || [];
+      const animalVotes = votes.filter(
+        (v: VoteRow) => v.vote === "animal",
+      ).length;
+      const humanVotes = votes.filter(
+        (v: VoteRow) => v.vote === "human",
+      ).length;
+      const totalVotes = animalVotes + humanVotes;
+
+      return {
+        ...image,
+        voteStats: {
+          animalVotes,
+          humanVotes,
+          totalVotes,
+          animalPercentage:
+            totalVotes > 0 ? (animalVotes / totalVotes) * 100 : 50,
+          humanPercentage:
+            totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 50,
+        },
+      };
+    });
+  } catch (error) {
+    console.error("Error in getRecentTransformations:", error);
+    return [];
   }
-
-  const { data, error } = await query
-    .order("created_at", { ascending: false })
-    .limit(limit);
-
-  if (error) {
-    console.error("Error getting recent transformations:", error);
-    throw new Error("Failed to get recent transformations");
-  }
-
-  // Process the data to include vote counts
-  const processedData = data.map((item) => {
-    // @ts-ignore
-    const votes = (item.votes as { vote: "animal" | "human" }[]) || [];
-    const animalVotes = votes.filter((v) => v.vote === "animal").length;
-    const humanVotes = votes.filter((v) => v.vote === "human").length;
-    const totalVotes = votes.length;
-
-    return {
-      ...item,
-      votes: undefined, // Remove the raw votes array
-      voteStats: {
-        animalVotes,
-        humanVotes,
-        totalVotes,
-        animalPercentage: totalVotes > 0 ? (animalVotes / totalVotes) * 100 : 0,
-        humanPercentage: totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0,
-      },
-    };
-  });
-
-  return processedData;
 }
 
 // Function to save a vote for an image

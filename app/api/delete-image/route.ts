@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { del } from "@vercel/blob";
+import { NextResponse } from "next/server";
 
 export async function DELETE(request: Request) {
   try {
@@ -9,7 +9,7 @@ export async function DELETE(request: Request) {
     if (!imageId) {
       return NextResponse.json(
         { error: "Image ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -24,7 +24,7 @@ export async function DELETE(request: Request) {
     if (!session) {
       return NextResponse.json(
         { error: "Authentication required" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -38,14 +38,19 @@ export async function DELETE(request: Request) {
       .single();
 
     if (fetchError || !imageData) {
+      console.error("Error fetching image:", fetchError);
       return NextResponse.json({ error: "Image not found" }, { status: 404 });
     }
 
     // Verify ownership
     if (imageData.uploader_id !== userId) {
+      console.error("Permission denied - user does not own image", {
+        imageUploaderId: imageData.uploader_id,
+        requestingUserId: userId,
+      });
       return NextResponse.json(
         { error: "You don't have permission to delete this image" },
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -76,16 +81,29 @@ export async function DELETE(request: Request) {
       console.error("Error deleting votes:", votesDeleteError);
     }
 
+    // Delete notifications associated with this image
+    const { error: notificationsDeleteError } = await supabase
+      .from("notifications")
+      .delete()
+      .eq("image_id", imageId);
+
+    if (notificationsDeleteError) {
+      console.error("Error deleting notifications:", notificationsDeleteError);
+    }
+
     // Delete the image record from the database
     const { error: deleteError } = await supabase
       .from("images")
       .delete()
-      .eq("id", imageId);
+      .eq("id", imageId)
+      .select()
+      .single();
 
     if (deleteError) {
+      console.error("Error deleting image:", deleteError);
       return NextResponse.json(
         { error: "Failed to delete image from database" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -94,7 +112,7 @@ export async function DELETE(request: Request) {
     console.error("Error in delete-image API:", error);
     return NextResponse.json(
       { error: "An unexpected error occurred" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
