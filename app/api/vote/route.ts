@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
 import { revalidatePath } from "next/cache";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   try {
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     if (!imageId) {
       return NextResponse.json(
         { error: "Image ID is required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -18,7 +18,7 @@ export async function GET(request: Request) {
     if (!supabase) {
       return NextResponse.json(
         { error: "Failed to create Supabase client" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     if (voteCheckError && voteCheckError.code !== "PGRST116") {
       return NextResponse.json(
         { error: "Failed to check existing vote" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     if (statsError) {
       return NextResponse.json(
         { error: "Failed to get vote stats" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -78,7 +78,7 @@ export async function GET(request: Request) {
     console.error("Error in vote GET route:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -89,7 +89,7 @@ export async function POST(request: Request) {
     if (!supabase) {
       return NextResponse.json(
         { error: "Failed to create Supabase client" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -100,7 +100,7 @@ export async function POST(request: Request) {
     if (!session.session?.user?.id) {
       return NextResponse.json(
         { error: "User must be logged in to vote" },
-        { status: 401 }
+        { status: 401 },
       );
     }
 
@@ -116,7 +116,7 @@ export async function POST(request: Request) {
     if (imageError) {
       return NextResponse.json(
         { error: "Failed to fetch image details" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -131,14 +131,14 @@ export async function POST(request: Request) {
     if (voteCheckError && voteCheckError.code !== "PGRST116") {
       return NextResponse.json(
         { error: "Failed to check existing vote" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
     if (existingVote) {
       return NextResponse.json(
         { error: "User has already voted on this image" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -152,7 +152,7 @@ export async function POST(request: Request) {
     if (voteError) {
       return NextResponse.json(
         { error: "Failed to submit vote" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -165,9 +165,9 @@ export async function POST(request: Request) {
           uploaderId: imageData.uploader_id,
           voterId: userId,
           imageId,
-          voteType
+          voteType,
         });
-        
+
         const { error: notificationError } = await supabase
           .from("notifications")
           .insert({
@@ -184,7 +184,7 @@ export async function POST(request: Request) {
             uploaderId: imageData.uploader_id,
             voterId: userId,
             imageId,
-            voteType
+            voteType,
           });
         }
       } catch (notificationError) {
@@ -193,20 +193,45 @@ export async function POST(request: Request) {
           uploaderId: imageData.uploader_id,
           voterId: userId,
           imageId,
-          voteType: vote === "animal" ? "🐾 Animal" : "👤 Human"
+          voteType: vote === "animal" ? "🐾 Animal" : "👤 Human",
         });
       }
     } else {
       console.log("Skipping notification - user is voting on their own image");
     }
 
+    // Get updated vote stats
+    const { data: votes, error: statsError } = await supabase
+      .from("votes")
+      .select("vote")
+      .eq("image_id", imageId);
+
+    if (statsError) {
+      return NextResponse.json(
+        { error: "Failed to get vote stats" },
+        { status: 500 },
+      );
+    }
+
+    const animalVotes = votes.filter((v) => v.vote === "animal").length;
+    const humanVotes = votes.filter((v) => v.vote === "human").length;
+    const totalVotes = animalVotes + humanVotes;
+
+    const voteStats = {
+      animalVotes,
+      humanVotes,
+      animalPercentage: totalVotes > 0 ? (animalVotes / totalVotes) * 100 : 0,
+      humanPercentage: totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 0,
+      totalVotes,
+    };
+
     revalidatePath("/results/[id]", "page");
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, voteStats });
   } catch (error) {
     console.error("Error in vote route:", error);
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

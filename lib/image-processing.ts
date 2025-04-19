@@ -27,7 +27,7 @@ export async function detectImageContent(imageUrl: string): Promise<string> {
             Analyze the attached image.
             
         Determine if the image contains a Human or one of these animals: ${ANIMAL_TYPES.join(
-          ", "
+          ", ",
         )}
         
         If it contains a human, respond with exactly "human".
@@ -128,7 +128,7 @@ export async function createAnimatedVersion(imageUrl: string) {
 export async function createOppositeVersion(
   imageUrl: string,
   type: string,
-  targetAnimalType: string
+  targetAnimalType: string,
 ): Promise<string> {
   try {
     if (!targetAnimalType) {
@@ -136,7 +136,7 @@ export async function createOppositeVersion(
       targetAnimalType = type === "human" ? "cat" : "human";
     }
     console.log(
-      `Starting opposite version creation (${type} to ${targetAnimalType})...`
+      `Starting opposite version creation (${type} to ${targetAnimalType})...`,
     );
 
     // Check if the image URL is valid
@@ -223,7 +223,7 @@ export async function saveImageData(
   oppositeUrl: string | null, // Can be null initially for human uploads
   imageType: string,
   targetAnimalType: string,
-  isPrivate = false
+  isPrivate = false,
 ) {
   try {
     console.log("Saving image data to Supabase with params:", {
@@ -243,7 +243,9 @@ export async function saveImageData(
 
     // Get the current user's ID
     const supabase = await createClient();
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (!session?.user?.id) {
       throw new Error("User must be authenticated to save image data");
     }
@@ -313,7 +315,7 @@ export async function getImageById(id: string): Promise<ImageData> {
     }
 
     console.log(
-      `Image data retrieved. Uploader ID: ${data.uploader_id}, Current user ID: ${currentUserId}`
+      `Image data retrieved. Uploader ID: ${data.uploader_id}, Current user ID: ${currentUserId}`,
     );
 
     // Check if the current user is the uploader
@@ -341,7 +343,7 @@ export async function getImageById(id: string): Promise<ImageData> {
     throw new Error(
       `Failed to get image data: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
   }
 }
@@ -349,7 +351,7 @@ export async function getImageById(id: string): Promise<ImageData> {
 // Update the vote function
 export async function recordVote(
   imageId: string,
-  vote: "animal" | "human"
+  vote: "animal" | "human",
 ): Promise<{
   voteStats: VoteStats;
   originalType: string;
@@ -381,7 +383,7 @@ export async function recordVote(
     const { error: voteError } = await supabase.from("votes").insert({
       image_id: imageId,
       voter_id: visitorId,
-      vote_type: vote,
+      vote: vote,
     });
 
     if (voteError) {
@@ -393,7 +395,7 @@ export async function recordVote(
     // @ts-ignore
     const { data: voteData, error: statsError } = await supabase
       .from("votes")
-      .select("vote_type")
+      .select("vote")
       .eq("image_id", imageId);
 
     if (statsError) {
@@ -403,9 +405,9 @@ export async function recordVote(
 
     // Calculate vote statistics
     // @ts-ignore
-    const animalVotes = voteData.filter((v) => v.vote_type === "animal").length;
+    const animalVotes = voteData.filter((v) => v.vote === "animal").length;
     // @ts-ignore
-    const humanVotes = voteData.filter((v) => v.vote_type === "human").length;
+    const humanVotes = voteData.filter((v) => v.vote === "human").length;
     const totalVotes = animalVotes + humanVotes;
 
     const animalPercentage =
@@ -453,7 +455,7 @@ export async function getRecentTransformations(limit = 100) {
       votes (
         vote
       )
-    `
+    `,
   );
 
   // Filter out private images unless they belong to the current user
@@ -499,7 +501,7 @@ export async function getRecentTransformations(limit = 100) {
 // Function to save a vote for an image
 export async function saveVote(
   imageId: string,
-  vote: "animal" | "human"
+  vote: "animal" | "human",
 ): Promise<VoteStats> {
   try {
     console.log(`Saving vote for image ${imageId}: ${vote}`);
@@ -565,7 +567,7 @@ export async function saveVote(
     throw new Error(
       `Failed to save vote: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
   }
 }
@@ -616,7 +618,7 @@ export async function getVoteStats(imageId: string): Promise<VoteStats> {
     throw new Error(
       `Failed to get vote stats: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
   }
 }
@@ -652,7 +654,7 @@ export async function hasUserVoted(imageId: string): Promise<boolean> {
     throw new Error(
       `Failed to check if user voted: ${
         error instanceof Error ? error.message : String(error)
-      }`
+      }`,
     );
   }
 }
@@ -766,8 +768,8 @@ export async function getVoteInfo(imageId: string): Promise<{
     console.error("Error in getVoteInfo:", error);
     throw new Error(
       `Failed to get vote info: ${
-      error instanceof Error ? error.message : String(error)
-      }`
+        error instanceof Error ? error.message : String(error)
+      }`,
     );
   }
 }

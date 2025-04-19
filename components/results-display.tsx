@@ -226,7 +226,9 @@ export default function ResultsDisplay({
 
       setUserVote(vote);
       setVoted(true);
-      setVoteStats(data.voteStats);
+      if (data.voteStats) {
+        setVoteStats(data.voteStats);
+      }
       setShowCelebration(true);
 
       // Hide celebration after 3 seconds
