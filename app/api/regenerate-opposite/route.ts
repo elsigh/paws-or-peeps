@@ -104,6 +104,7 @@ export async function POST(request: NextRequest) {
       .select("*")
       .eq("id", imageId)
       .single();
+    console.debug("Updated image:", updatedImage);
 
     if (fetchError) {
       console.error("Error fetching updated image:", fetchError);

@@ -1,14 +1,12 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { uploadToBlob } from "@/lib/blob";
 import {
-  saveImageData,
-  detectImageContent,
   createAnimatedVersion,
   createOppositeVersion,
+  detectImageContent,
+  saveImageData,
 } from "@/lib/image-processing";
-import { createClient } from "@/lib/supabase-server";
-import { checkEnvironmentVariables } from "@/lib/env-checker";
-import getVisitorId from "@/lib/get-visitor-id";
+import { capitalize } from "@/lib/utils";
+import type { NextRequest } from "next/server";
 
 export async function POST(request: NextRequest) {
   console.log("API route started");
@@ -28,8 +26,8 @@ export async function POST(request: NextRequest) {
               `${JSON.stringify({
                 status: "error",
                 message: "No image file provided",
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
           controller.close();
           return;
@@ -43,8 +41,8 @@ export async function POST(request: NextRequest) {
               step: "starting",
               message: "Processing started...",
               progress: 5,
-            })}\n`
-          )
+            })}\n`,
+          ),
         );
 
         // Upload original image to Vercel Blob
@@ -55,8 +53,8 @@ export async function POST(request: NextRequest) {
               step: "uploading",
               message: "Uploading image...",
               progress: 10,
-            })}\n`
-          )
+            })}\n`,
+          ),
         );
 
         console.log("Starting image upload to Blob...");
@@ -71,8 +69,8 @@ export async function POST(request: NextRequest) {
                 step: "uploaded",
                 message: "Image uploaded successfully",
                 progress: 20,
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
 
           // Verify the URL is valid
@@ -86,20 +84,20 @@ export async function POST(request: NextRequest) {
                 `${JSON.stringify({
                   status: "error",
                   message: "Failed to upload image to storage",
-                })}\n`
-              )
+                })}\n`,
+              ),
             );
             controller.close();
             return;
           }
-        } catch (error) {
+        } catch (_error) {
           controller.enqueue(
             encoder.encode(
               `${JSON.stringify({
                 status: "error",
                 message: "Failed to upload image to storage",
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
           controller.close();
           return;
@@ -113,8 +111,8 @@ export async function POST(request: NextRequest) {
               step: "detecting",
               message: "Detecting image content...",
               progress: 25,
-            })}\n`
-          )
+            })}\n`,
+          ),
         );
 
         console.log("Detecting image content...");
@@ -128,10 +126,10 @@ export async function POST(request: NextRequest) {
               `${JSON.stringify({
                 status: "progress",
                 step: "detected",
-                message: `Detected: ${detectionResult}`,
+                message: `Detected: ${capitalize(detectionResult)}`,
                 progress: 35,
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
         } catch (error) {
           controller.enqueue(
@@ -139,8 +137,8 @@ export async function POST(request: NextRequest) {
               `${JSON.stringify({
                 status: "error",
                 message: `Error detecting image content: ${error}`,
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
           controller.close();
           return;
@@ -154,8 +152,8 @@ export async function POST(request: NextRequest) {
               step: "animating",
               message: "Creating animated version...",
               progress: 40,
-            })}\n`
-          )
+            })}\n`,
+          ),
         );
 
         console.log("Generating animated version...");
@@ -169,13 +167,13 @@ export async function POST(request: NextRequest) {
                 step: "animated",
                 message: "Animated version created",
                 progress: 60,
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
         } catch (error) {
           console.error(
             "Error creating animated version:",
-            JSON.stringify(error, null, 2)
+            JSON.stringify(error, null, 2),
           );
 
           controller.enqueue(
@@ -183,8 +181,8 @@ export async function POST(request: NextRequest) {
               `${JSON.stringify({
                 status: "error",
                 message: `Failed to create animated version: ${error}`,
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
           controller.close();
           return;
@@ -198,8 +196,8 @@ export async function POST(request: NextRequest) {
               step: "transforming",
               message: "Creating opposite version...",
               progress: 75,
-            })}\n`
-          )
+            })}\n`,
+          ),
         );
 
         console.log("Generating opposite version...");
@@ -209,7 +207,7 @@ export async function POST(request: NextRequest) {
           oppositeUrl = await createOppositeVersion(
             originalUrl,
             detectionResult,
-            targetAnimalType
+            targetAnimalType,
           );
           controller.enqueue(
             encoder.encode(
@@ -218,8 +216,8 @@ export async function POST(request: NextRequest) {
                 step: "transformed",
                 message: "Opposite version created",
                 progress: 85,
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
         } catch (error) {
           console.error("Error creating opposite version:", error);
@@ -234,8 +232,8 @@ export async function POST(request: NextRequest) {
               step: "saving",
               message: "Saving to database...",
               progress: 90,
-            })}\n`
-          )
+            })}\n`,
+          ),
         );
 
         // Try to save the image data to the database
@@ -248,7 +246,7 @@ export async function POST(request: NextRequest) {
             oppositeUrl,
             detectionResult,
             targetAnimalType,
-            isPrivate
+            isPrivate,
           );
 
           controller.enqueue(
@@ -258,8 +256,8 @@ export async function POST(request: NextRequest) {
                 step: "saved",
                 message: "Data saved successfully",
                 progress: 95,
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
         } catch (error) {
           controller.enqueue(
@@ -267,8 +265,8 @@ export async function POST(request: NextRequest) {
               `${JSON.stringify({
                 status: "error",
                 message: `Database error: ${error}`,
-              })}\n`
-            )
+              })}\n`,
+            ),
           );
           controller.close();
           return;
@@ -284,8 +282,8 @@ export async function POST(request: NextRequest) {
               animatedUrl,
               oppositeUrl,
               type: detectionResult,
-            })}\n`
-          )
+            })}\n`,
+          ),
         );
 
         controller.close();
@@ -295,8 +293,8 @@ export async function POST(request: NextRequest) {
             `${JSON.stringify({
               status: "error",
               message: `Unexpected error: ${error}`,
-            })}\n`
-          )
+            })}\n`,
+          ),
         );
         controller.close();
       }

@@ -531,7 +531,13 @@ export default function ResultsDisplay({
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
               <Image
-                src={type === "human" ? oppositeUrl : animatedUrl}
+                src={
+                  regenerating
+                    ? ""
+                    : type === "human"
+                      ? oppositeUrl
+                      : animatedUrl
+                }
                 alt=""
                 className={`object-cover w-full h-full transition-opacity duration-300 ${
                   animalImageLoaded ? "opacity-100" : "opacity-0"
@@ -550,9 +556,11 @@ export default function ResultsDisplay({
             <div className="mt-4 text-center">
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
                 <span>
-                  {type === "human"
-                    ? capitalize(targetAnimalType)
-                    : capitalize(type)}
+                  {regenerating
+                    ? "Loading..."
+                    : type === "human"
+                      ? capitalize(targetAnimalType)
+                      : capitalize(type)}
                 </span>
                 <span className="text-xl">🐾</span>
                 {userVote === "animal" && (
