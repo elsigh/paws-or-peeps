@@ -75,9 +75,10 @@ export function NotificationBell() {
   };
 
   const handleMarkAllAsRead = async () => {
+    console.debug("NotificationBell handleMarkAllAsRead", { user });
     if (!user?.id) return;
-    await markAllNotificationsAsRead(user.id);
     setNotifications(notifications.map((n) => ({ ...n, read: true })));
+    await markAllNotificationsAsRead(user.id);
   };
 
   if (!user) return null;

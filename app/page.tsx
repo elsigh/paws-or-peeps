@@ -1,10 +1,10 @@
-import FileUpload from "@/components/file-upload";
 import { CatLogo } from "@/components/cat-logo";
+import FileUpload from "@/components/file-upload";
 import { PawPrint } from "@/components/paw-print";
 import { RandomCat } from "@/components/random-cat";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ImageIcon } from "lucide-react";
+import Link from "next/link";
 //import { DatabaseStatus } from "@/components/database-status";
 
 export default function Home() {
@@ -35,12 +35,6 @@ export default function Home() {
         <RandomCat size="tiny" index={2} rotate={-5} />
       </div>
 
-      <div className="text-center mb-8">
-        <p className="text-base md:text-xl text-gray-600 text-pretty">
-          Upload the photo of pet or human and be amazed.
-        </p>
-      </div>
-
       <div className="max-w-md mx-auto">
         <FileUpload />
       </div>
@@ -51,16 +45,6 @@ export default function Home() {
         </div>
         <div className="absolute -right-12 top-1/2 -translate-y-1/2 opacity-20">
           <PawPrint size="md" rotation={15} />
-        </div>
-
-        {/* Gallery link */}
-        <div className="text-center mt-4 mb-8">
-          <Link href="/gallery">
-            <Button variant="outline" className="gap-2 border-rose-200">
-              <ImageIcon className="h-4 w-4" />
-              View Gallery
-            </Button>
-          </Link>
         </div>
 
         <h2 className="text-xl font-semibold text-center mb-4 relative">

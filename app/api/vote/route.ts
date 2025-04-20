@@ -96,15 +96,15 @@ export async function POST(request: Request) {
     const { imageId, vote } = await request.json();
 
     // Get the current user
-    const { data: session } = await supabase.auth.getSession();
-    if (!session.session?.user?.id) {
+    const { data: sessionResponse } = await supabase.auth.getSession();
+    if (!sessionResponse.session?.user?.id) {
       return NextResponse.json(
         { error: "User must be logged in to vote" },
         { status: 401 },
       );
     }
 
-    const userId = session.session.user.id;
+    const userId = sessionResponse.session.user.id;
 
     // Get the image details to check if the user is voting on their own image
     const { data: imageData, error: imageError } = await supabase
@@ -160,7 +160,8 @@ export async function POST(request: Request) {
     if (imageData.uploader_id !== userId) {
       try {
         const voteType = vote === "animal" ? "🐾 Animal" : "👤 Human";
-        const notificationMessage = `Someone voted "${voteType}" on your upload!`;
+        const voterName = sessionResponse.session.user.user_metadata.name;
+        const notificationMessage = `${voterName} voted "${voteType}" on your upload!`;
         console.log("Creating notification for user:", {
           uploaderId: imageData.uploader_id,
           voterId: userId,

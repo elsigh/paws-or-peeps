@@ -1,19 +1,18 @@
 import "./globals.css";
 
-import type React from "react";
-import { unstable_ViewTransition as ViewTransition } from "react";
+import { CatLogo } from "@/components/cat-logo";
+import { Footer } from "@/components/footer";
+import { NotificationBell } from "@/components/notification-bell";
+import { HomePageLink } from "@/components/site-header";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import { UserMenu } from "@/components/user-menu";
+import { AuthProvider } from "@/lib/auth-context";
 import { Analytics } from "@vercel/analytics/react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { ThemeProvider } from "@/components/theme-provider";
-import { AuthProvider } from "@/lib/auth-context";
-import { UserMenu } from "@/components/user-menu";
-import { Toaster } from "@/components/ui/toaster";
-import { CatLogo } from "@/components/cat-logo";
-import { HomeIcon } from "lucide-react";
-import { HomePageLink } from "@/components/site-header";
-import { Footer } from "@/components/footer";
-import { NotificationBell } from "@/components/notification-bell";
+import type React from "react";
+import { unstable_ViewTransition as ViewTransition } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 

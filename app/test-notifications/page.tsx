@@ -62,6 +62,8 @@ export default function TestNotificationsPage() {
     });
   };
 
+  //console.debug("TestNotificationsPage", { user });
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Test Notifications</h1>
@@ -91,6 +93,11 @@ export default function TestNotificationsPage() {
                       {new Date(settings.updated_at).toLocaleString()}
                     </p>
                   </>
+                )}
+                {user.user_metadata && (
+                  <pre className="text-sm">
+                    {JSON.stringify(user.user_metadata, null, 2)}
+                  </pre>
                 )}
               </div>
             ) : (

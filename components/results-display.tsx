@@ -34,7 +34,7 @@ import { ANIMAL_TYPES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase-client";
 import type { ImageData, VoteStats } from "@/lib/types";
 import type { UserProfile } from "@/lib/user-service";
-import { id } from "date-fns/locale";
+import { capitalize } from "@/lib/utils";
 import {
   AlertCircle,
   Check,
@@ -103,7 +103,7 @@ export default function ResultsDisplay({
 
       // Set up auth state change listener
       const { data: authListener } = supabase.auth.onAuthStateChange(
-        (event, session) => {
+        (_event, session) => {
           setIsAuthenticated(!!session);
         },
       );
@@ -236,7 +236,7 @@ export default function ResultsDisplay({
     opposite_url: oppositeUrl,
     image_type: type,
     original_url: originalUrl,
-    uploader_id: uploaderId,
+    //uploader_id: uploaderId,
     target_animal_type: targetAnimalType,
     hasVotes,
     isUploader,
@@ -551,9 +551,8 @@ export default function ResultsDisplay({
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
                 <span>
                   {type === "human"
-                    ? targetAnimalType.charAt(0).toUpperCase() +
-                      targetAnimalType?.slice(1)
-                    : type.charAt(0).toUpperCase() + type.slice(1)}
+                    ? capitalize(targetAnimalType)
+                    : capitalize(type)}
                 </span>
                 <span className="text-xl">🐾</span>
                 {userVote === "animal" && (
@@ -576,8 +575,7 @@ export default function ResultsDisplay({
                     <SelectContent>
                       {[...ANIMAL_TYPES].sort().map((animalType) => (
                         <SelectItem key={animalType} value={animalType}>
-                          {animalType.charAt(0).toUpperCase() +
-                            animalType.slice(1)}
+                          {capitalize(animalType)}
                         </SelectItem>
                       ))}
                     </SelectContent>
