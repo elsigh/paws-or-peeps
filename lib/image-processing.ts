@@ -9,11 +9,29 @@ import { nanoid } from "nanoid";
 import { ANIMAL_TYPES } from "./constants";
 import getVisitorId from "./get-visitor-id";
 
-const ORIGINAL_IMAGE_PROMPT = `Stylize this image with enhanced color (saturation+, vibrance+), 
-  increased contrast, and subtle sharpening, maintaining original composition, 
+const ORIGINAL_IMAGE_PROMPT = `Stylize this image with a touch of stylized realism, subtle sharpening, maintaining original composition, 
   aspect ratio, and subject positioning/direction.`;
 
-// Define the database types inline since we don't have access to the generated types
+const HUMAN_TO_ANIMAL_PROMPT = (
+  targetAnimalType: string,
+) => `Generate a portrait of a ${targetAnimalType} that is a representation in animal form of the input human image.
+
+Style: 
+* Subtle, stylized realistic style.
+* Emphasize expressive eyes and subtle shifts in muscle tension to convey emotional state.
+
+Core Task: 
+* Analyze: Carefully examine the input human image to identify and extract the primary colors, facial expression and emotional 
+  mood (e.g., happiness, sadness, anger, surprise).
+* Translate: Translate this specific emotional state onto the face of the ${targetAnimalType} in a manner that feels natural 
+  and believable for that species. Consider how this particular emotion would be expressed through the animal's unique facial features.`;
+
+const ANIMAL_TO_HUMAN_PROMPT = (type: string) =>
+  `Render this image of a ${type} as a human with subtle, stylized photorealism (like Pixar or Dreamworks) 
+with shot-on-iPhone level quality. Maintain the essential features and overall composition of the original photo. 
+Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics 
+like fur, feathers, tails, claws, or animal-like features.`;
+
 type ImageRow = {
   id: string;
   original_url: string;
@@ -170,26 +188,9 @@ export async function createOppositeVersion(
     // Create a specific prompt based on the detected animal type
     let prompt = "";
     if (type === "human") {
-      //prompt = `Transform this ${type} into a light cartoon-style ${targetAnimalType}, retaining realism. Do not put clothes on the ${targetAnimalType}.`;
-      prompt = `Generate a portrait of a ${targetAnimalType}.
-
-Style: * Subtle, stylized realistic style.
-* Emphasize expressive eyes and subtle shifts in muscle tension to convey emotional state.
-
-Core Task: * Analyze: Carefully examine the input human image to identify and extract the primary facial expression and emotional mood (e.g., happiness, sadness, anger, surprise).
-* Translate: Translate this specific emotional state onto the face of the ${targetAnimalType} in a manner that feels natural and believable for that species. Consider how this particular emotion would be expressed through the animal's unique facial features.
-
-Crucial Constraints:
-* Focus: The final image must depict only the ${targetAnimalType} and maintain the overall perspective and composition of the original photo and the focus-length of the shot. 
-         You should roughly be able to overlay the new picture on top of the old and the framing should roughly line up. 
-         No full-body shots unless necessary for conveying the specific emotion.
-* Accuracy: Maintain the ${targetAnimalType}'s natural anatomy and facial features with high fidelity. Avoid any human-like features, including but not limited to:
-  * Clothing, accessories (jewelry, glasses, hats)
-  * Human-like hands, posture, or body proportions
-  * Unnatural or exaggerated facial features (e.g., human-like smiles on animals that don't smile)
-  * Emotional Focus: Prioritize accurately conveying the human's emotional state through the animal's expressive capabilities. Minor stylistic liberties are acceptable as long as they serve to enhance the emotional expression and remain within the bounds of the animal's natural appearance.`;
+      prompt = HUMAN_TO_ANIMAL_PROMPT(targetAnimalType);
     } else {
-      prompt = `Render this image of a ${type} as a human with subtle, stylized photorealism (like Pixar or Dreamworks) with shot-on-iPhone level quality. Maintain the essential features and overall composition of the original photo. Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics like fur, feathers, tails, claws, or animal-like features.`;
+      prompt = ANIMAL_TO_HUMAN_PROMPT(type);
     }
 
     console.debug("createOppositeVersion prompt:", prompt);

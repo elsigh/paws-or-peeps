@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/lib/auth-context";
 import { AlertCircle, FileWarning, ImageIcon, Upload, X } from "lucide-react";
-import { default as NextImage } from "next/image";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -54,7 +53,7 @@ export default function FileUpload() {
   const [isDragging, setIsDragging] = useState(false);
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [currentCatIndex, setCurrentCatIndex] = useState(0);
-  const [fileSize, setFileSize] = useState<number>(0);
+  const [_fileSize, setFileSize] = useState<number>(0);
   // biome-ignore lint/suspicious/noExplicitAny: <explanation>
   const [debugInfo, setDebugInfo] = useState<any>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
@@ -122,6 +121,7 @@ export default function FileUpload() {
   };
 
   // Process the file regardless of source (input, paste, or drop)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const processFile = useCallback(
     async (selectedFile: File | null) => {
       setFile(selectedFile);
@@ -150,7 +150,10 @@ export default function FileUpload() {
           // Compress the image if it's too large
           if (selectedFile.size > MAX_FILE_SIZE) {
             try {
+              setPreview(null);
               setIsCompressing(true);
+              // Add small delay to allow loading spinner to render
+              await new Promise((resolve) => setTimeout(resolve, 500));
               fileToUse = await compressImage(selectedFile);
               // If still too large after compression, show error
               if (fileToUse.size > MAX_FILE_SIZE) {
@@ -391,14 +394,14 @@ export default function FileUpload() {
             let height = img.height;
 
             // Handle HEIC/HEIF images from iPhones which may not be properly recognized
-            const isLargeImage = width * height > 5000000; // 5MP threshold
+            const isLargeImage = width * height > 8000000; // Increased threshold to 8MP
 
             // Calculate scaling factor to get under 4MB
-            let maxSize = 1600; // Default max dimension
+            let maxSize = 2400; // Increased default max dimension
 
-            // For very large images, use more aggressive scaling
+            // For very large images, use more moderate scaling
             if (isLargeImage) {
-              maxSize = 1200;
+              maxSize = 2000; // Less aggressive reduction for large images
             }
 
             if (width > height && width > maxSize) {
@@ -423,8 +426,8 @@ export default function FileUpload() {
             ctx.imageSmoothingQuality = "high";
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Use lower quality for larger images
-            const quality = isLargeImage ? 0.6 : 0.7;
+            // Use higher quality settings
+            const quality = isLargeImage ? 0.85 : 0.92;
 
             // Add timeout to prevent UI freezing on large images
             setTimeout(() => {
@@ -442,15 +445,15 @@ export default function FileUpload() {
                       `Original size: ${file.size}, Compressed size: ${blob.size}`,
                     );
 
-                    // If compression didn't help much, try again with more aggressive settings
+                    // If compression didn't help much, try again with slightly more compression
                     if (
                       blob.size > MAX_FILE_SIZE &&
                       blob.size > file.size * 0.8
                     ) {
                       console.log(
-                        "First compression not effective, trying more aggressive settings",
+                        "First compression not effective, trying more compression",
                       );
-                      // Try again with more aggressive compression
+                      // Try again with moderate compression
                       canvas.toBlob(
                         (aggressiveBlob) => {
                           if (aggressiveBlob) {
@@ -468,7 +471,7 @@ export default function FileUpload() {
                           }
                         },
                         "image/jpeg",
-                        0.5, // More aggressive quality reduction
+                        0.75, // More moderate quality reduction
                       );
                     } else {
                       resolve(compressedFile);
@@ -570,10 +573,10 @@ export default function FileUpload() {
             >
               {preview ? (
                 <div className="relative aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg">
-                  <NextImage
+                  <img
                     src={preview || "/placeholder.svg"}
                     alt="Preview"
-                    className={isCompressing ? "blur-sm" : ""}
+                    className={`object-cover w-full h-full ${isCompressing ? "blur-sm" : ""}`}
                   />
 
                   {/* Add X button to remove the image */}
