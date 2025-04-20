@@ -79,3 +79,12 @@ export interface Vote {
   vote: "animal" | "human";
   created_at: string;
 }
+
+export interface UserProfile {
+  id: string;
+  email: string | null;
+  display_name?: string | null;
+  avatar_url?: string | null;
+}
+
+export type UserVote = "human" | "animal" | null;

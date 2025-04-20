@@ -1,14 +1,9 @@
-import { CatLogo } from "@/components/cat-logo";
 import { PawPrint } from "@/components/paw-print";
 import { RandomCat } from "@/components/random-cat";
 import ResultsDisplay from "@/components/results-display";
-import { Button } from "@/components/ui/button";
 import { getImageById, getVoteInfo } from "@/lib/image-processing";
-import { createClient } from "@/lib/supabase-server";
-import { type UserProfile, getUserProfile } from "@/lib/user-service";
-import { Home } from "lucide-react";
+import { getUserProfile } from "@/lib/user-service";
 import type { Metadata, ResolvingMetadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
@@ -21,7 +16,7 @@ interface ResultsPageProps {
 // Generate metadata for the page
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> },
-  parent: ResolvingMetadata,
+  _parent: ResolvingMetadata,
 ): Promise<Metadata> {
   // Await the params promise to get the id
   const { id } = await params;
@@ -73,15 +68,16 @@ export async function generateMetadata(
 export default async function ResultsPage({ params }: ResultsPageProps) {
   const { id } = await params;
 
+  // Get initial image data on the server
   const imageData = await getImageById(id);
-  console.log("Image data retrieved successfully", { id, imageData });
+  console.log("Initial image data retrieved", { id, imageData });
 
   if (!imageData) {
     notFound();
   }
 
   // Fetch uploader profile on the server
-  let uploaderProfile: UserProfile | null = null;
+  let uploaderProfile = null;
   if (imageData.uploader_id) {
     uploaderProfile = await getUserProfile(imageData.uploader_id);
   }
@@ -91,7 +87,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
   return (
     <div className="container relative mx-auto px-4 py-8">
-      {/* Decorative paw prints */}
+      {/* Decorative elements */}
       <div className="pointer-events-none absolute left-4 top-20 opacity-20">
         <PawPrint size="lg" rotation={-15} />
       </div>
@@ -128,8 +124,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
           <ResultsDisplay
             imageData={imageData}
             uploaderProfile={uploaderProfile}
-            initialVote={userVote}
-            initialVoteStats={voteStats}
+            userVote={userVote}
+            voteStats={voteStats}
           />
         </Suspense>
       </div>

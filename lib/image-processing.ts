@@ -113,8 +113,10 @@ export async function createAnimatedVersion(imageUrl: string) {
       messages: [
         {
           role: "user",
-          content:
-            "Render this image with a subtle, stylized photorealism (like 3D animated Pixar or Dreamworks). Maintain the essential features and overall composition of the original photo in terms of the direction that the subject is facing and the focus-length of the shot.",
+          content: `Render this image in a lightly stylized realistic style nicely shot-on-iphone. 
+            Maintain the essential features and composition of the original photo in terms of the perspective and direction of the main subject. 
+            You should be able to overaly the newly generated picture on top of the original and it should roughly line up. 
+            Do not add any text or annotations.`,
         },
         {
           role: "user",
@@ -170,14 +172,16 @@ export async function createOppositeVersion(
       //prompt = `Transform this ${type} into a light cartoon-style ${targetAnimalType}, retaining realism. Do not put clothes on the ${targetAnimalType}.`;
       prompt = `Generate a portrait of a ${targetAnimalType}.
 
-Style: * Stylized realism, similar to modern 3D animation (e.g., Pixar, Dreamworks).
-* Emphasize expressive eyes and subtle shifts in muscle tension to convey the animal's emotional state.
+Style: * Subtle, stylized realistic style.
+* Emphasize expressive eyes and subtle shifts in muscle tension to convey emotional state.
 
 Core Task: * Analyze: Carefully examine the input human image to identify and extract the primary facial expression and emotional mood (e.g., happiness, sadness, anger, surprise).
 * Translate: Translate this specific emotional state onto the face of the ${targetAnimalType} in a manner that feels natural and believable for that species. Consider how this particular emotion would be expressed through the animal's unique facial features.
 
 Crucial Constraints:
-* Focus: The final image must depict only the ${targetAnimalType} and maintain the overall composition of the original photo in terms of the direction that the subject is facing and the focus-length of the shot. No full-body shots unless necessary for conveying the specific emotion.
+* Focus: The final image must depict only the ${targetAnimalType} and maintain the overall perspective and composition of the original photo and the focus-length of the shot. 
+         You should roughly be able to overlay the new picture on top of the old and the framing should roughly line up. 
+         No full-body shots unless necessary for conveying the specific emotion.
 * Accuracy: Maintain the ${targetAnimalType}'s natural anatomy and facial features with high fidelity. Avoid any human-like features, including but not limited to:
   * Clothing, accessories (jewelry, glasses, hats)
   * Human-like hands, posture, or body proportions
@@ -243,7 +247,7 @@ export async function saveImageData(
   oppositeUrl: string | null, // Can be null initially for human uploads
   imageType: string,
   targetAnimalType: string,
-  isPrivate = false,
+  isPrivate = true, // Changed default to true
 ) {
   try {
     console.log("Saving image data to Supabase with params:", {
@@ -476,11 +480,13 @@ export async function getRecentTransformations(limit = 100) {
       `,
     );
 
-    // Only show private images to their owners
+    // Only show private/incomplete images to their owners
     if (userId) {
-      query = query.or(`private.eq.false,uploader_id.eq.${userId}`);
+      query = query.or(
+        `and(private.eq.false,opposite_url.neq.''),uploader_id.eq.${userId}`,
+      );
     } else {
-      query = query.eq("private", false);
+      query = query.eq("private", false).neq("opposite_url", "");
     }
 
     const { data: images, error } = await query
@@ -494,14 +500,13 @@ export async function getRecentTransformations(limit = 100) {
 
     // Process and validate each image
     const validImages = (images as ImageWithVotes[]).filter((image) => {
-      // Check if required URLs exist
-      const hasRequiredUrls =
-        image.original_url && (image.animated_url || image.opposite_url);
+      // For non-owners, require both original and opposite URLs
+      if (image.uploader_id !== userId) {
+        return image.original_url && image.opposite_url;
+      }
 
-      // Validate URLs are still accessible
-      const urlsAreValid = true; // We don't want to make HTTP requests here for performance
-
-      return hasRequiredUrls && urlsAreValid;
+      // For owners, just check if required URLs exist
+      return image.original_url && (image.animated_url || image.opposite_url);
     });
 
     return validImages.map((image) => {
@@ -806,5 +811,53 @@ export async function getVoteInfo(imageId: string): Promise<{
         error instanceof Error ? error.message : String(error)
       }`,
     );
+  }
+}
+
+// Function to auto-generate missing opposite image
+export async function autoGenerateOppositeIfNeeded(
+  imageData: ImageData,
+): Promise<ImageData> {
+  try {
+    // If opposite_url exists, return as is
+    if (imageData.opposite_url) {
+      return imageData;
+    }
+
+    console.log("Auto-generating missing opposite image for:", imageData.id);
+
+    // Generate the opposite image
+    const oppositeUrl = await createOppositeVersion(
+      imageData.original_url,
+      imageData.image_type,
+      imageData.target_animal_type || "cat",
+    );
+
+    // Update the image in the database
+    const supabase = await createClient();
+    const { data: updatedImage, error: updateError } = await supabase
+      .from("images")
+      .update({
+        opposite_url: oppositeUrl,
+        private: false, // Make public once complete
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", imageData.id)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error("Error updating image with opposite URL:", updateError);
+      throw new Error(`Failed to update image: ${updateError.message}`);
+    }
+
+    return {
+      ...updatedImage,
+      isUploader: imageData.isUploader,
+      hasVotes: imageData.hasVotes,
+    } as ImageData;
+  } catch (error) {
+    console.error("Error in autoGenerateOppositeIfNeeded:", error);
+    return imageData; // Return original data if generation fails
   }
 }

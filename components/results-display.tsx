@@ -32,8 +32,7 @@ import {
 import { useAuth } from "@/lib/auth-context";
 import { ANIMAL_TYPES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase-client";
-import type { ImageData, VoteStats } from "@/lib/types";
-import type { UserProfile } from "@/lib/user-service";
+import type { ImageData, UserProfile, UserVote, VoteStats } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
 import {
   AlertCircle,
@@ -55,27 +54,29 @@ import { toast } from "sonner";
 interface ResultsDisplayProps {
   imageData: ImageData;
   uploaderProfile: UserProfile | null;
-  initialVote?: "animal" | "human" | null;
-  initialVoteStats?: VoteStats;
+  userVote?: UserVote;
+  voteStats?: VoteStats;
 }
 
 export default function ResultsDisplay({
-  imageData,
+  imageData: initialImageData,
   uploaderProfile,
-  initialVote = null,
-  initialVoteStats = {
-    animalVotes: 0,
-    humanVotes: 0,
-    animalPercentage: 0,
-    humanPercentage: 0,
-    totalVotes: 0,
-  },
+  userVote: initialVote,
+  voteStats: initialVoteStats,
 }: ResultsDisplayProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [voted, setVoted] = useState(!!initialVote);
-  const [voteStats, setVoteStats] = useState<VoteStats>(initialVoteStats);
+  const [voteStats, setVoteStats] = useState<VoteStats>(
+    initialVoteStats || {
+      animalVotes: 0,
+      humanVotes: 0,
+      totalVotes: 0,
+      animalPercentage: 0,
+      humanPercentage: 0,
+    },
+  );
   const [showCelebration, setShowCelebration] = useState(false);
   const [copied, setCopied] = useState(false);
   const shareUrlRef = useRef<HTMLInputElement>(null);
@@ -84,12 +85,14 @@ export default function ResultsDisplay({
   const [humanImageLoaded, setHumanImageLoaded] = useState(false);
   const [animalImageLoaded, setAnimalImageLoaded] = useState(false);
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
-  const [userVote, setUserVote] = useState<"animal" | "human" | null>(
-    initialVote,
+  const [userVote, setUserVote] = useState<UserVote>(initialVote || null);
+  const [isPrivate, setIsPrivate] = useState(
+    initialImageData?.private || false,
   );
-  const [isPrivate, setIsPrivate] = useState(imageData?.private || false);
   const [privacyLoading, setPrivacyLoading] = useState(false);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
+  const [imageData, setImageData] = useState(initialImageData);
+  const [isGeneratingOpposite, setIsGeneratingOpposite] = useState(false);
 
   const { requireAuth } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -142,7 +145,7 @@ export default function ResultsDisplay({
   useEffect(() => {
     const requestNotificationPermission = async () => {
       // Only request for the uploader
-      if (!imageData.isUploader || !isAuthenticated) return;
+      if (!imageData.private || !isAuthenticated) return;
 
       // Check if notifications are supported
       if (!("Notification" in window)) {
@@ -166,7 +169,7 @@ export default function ResultsDisplay({
     };
 
     requestNotificationPermission();
-  }, [imageData.isUploader, isAuthenticated]);
+  }, [imageData.private, isAuthenticated]);
 
   const handleEnableNotifications = async () => {
     try {
@@ -242,15 +245,63 @@ export default function ResultsDisplay({
     isUploader,
   } = imageData;
 
-  const handleVote = async (vote: "animal" | "human") => {
+  //console.log("imageData", imageData);
+
+  // Effect to trigger opposite image generation on client
+  // biome-ignore lint/correctness/useExhaustiveDependencies: We only want to run this when id or opposite_url changes
+  useEffect(() => {
+    //console.log("useEffect onload", { imageData, isGeneratingOpposite });
+    const generateOpposite = async () => {
+      // Don't generate if we already have an opposite URL, are currently generating,
+      // or if this is a regeneration request (has target_animal_type)
+      if (imageData.opposite_url || isGeneratingOpposite) {
+        return;
+      }
+      console.log("generateOpposite onload", {
+        imageData,
+        isGeneratingOpposite,
+      });
+
+      try {
+        setIsGeneratingOpposite(true);
+        console.log("fetch /api/generate-opposite", { imageId: imageData.id });
+        const response = await fetch("/api/generate-opposite", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ imageId: imageData.id }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to generate opposite image");
+        }
+
+        const data = await response.json();
+        if (data.image?.opposite_url) {
+          setImageData({
+            ...imageData,
+            ...data.image,
+          });
+        }
+      } catch (error) {
+        console.error("Error generating opposite image:", error);
+      } finally {
+        setIsGeneratingOpposite(false);
+      }
+    };
+
+    generateOpposite();
+  }, [imageData.id, imageData.opposite_url]); // Track both id and opposite_url
+
+  const handleVote = async (vote: UserVote) => {
+    if (!vote) return;
     setLoading(true);
     setError(null);
 
     // Check if user is authenticated
     if (!isAuthenticated) {
       setLoading(false);
-
-      // Open auth modal with current path as redirect URL
       requireAuth(() => {});
       return;
     }
@@ -268,7 +319,6 @@ export default function ResultsDisplay({
 
       if (!response.ok) {
         if (response.status === 401 && data.requireAuth) {
-          // If somehow we still get auth error, open auth modal
           setError("Please sign in to vote");
           localStorage.setItem(
             "pendingVote",
@@ -291,7 +341,6 @@ export default function ResultsDisplay({
       }
       setShowCelebration(true);
 
-      // Hide celebration after 3 seconds
       setTimeout(() => {
         setShowCelebration(false);
       }, 3000);
@@ -322,7 +371,7 @@ export default function ResultsDisplay({
   const handleRegenerate = async (selectedAnimal: string) => {
     try {
       setRegenerating(true);
-      const response = await fetch("/api/regenerate-opposite", {
+      const response = await fetch("/api/generate-opposite", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -344,8 +393,10 @@ export default function ResultsDisplay({
         throw new Error("No image ID received from server");
       }
 
-      // Redirect to the new results page with the image ID
-      router.push(`/results/${data.image.id}`);
+      setImageData({
+        ...imageData,
+        ...data.image,
+      });
     } catch (error) {
       console.error("Error regenerating image:", error);
       toast.error("Failed to regenerate image");
@@ -397,12 +448,6 @@ export default function ResultsDisplay({
     if (!uploaderProfile) return "Anonymous";
 
     if (uploaderProfile.display_name) return uploaderProfile.display_name;
-
-    if (uploaderProfile.email) {
-      // Extract first part of email before @ symbol
-      const emailName = uploaderProfile.email.split("@")[0];
-      return emailName;
-    }
 
     return "Anonymous";
   };
@@ -493,17 +538,29 @@ export default function ResultsDisplay({
         >
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
-              <Image
-                src={type === "human" ? animatedUrl : oppositeUrl}
-                alt=""
-                className={`object-cover w-full h-full transition-opacity duration-300 ${
-                  humanImageLoaded ? "opacity-100" : "opacity-0"
-                }`}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-                onLoad={() => setHumanImageLoaded(true)}
-              />
+              {isGeneratingOpposite && type !== "human" ? (
+                <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-500 border-t-transparent mb-4" />
+                  <p className="font-medium">Generating human version...</p>
+                  <p className="text-sm mt-1">This will only take a moment</p>
+                </div>
+              ) : (
+                <Image
+                  src={
+                    type === "human"
+                      ? animatedUrl || "/images/whimsical-forest-creatures.png"
+                      : oppositeUrl || "/images/whimsical-forest-creatures.png"
+                  }
+                  alt=""
+                  className={`object-cover w-full h-full transition-opacity duration-300 ${
+                    humanImageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
+                  onLoad={() => setHumanImageLoaded(true)}
+                />
+              )}
             </div>
             <div className="mt-4 text-center">
               <h3 className="text-lg font-semibold flex items-center justify-center gap-2">
@@ -530,27 +587,31 @@ export default function ResultsDisplay({
         >
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
-              <Image
-                src={
-                  regenerating
-                    ? ""
-                    : type === "human"
-                      ? oppositeUrl
-                      : animatedUrl
-                }
-                alt=""
-                className={`object-cover w-full h-full transition-opacity duration-300 ${
-                  animalImageLoaded ? "opacity-100" : "opacity-0"
-                }`}
-                fill
-                sizes="(max-width: 768px) 100vw, 50vw"
-                priority
-                onLoad={() => setAnimalImageLoaded(true)}
-              />
-              {regenerating && (
-                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                  <RefreshCw className="h-8 w-8 text-white animate-spin" />
+              {(isGeneratingOpposite && type === "human") || regenerating ? (
+                <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-500 border-t-transparent mb-4" />
+                  <p className="font-medium">
+                    {regenerating ? "Regenerating" : "Generating"}{" "}
+                    {selectedAnimal} version...
+                  </p>
+                  <p className="text-sm mt-1">This will only take a moment</p>
                 </div>
+              ) : (
+                <Image
+                  src={
+                    type === "human"
+                      ? oppositeUrl || "/images/whimsical-forest-creatures.png"
+                      : animatedUrl || "/images/whimsical-forest-creatures.png"
+                  }
+                  alt=""
+                  className={`object-cover w-full h-full transition-opacity duration-300 ${
+                    animalImageLoaded ? "opacity-100" : "opacity-0"
+                  }`}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  priority
+                  onLoad={() => setAnimalImageLoaded(true)}
+                />
               )}
             </div>
             <div className="mt-4 text-center">
@@ -861,7 +922,7 @@ export default function ResultsDisplay({
                   <span>
                     {voteStats?.humanVotes || 0}{" "}
                     {voteStats?.humanVotes === 1 ? "vote" : "votes"} (
-                    {voteStats?.humanPercentage.toFixed(1)}%)
+                    {voteStats?.humanPercentage?.toFixed(1)}%)
                   </span>
                 </div>
                 <Progress
@@ -885,7 +946,7 @@ export default function ResultsDisplay({
                   <span>
                     {voteStats?.animalVotes || 0}{" "}
                     {voteStats?.animalVotes === 1 ? "vote" : "votes"} (
-                    {voteStats?.animalPercentage.toFixed(1)}%)
+                    {voteStats?.animalPercentage?.toFixed(1)}%)
                   </span>
                 </div>
                 <Progress

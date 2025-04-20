@@ -40,10 +40,10 @@ export async function showWebNotification(
   // Check if we've already shown a notification for this ID
   const lastNotifiedId = await getLastNotifiedId(userId);
   if (lastNotifiedId && lastNotifiedId === notificationId) {
-    console.debug(
-      "showWebNotification: Already shown this notification",
-      notificationId,
-    );
+    // console.debug(
+    //   "showWebNotification: Already shown this notification",
+    //   notificationId,
+    // );
     return;
   }
 

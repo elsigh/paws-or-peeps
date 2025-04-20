@@ -150,7 +150,7 @@ export async function POST(request: NextRequest) {
             `${JSON.stringify({
               status: "progress",
               step: "animating",
-              message: "Creating animated version...",
+              message: "Creating stylized version...",
               progress: 40,
             })}\n`,
           ),
@@ -187,54 +187,55 @@ export async function POST(request: NextRequest) {
           controller.close();
           return;
         }
-
-        // Generate opposite version
-        controller.enqueue(
-          encoder.encode(
-            `${JSON.stringify({
-              status: "progress",
-              step: "transforming",
-              message: "Creating opposite version...",
-              progress: 75,
-            })}\n`,
-          ),
-        );
-
-        console.log("Generating opposite version...");
-        let oppositeUrl = "";
+        const oppositeUrl = null;
         const targetAnimalType = detectionResult === "human" ? "cat" : "human";
-        try {
-          oppositeUrl = await createOppositeVersion(
-            originalUrl,
-            detectionResult,
-            targetAnimalType,
-          );
-          controller.enqueue(
-            encoder.encode(
-              `${JSON.stringify({
-                status: "progress",
-                step: "transformed",
-                message: "Opposite version created",
-                progress: 85,
-              })}\n`,
-            ),
-          );
-        } catch (error) {
-          console.error("Error creating opposite version:", error);
-          throw error;
-        }
 
-        // Save to database
-        controller.enqueue(
-          encoder.encode(
-            `${JSON.stringify({
-              status: "progress",
-              step: "saving",
-              message: "Saving to database...",
-              progress: 90,
-            })}\n`,
-          ),
-        );
+        // // Generate opposite version
+        // controller.enqueue(
+        //   encoder.encode(
+        //     `${JSON.stringify({
+        //       status: "progress",
+        //       step: "transforming",
+        //       message: "Creating opposite version...",
+        //       progress: 75,
+        //     })}\n`,
+        //   ),
+        // );
+
+        // console.log("Generating opposite version...");
+        // let oppositeUrl = "";
+        // try {
+        //   oppositeUrl = await createOppositeVersion(
+        //     originalUrl,
+        //     detectionResult,
+        //     targetAnimalType,
+        //   );
+        //   controller.enqueue(
+        //     encoder.encode(
+        //       `${JSON.stringify({
+        //         status: "progress",
+        //         step: "transformed",
+        //         message: "Opposite version created",
+        //         progress: 85,
+        //       })}\n`,
+        //     ),
+        //   );
+        // } catch (error) {
+        //   console.error("Error creating opposite version:", error);
+        //   throw error;
+        // }
+
+        // // Save to database
+        // controller.enqueue(
+        //   encoder.encode(
+        //     `${JSON.stringify({
+        //       status: "progress",
+        //       step: "saving",
+        //       message: "Saving to database...",
+        //       progress: 90,
+        //     })}\n`,
+        //   ),
+        // );
 
         // Try to save the image data to the database
         let imageData = null;
@@ -272,7 +273,7 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        // Send final success message with data
+        // // Send final success message with data
         controller.enqueue(
           encoder.encode(
             `${JSON.stringify({
@@ -280,7 +281,7 @@ export async function POST(request: NextRequest) {
               id: imageData.id,
               originalUrl,
               animatedUrl,
-              oppositeUrl,
+              oppositeUrl: null,
               type: detectionResult,
             })}\n`,
           ),

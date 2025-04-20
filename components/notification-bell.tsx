@@ -38,11 +38,11 @@ export function NotificationBell() {
       // Get the most recent unread notification
       const mostRecentUnread = notifications.find((n) => !n.is_read);
 
-      console.debug("NotificationBell fetchNotifications:", {
-        notifications,
-        count,
-        mostRecentUnread,
-      });
+      // console.debug("NotificationBell fetchNotifications:", {
+      //   notifications,
+      //   count,
+      //   mostRecentUnread,
+      // });
 
       // Show web notification only for the most recent unread notification
       if (mostRecentUnread) {

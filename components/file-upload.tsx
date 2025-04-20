@@ -14,6 +14,7 @@ import {
   FileWarning,
   ImageIcon,
   Info,
+  Loader2,
   Upload,
   X,
 } from "lucide-react";
@@ -80,76 +81,7 @@ export default function FileUpload() {
     useState<string>("Transforming...");
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // // Check system status on component mount
-  // useEffect(() => {
-  //   const checkSystemStatus = async () => {
-  //     try {
-  //       //console.log("Checking system status...");
-  //       const response = await fetch("/api/health");
-
-  //       if (!response.ok) {
-  //         console.error(
-  //           "Health check returned non-OK status:",
-  //           response.status
-  //         );
-  //         setSystemStatus("error");
-  //         setSystemStatusDetails({
-  //           message: `Health API returned status ${response.status}`,
-  //           status: response.status,
-  //         });
-  //         setHasRealError(true);
-  //         setStatusChecked(true);
-  //         return;
-  //       }
-
-  //       const data = await response.json();
-  //       console.log("Health check response:", data);
-
-  //       setSystemStatus(data.status);
-
-  //       // Check if there's a real database error with a specific message
-  //       const hasDbError =
-  //         data.checks.database.status === "error" &&
-  //         data.checks.database.message &&
-  //         data.checks.database.message !== "Database error:" &&
-  //         !data.checks.database.message.includes("undefined");
-
-  //       if (hasDbError) {
-  //         setSystemStatusDetails({
-  //           database: data.checks.database,
-  //           environment: data.environment,
-  //           timestamp: data.timestamp,
-  //         });
-  //         setHasRealError(true);
-  //       } else {
-  //         setHasRealError(false);
-  //       }
-  //     } catch (err) {
-  //       console.error("Error checking system status:", err);
-  //       setSystemStatus("error");
-
-  //       const errorMessage = err instanceof Error ? err.message : String(err);
-  //       if (
-  //         errorMessage &&
-  //         errorMessage !== "undefined" &&
-  //         errorMessage !== "[object Object]"
-  //       ) {
-  //         setSystemStatusDetails({
-  //           message: errorMessage,
-  //           error: err,
-  //         });
-  //         setHasRealError(true);
-  //       } else {
-  //         setHasRealError(false);
-  //       }
-  //     } finally {
-  //       setStatusChecked(true);
-  //     }
-  //   };
-
-  //   checkSystemStatus();
-  // }, []);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   // Cycle through pet facts during loading
   useEffect(() => {
@@ -206,9 +138,8 @@ export default function FileUpload() {
   };
 
   // Process the file regardless of source (input, paste, or drop)
-  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
   const processFile = useCallback(
-    (selectedFile: File | null) => {
+    async (selectedFile: File | null) => {
       setFile(selectedFile);
       setError(null);
       setErrorDetails(null);
@@ -216,31 +147,49 @@ export default function FileUpload() {
 
       if (selectedFile) {
         // Check if user is authenticated first
-        requireAuth(() => {
-          // Set file size for display
-          setFileSize(selectedFile.size);
-
+        requireAuth(async () => {
           // Validate file type
           if (!selectedFile.type.startsWith("image/")) {
             setError("Please select an image file");
             return;
           }
 
-          // Add file size validation (limit to 4MB)
+          let fileToUse = selectedFile;
+
+          // Compress the image if it's too large
           if (selectedFile.size > MAX_FILE_SIZE) {
-            setError(
-              `Image size (${formatFileSize(
-                selectedFile.size,
-              )}) exceeds the 4MB limit. Please select a smaller image.`,
-            );
-            return;
+            try {
+              setIsCompressing(true);
+              fileToUse = await compressImage(selectedFile);
+              // If still too large after compression, show error
+              if (fileToUse.size > MAX_FILE_SIZE) {
+                setError(
+                  `Image is still too large (${formatFileSize(
+                    fileToUse.size,
+                  )}) after compression. Please select a smaller image.`,
+                );
+                return;
+              }
+            } catch (err) {
+              console.error("Error compressing image:", err);
+              setError(
+                "Failed to compress image. Please try a different image.",
+              );
+              return;
+            } finally {
+              setIsCompressing(false);
+            }
           }
+
+          // Set file size for display
+          setFileSize(fileToUse.size);
+          setFile(fileToUse);
 
           const reader = new FileReader();
           reader.onload = () => {
             setPreview(reader.result as string);
           };
-          reader.readAsDataURL(selectedFile);
+          reader.readAsDataURL(fileToUse);
         });
       } else {
         setPreview(null);
@@ -350,7 +299,7 @@ export default function FileUpload() {
                       `/results/${data.id}`,
                     );
                     router.push(`/results/${data.id}`);
-                  }, 500);
+                  }, 100);
                 }
               } else if (data.status === "error") {
                 setError(data.message);
@@ -434,7 +383,7 @@ export default function FileUpload() {
 
   // Image compression function
   const compressImage = async (file: File): Promise<File> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve, _reject) => {
       const reader = new FileReader();
       reader.readAsDataURL(file);
       reader.onload = (event) => {
@@ -688,7 +637,6 @@ export default function FileUpload() {
             />
 
             {/* Custom drop zone */}
-            {/* biome-ignore lint/a11y/useKeyWithClickEvents: <explanation> */}
             <div
               ref={dropZoneRef}
               onClick={handleDropZoneClick}
@@ -738,8 +686,19 @@ export default function FileUpload() {
                     <X className="h-5 w-5" />
                   </button>
 
+                  {/* Compression loading overlay */}
+                  {isCompressing && (
+                    <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 text-center">
+                      <Loader2 className="h-8 w-8 animate-spin mb-2" />
+                      <p className="font-medium">Compressing image...</p>
+                      <p className="text-sm mt-1">
+                        This will only take a moment
+                      </p>
+                    </div>
+                  )}
+
                   {/* File size warning overlay for large files */}
-                  {isFileTooLarge && (
+                  {isFileTooLarge && !isCompressing && (
                     <div className="absolute inset-0 bg-red-500/70 flex flex-col items-center justify-center text-white p-4 text-center">
                       <FileWarning className="h-12 w-12 mb-2" />
                       <p className="font-bold text-lg">File Too Large!</p>
@@ -770,11 +729,11 @@ export default function FileUpload() {
               <div className="space-y-1">
                 <div className="flex justify-between text-xs">
                   <span>File size: {formatFileSize(file.size)}</span>
-                  <span
+                  {/* <span
                     className={isFileTooLarge ? "text-red-500 font-bold" : ""}
                   >
                     Max: 4MB
-                  </span>
+                  </span> */}
                 </div>
                 <Progress
                   value={fileSizePercentage}
@@ -785,13 +744,19 @@ export default function FileUpload() {
             )}
 
             <p className="text-sm text-gray-500">
-              AI processing may take up to 30 seconds.{" "}
-              {detectedType && (
-                <b className="text-nowrap">{`Detected: ${
-                  detectedType as string
-                }`}</b>
-              )}
+              AI processing may take up to 30 seconds.
             </p>
+            <div className="text-nowrap text-sm text-gray-500">
+              {detectedType ? (
+                <b className="text-black">
+                  {`Detected: ${detectedType as string}`}
+                </b>
+              ) : loading ? (
+                "Detecting..."
+              ) : (
+                ""
+              )}
+            </div>
           </div>
 
           {error && (
@@ -869,19 +834,19 @@ export default function FileUpload() {
           {/* Pet facts during loading with cycling cat images */}
           {loading && (
             <div className="relative text-center text-sm text-gray-600 mt-2 px-8">
-              <div className="flex items-center justify-center mb-2">
-                <RandomCat
-                  size="small"
-                  index={currentCatIndex}
-                  className="animate-bounce"
-                />
-              </div>
               <div className="flex items-center">
                 <span className="text-lg mr-2">🐾</span>
                 <p className="animate-pulse min-h-[4.5rem] flex items-center justify-center">
                   Pet Fact: {PET_FACTS[currentFactIndex]}
                 </p>
                 <span className="text-lg ml-2">🐾</span>
+              </div>
+              <div className="flex items-center justify-center mt-8">
+                <RandomCat
+                  size="small"
+                  index={currentCatIndex}
+                  className="animate-bounce"
+                />
               </div>
             </div>
           )}
