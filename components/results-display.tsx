@@ -384,7 +384,7 @@ export default function ResultsDisplay({
       }
 
       // Redirect to homepage after successful deletion
-      router.push("/gallery?deleted=1");
+      router.push(`/gallery?deleted=${imageId}`);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "An unknown error occurred",
