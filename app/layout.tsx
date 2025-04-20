@@ -17,13 +17,12 @@ import { unstable_ViewTransition as ViewTransition } from "react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title:
-    "🐾 Paws or Peeps 💁 - Transform Animals to Humans and Humans to Animals",
+  title: "PawsOrPeeps - Transform Animals to Humans and Humans to Animals",
   description:
     "Upload a photo of a cat or human and see the magical transformation!",
   generator: "v0.dev",
   openGraph: {
-    title: "Paws or Peeps | Human to Animal AI Transformations",
+    title: "PawsOrPeeps | Human to Animal AI Transformations",
     description:
       "Transform humans into animals and animals into humans with AI. Vote on which image is the original!",
     images: [
@@ -33,13 +32,13 @@ export const metadata: Metadata = {
         }/api/og`,
         width: 1200,
         height: 630,
-        alt: "Paws or Peeps",
+        alt: "PawsOrPeeps",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Paws or Peeps | Human to Animal AI Transformations",
+    title: "PawsOrPeeps | Human to Animal AI Transformations",
     description:
       "Transform humans into animals and animals into humans with AI. Vote on which image is the original!",
     images: [

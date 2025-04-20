@@ -1,10 +1,9 @@
-import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Paws or Peeps",
-  description: "Privacy Policy for Paws or Peeps",
+  title: "Privacy Policy | PawsOrPeeps",
+  description: "Privacy Policy for PawsOrPeeps",
 };
 
 export default function PrivacyPage() {
@@ -14,7 +13,7 @@ export default function PrivacyPage() {
 
       <div className="prose prose-rose max-w-none">
         <h2>1. Information We Collect</h2>
-        <p>When you use Paws or Peeps, we collect:</p>
+        <p>When you use PawsOrPeeps, we collect:</p>
         <ul>
           <li>
             Account information: email address and authentication details when
@@ -38,7 +37,7 @@ export default function PrivacyPage() {
         </ul>
 
         <h2>3. User Content and Privacy</h2>
-        <p>When you upload images to Paws or Peeps:</p>
+        <p>When you upload images to PawsOrPeeps:</p>
         <ul>
           <li>You maintain ownership of your content</li>
           <li>

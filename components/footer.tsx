@@ -24,7 +24,7 @@ export function Footer() {
           </a>
         </div>
         <div className="text-center text-sm text-gray-500">
-          © {new Date().getFullYear()} Paws or Peeps. All rights reserved.
+          © {new Date().getFullYear()} PawsOrPeeps. All rights reserved.
         </div>
       </div>
     </footer>

@@ -1,10 +1,6 @@
-import { CatLogo } from "@/components/cat-logo";
 import FileUpload from "@/components/file-upload";
 import { PawPrint } from "@/components/paw-print";
 import { RandomCat } from "@/components/random-cat";
-import { Button } from "@/components/ui/button";
-import { ImageIcon } from "lucide-react";
-import Link from "next/link";
 //import { DatabaseStatus } from "@/components/database-status";
 
 export default function Home() {
@@ -67,8 +63,8 @@ export default function Home() {
 
       <div className="mt-8 text-center text-sm text-gray-500">
         <p>
-          🐾 Paws or Peeps 💁 uses AI to detect pets and humans in your photos
-          and transform them into their opposite.
+          🐾 PawsOrPeeps 💁 uses AI to detect pets and humans in your photos and
+          transform them into their opposite.
         </p>
       </div>
     </div>

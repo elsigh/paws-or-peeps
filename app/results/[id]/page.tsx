@@ -26,7 +26,7 @@ export async function generateMetadata(
 
   if (!imageData) {
     return {
-      title: "Transformation Not Found | Paws or Peeps",
+      title: "Transformation Not Found | PawsOrPeeps",
       description: "This transformation could not be found.",
     };
   }
@@ -41,10 +41,10 @@ export async function generateMetadata(
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://pawsorpeeps.com";
 
   return {
-    title: `Which is the real ${imageData.image_type}? | Paws or Peeps`,
+    title: `Which is the real ${imageData.image_type}? | PawsOrPeeps`,
     description: `Check out this amazing ${transformationType} transformation and vote on which one you think is the original!`,
     openGraph: {
-      title: `Which is the real ${imageData.image_type}? | Paws or Peeps`,
+      title: `Which is the real ${imageData.image_type}? | PawsOrPeeps`,
       description: `Check out this amazing ${transformationType} transformation and vote on which one you think is the original!`,
       images: [
         {
@@ -58,7 +58,7 @@ export async function generateMetadata(
     },
     twitter: {
       card: "summary_large_image",
-      title: `Which is the real ${imageData.image_type}? | Paws or Peeps`,
+      title: `Which is the real ${imageData.image_type}? | PawsOrPeeps`,
       description: `Check out this amazing ${transformationType} transformation and vote on which one you think is the original!`,
       images: [`${baseUrl}/api/og/${id}`],
     },

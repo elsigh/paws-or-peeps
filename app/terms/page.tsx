@@ -1,10 +1,9 @@
-import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "Terms of Service | Paws or Peeps",
-  description: "Terms of Service for Paws or Peeps",
+  title: "Terms of Service | PawsOrPeeps",
+  description: "Terms of Service for PawsOrPeeps",
 };
 
 export default function TermsPage() {
@@ -15,13 +14,13 @@ export default function TermsPage() {
       <div className="prose prose-rose max-w-none">
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By accessing or using Paws or Peeps, you agree to be bound by these
+          By accessing or using PawsOrPeeps, you agree to be bound by these
           Terms of Service. If you do not agree to these terms, please do not
           use our service.
         </p>
 
         <h2>2. User Content</h2>
-        <p>When you upload images to Paws or Peeps, you assert that:</p>
+        <p>When you upload images to PawsOrPeeps, you assert that:</p>
         <ul>
           <li>
             You own all rights to the content or have authorization to use and
@@ -43,7 +42,7 @@ export default function TermsPage() {
 
         <h2>3. Content Moderation</h2>
         <p>
-          Paws or Peeps may, but is not obligated to, review content that you
+          PawsOrPeeps may, but is not obligated to, review content that you
           upload. We may remove or refuse to display content that we reasonably
           believe violates our policies or the law.
         </p>
@@ -51,7 +50,7 @@ export default function TermsPage() {
         <h2>4. Intellectual Property</h2>
         <p>
           You retain ownership rights to content you upload. However, by
-          uploading content, you grant Paws or Peeps a worldwide, non-exclusive,
+          uploading content, you grant PawsOrPeeps a worldwide, non-exclusive,
           royalty-free license to use, reproduce, modify, and display the
           content in connection with providing our service.
         </p>
@@ -68,13 +67,13 @@ export default function TermsPage() {
 
         <h2>6. Limitation of Liability</h2>
         <p>
-          Paws or Peeps is provided "as is" without warranties of any kind. We
-          are not liable for any damages arising from your use of our service.
+          PawsOrPeeps is provided "as is" without warranties of any kind. We are
+          not liable for any damages arising from your use of our service.
         </p>
 
         <h2>7. Changes to Terms</h2>
         <p>
-          We may modify these terms at any time. Continued use of Paws or Peeps
+          We may modify these terms at any time. Continued use of PawsOrPeeps
           after changes constitutes acceptance of the modified terms.
         </p>
 

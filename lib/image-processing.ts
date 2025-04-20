@@ -3,11 +3,15 @@ import type { ImageData, VoteStats } from "@/lib/types";
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { put } from "@vercel/blob";
-import { generateText } from "ai";
 import type { GeneratedFile } from "ai";
+import { generateText } from "ai";
 import { nanoid } from "nanoid";
 import { ANIMAL_TYPES } from "./constants";
 import getVisitorId from "./get-visitor-id";
+
+const ORIGINAL_IMAGE_PROMPT = `Stylize this image with enhanced color (saturation+, vibrance+), 
+  increased contrast, and subtle sharpening, maintaining original composition, 
+  aspect ratio, and subject positioning/direction.`;
 
 // Define the database types inline since we don't have access to the generated types
 type ImageRow = {
@@ -113,10 +117,7 @@ export async function createAnimatedVersion(imageUrl: string) {
       messages: [
         {
           role: "user",
-          content: `Render this image in a lightly stylized realistic style nicely shot-on-iphone. 
-            Maintain the essential features and composition of the original photo in terms of the perspective and direction of the main subject. 
-            You should be able to overaly the newly generated picture on top of the original and it should roughly line up. 
-            Do not add any text or annotations.`,
+          content: ORIGINAL_IMAGE_PROMPT,
         },
         {
           role: "user",

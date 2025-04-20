@@ -6,19 +6,10 @@ import { RandomCat } from "@/components/random-cat";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/lib/auth-context";
-import {
-  AlertCircle,
-  FileWarning,
-  ImageIcon,
-  Info,
-  Loader2,
-  Upload,
-  X,
-} from "lucide-react";
-import Link from "next/link";
+import { AlertCircle, FileWarning, ImageIcon, Upload, X } from "lucide-react";
+import { default as NextImage } from "next/image";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -54,7 +45,7 @@ const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
 export default function FileUpload() {
   const router = useRouter();
-  const { user, requireAuth } = useAuth();
+  const { requireAuth } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -70,13 +61,6 @@ export default function FileUpload() {
   const [detectedType, setDetectedType] = useState<
     keyof typeof ANIMAL_TYPES | "human" | "other" | null
   >(null);
-  const [systemStatus, setSystemStatus] = useState<
-    "ok" | "warning" | "error" | "unknown"
-  >("unknown");
-  const [statusChecked, setStatusChecked] = useState(false);
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  const [systemStatusDetails, setSystemStatusDetails] = useState<any>(null);
-  const [hasRealError, setHasRealError] = useState(false);
   const [progressMessage, setProgressMessage] =
     useState<string>("Transforming...");
   const dropZoneRef = useRef<HTMLDivElement>(null);
@@ -154,6 +138,13 @@ export default function FileUpload() {
             return;
           }
 
+          // Set preview immediately for better UX
+          const reader = new FileReader();
+          reader.onload = () => {
+            setPreview(reader.result as string);
+          };
+          reader.readAsDataURL(selectedFile);
+
           let fileToUse = selectedFile;
 
           // Compress the image if it's too large
@@ -184,12 +175,6 @@ export default function FileUpload() {
           // Set file size for display
           setFileSize(fileToUse.size);
           setFile(fileToUse);
-
-          const reader = new FileReader();
-          reader.onload = () => {
-            setPreview(reader.result as string);
-          };
-          reader.readAsDataURL(fileToUse);
         });
       } else {
         setPreview(null);
@@ -550,79 +535,6 @@ export default function FileUpload() {
       </div>
 
       <CardContent className="pt-6">
-        {/* System status warning - only show if there's a real error with a message */}
-        {statusChecked && systemStatus !== "ok" && hasRealError && (
-          <Alert
-            variant={systemStatus === "error" ? "destructive" : "warning"}
-            className="mb-4"
-          >
-            <Info className="h-4 w-4" />
-            <AlertTitle>System Status: {systemStatus.toUpperCase()}</AlertTitle>
-            <AlertDescription>
-              {systemStatus === "error"
-                ? "There are issues with the system that may affect functionality. Some features might not work correctly."
-                : "The system is running with warnings. Some features might be limited."}
-
-              {systemStatusDetails && (
-                <div className="mt-2 text-xs">
-                  <details open>
-                    <summary className="cursor-pointer font-medium">
-                      Technical Details
-                    </summary>
-                    <div className="mt-1 pl-2 border-l-2 border-gray-200">
-                      {systemStatusDetails.message && (
-                        <p className="mt-1">
-                          <strong>Message:</strong>{" "}
-                          {systemStatusDetails.message}
-                        </p>
-                      )}
-
-                      {systemStatusDetails.database?.message && (
-                        <div className="mt-1">
-                          <strong>Database:</strong>{" "}
-                          {systemStatusDetails.database.message ||
-                            "Unknown error"}
-                          {systemStatusDetails.database.details && (
-                            <pre className="mt-1 whitespace-pre-wrap overflow-auto max-h-40 bg-gray-100 p-2 rounded text-xs">
-                              {JSON.stringify(
-                                systemStatusDetails.database.details,
-                                null,
-                                2,
-                              )}
-                            </pre>
-                          )}
-                        </div>
-                      )}
-
-                      {systemStatusDetails.environment && (
-                        <div className="mt-2">
-                          <strong>Environment Variables:</strong>
-                          <pre className="mt-1 whitespace-pre-wrap overflow-auto max-h-40 bg-gray-100 p-2 rounded text-xs">
-                            {JSON.stringify(
-                              systemStatusDetails.environment,
-                              null,
-                              2,
-                            )}
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  </details>
-
-                  <div className="mt-2 text-center">
-                    <Link
-                      href="/supabase-diagnostic"
-                      className="text-blue-500 hover:underline"
-                    >
-                      View Full Diagnostic Information
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </AlertDescription>
-          </Alert>
-        )}
-
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             {/* Hidden file input */}
@@ -653,23 +565,15 @@ export default function FileUpload() {
                     : "border-rose-200 hover:border-rose-400"
                 }
                 ${loading ? "opacity-50 cursor-not-allowed" : ""}
-                ${isFileTooLarge ? "border-red-400 bg-red-50" : ""}
+                ${isFileTooLarge && !isCompressing ? "border-red-400 bg-red-50" : ""}
               `}
             >
-              {/* Cat ears on the drop zone when empty */}
-              {!preview && (
-                <>
-                  <div className="absolute -top-3 left-1/2 ml-6 h-6 w-6 rotate-45 rounded-t-full bg-rose-200" />
-                  <div className="absolute -top-3 left-1/2 -ml-12 h-6 w-6 -rotate-45 rounded-t-full bg-rose-200" />
-                </>
-              )}
-
               {preview ? (
                 <div className="relative aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg">
-                  <img
+                  <NextImage
                     src={preview || "/placeholder.svg"}
                     alt="Preview"
-                    className="object-cover w-full h-full"
+                    className={isCompressing ? "blur-sm" : ""}
                   />
 
                   {/* Add X button to remove the image */}
@@ -689,8 +593,8 @@ export default function FileUpload() {
                   {/* Compression loading overlay */}
                   {isCompressing && (
                     <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 text-center">
-                      <Loader2 className="h-8 w-8 animate-spin mb-2" />
-                      <p className="font-medium">Compressing image...</p>
+                      <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-500 border-t-transparent mb-4" />
+                      <p className="font-medium">Optimizing image size...</p>
                       <p className="text-sm mt-1">
                         This will only take a moment
                       </p>
