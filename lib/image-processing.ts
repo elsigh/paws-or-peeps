@@ -8,29 +8,34 @@ import { generateText } from "ai";
 import { nanoid } from "nanoid";
 import { ANIMAL_TYPES } from "./constants";
 import getVisitorId from "./get-visitor-id";
+import {
+  ANIMAL_TO_HUMAN_PROMPT_V2 as ANIMAL_TO_HUMAN_PROMPT,
+  HUMAN_TO_ANIMAL_PROMPT_V2 as HUMAN_TO_ANIMAL_PROMPT,
+  ORIGINAL_IMAGE_PROMPT_V2 as ORIGINAL_IMAGE_PROMPT,
+} from "./prompts";
 
-const ORIGINAL_IMAGE_PROMPT = `Stylize this image with a touch of stylized realism, subtle sharpening, maintaining original composition, 
-  aspect ratio, and subject positioning/direction.`;
+// const ORIGINAL_IMAGE_PROMPT = `Stylize this image with a touch of stylized realism, subtle sharpening, maintaining original composition,
+//   aspect ratio, and subject positioning/direction.`;
 
-const HUMAN_TO_ANIMAL_PROMPT = (
-  targetAnimalType: string,
-) => `Generate a portrait of a ${targetAnimalType} that is a representation in animal form of the input human image.
+// const HUMAN_TO_ANIMAL_PROMPT = (
+//   targetAnimalType: string,
+// ) => `Generate a portrait of a ${targetAnimalType} that is a representation in animal form of the input human image.
 
-Style: 
-* Subtle, stylized realistic style.
-* Emphasize expressive eyes and subtle shifts in muscle tension to convey emotional state.
+// Style:
+// * Subtle, stylized realistic style.
+// * Emphasize expressive eyes and subtle shifts in muscle tension to convey emotional state.
 
-Core Task: 
-* Analyze: Carefully examine the input human image to identify and extract the primary colors, facial expression and emotional 
-  mood (e.g., happiness, sadness, anger, surprise).
-* Translate: Translate this specific emotional state onto the face of the ${targetAnimalType} in a manner that feels natural 
-  and believable for that species. Consider how this particular emotion would be expressed through the animal's unique facial features.`;
+// Core Task:
+// * Analyze: Carefully examine the input human image to identify and extract the primary colors, facial expression and emotional
+//   mood (e.g., happiness, sadness, anger, surprise).
+// * Translate: Translate this specific emotional state onto the face of the ${targetAnimalType} in a manner that feels natural
+//   and believable for that species. Consider how this particular emotion would be expressed through the animal's unique facial features.`;
 
-const ANIMAL_TO_HUMAN_PROMPT = (type: string) =>
-  `Render this image of a ${type} as a human with subtle, stylized photorealism (like Pixar or Dreamworks) 
-with shot-on-iPhone level quality. Maintain the essential features and overall composition of the original photo. 
-Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics 
-like fur, feathers, tails, claws, or animal-like features.`;
+// const ANIMAL_TO_HUMAN_PROMPT = (type: string) =>
+//   `Render this image of a ${type} as a human with subtle, stylized photorealism (like Pixar or Dreamworks)
+// with shot-on-iPhone level quality. Maintain the essential features and overall composition of the original photo.
+// Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics
+// like fur, feathers, tails, claws, or animal-like features.`;
 
 type ImageRow = {
   id: string;
