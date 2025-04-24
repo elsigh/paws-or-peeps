@@ -56,29 +56,36 @@ Character Translation:
    - Keep the same emotional warmth and presence as the original photo`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_CHARMING = (type: string) =>
-  `Create a delightful human portrait that captures the spirit and charm of this ${type}.
+  `Create a delightful animated human character portrait that captures the spirit of this ${type}. 
+
+IMPORTANT: The output MUST be a HUMAN CHARACTER - like a Disney/Pixar protagonist, NOT an animal.
 
 Style Guide:
-- Use a high-quality animated film aesthetic (think modern Disney/Pixar human characters)
+- Use high-quality animated film aesthetic (like modern Disney/Pixar human characters)
+- Think of human characters like those in Frozen, Tangled, or Big Hero 6
 - Create warm, inviting lighting that brings out personality
-- Maintain a natural, appealing human appearance
-- Ensure eyes capture the same spark and character as the ${type}
+- Ensure the result is clearly a human face with human features
 
-Character Translation:
-1. Personality Preservation:
-   - Transform the ${type}'s expression into human facial features while keeping the emotional essence
-   - Capture the animal's unique personality in human body language and pose
-   - Maintain the same energy and charm in human form
+Character Translation Rules:
+1. Human Features Required:
+   - Must have a human face, human eyes, human nose, human mouth
+   - Human hair instead of fur/feathers
+   - Human skin instead of animal features
+   - NO animal features in the final image
 
-2. Feature Adaptation:
-   - Create natural human features that subtly echo the ${type}'s most endearing characteristics
-   - Use hair style, facial features, and expression to capture the ${type}'s personality
-   - Ensure the human looks completely natural while feeling familiar to the original ${type}
+2. Personality Transfer:
+   - Transform the ${type}'s personality into human expressions
+   - Use the ${type}'s colors as inspiration for hair/eye color
+   - Capture the ${type}'s energy in human body language
+   - Keep the same emotional warmth in human form
 
-3. Emotional Connection:
-   - Make the connection between the original and transformed image immediately apparent
-   - Keep the same emotional warmth and presence
-   - Create a human portrait that makes viewers smile at the clever transformation`;
+3. Animation Style:
+   - Clean, appealing animated human character design
+   - Expressive human eyes that maintain the character's spirit
+   - Soft, appealing lighting like modern animated films
+   - Natural human skin tones and textures in animated style
+
+The final image MUST be a human character in animated style - imagine if this ${type} was cast as a human protagonist in a Disney/Pixar film.`;
 
 // Realistic style prompts - optimized for natural, photorealistic transformations
 export const ORIGINAL_IMAGE_PROMPT_REALISTIC = `Enhance this image to professional photography quality while maintaining natural appearance:
