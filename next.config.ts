@@ -10,6 +10,7 @@ const nextConfig: NextConfig = {
   experimental: {
     viewTransition: true,
     ppr: true,
+    clientSegmentCache: true,
   },
 };
 
