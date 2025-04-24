@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
             color: "#333",
           }}
         >
-          Which is the real picture?
+          Which was the real picture?
         </div>
 
         <div
