@@ -6,7 +6,7 @@ export function StyleBadge({ style }: { style: TransformationStyle }) {
     <Badge
       variant={style === "CHARMING" ? "default" : "secondary"}
       className={`
-        ${style === "CHARMING" ? "bg-rose-100 text-rose-800" : "bg-slate-100 text-slate-800"}
+        ${style === "CHARMING" ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-800"}
         font-medium
       `}
     >
