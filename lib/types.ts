@@ -7,7 +7,7 @@ export type ImageData = {
   animated_url?: string;
   opposite_url?: string;
   image_type: string;
-  target_animal_type?: string;
+  target_animal_type: string;
   style: TransformationStyle;
   created_at: string;
   uploader_id?: string;
