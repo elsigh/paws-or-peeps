@@ -87,7 +87,6 @@ export async function POST(request: NextRequest) {
     // Update the image in the database
     const updateData: Partial<ImageData> = {
       opposite_url: oppositeUrl,
-      updated_at: new Date().toISOString(),
     };
 
     // Only update target_animal_type if newType is provided (regeneration)
