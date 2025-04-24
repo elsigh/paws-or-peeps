@@ -1,5 +1,6 @@
 import { uploadToBlob } from "@/lib/blob";
 import {
+  type TransformationStyle,
   createAnimatedVersion,
   createOppositeVersion,
   detectImageContent,
@@ -17,10 +18,12 @@ export async function POST(request: NextRequest) {
       try {
         // Parse the form data
         const formData = await request.formData();
-        const file = formData.get("image") as File;
+        const image = formData.get("image") as File;
+        const style =
+          (formData.get("style") as TransformationStyle) || "CHARMING";
         const isPrivate = formData.get("private") === "true";
 
-        if (!file) {
+        if (!image) {
           controller.enqueue(
             encoder.encode(
               `${JSON.stringify({
@@ -60,7 +63,7 @@ export async function POST(request: NextRequest) {
         console.log("Starting image upload to Blob...");
         let originalUrl = "";
         try {
-          originalUrl = await uploadToBlob(file);
+          originalUrl = await uploadToBlob(image);
 
           controller.enqueue(
             encoder.encode(
@@ -159,7 +162,7 @@ export async function POST(request: NextRequest) {
         console.log("Generating animated version...");
         let animatedUrl = "";
         try {
-          animatedUrl = await createAnimatedVersion(originalUrl);
+          animatedUrl = await createAnimatedVersion(originalUrl, style);
           controller.enqueue(
             encoder.encode(
               `${JSON.stringify({
@@ -187,7 +190,13 @@ export async function POST(request: NextRequest) {
           controller.close();
           return;
         }
-        const oppositeUrl = null;
+
+        const oppositeUrl = await createOppositeVersion(
+          originalUrl,
+          detectionResult,
+          detectionResult === "human" ? "cat" : "human",
+          style,
+        );
         const targetAnimalType = detectionResult === "human" ? "cat" : "human";
 
         // // Generate opposite version
@@ -247,6 +256,7 @@ export async function POST(request: NextRequest) {
             oppositeUrl,
             detectionResult,
             targetAnimalType,
+            style,
             isPrivate,
           );
 

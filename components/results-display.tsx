@@ -40,16 +40,17 @@ import {
   Copy,
   ImageIcon,
   LockIcon,
+  RefreshCw,
   ThumbsUp,
   Trash2,
+  UserIcon,
 } from "lucide-react";
-import { RefreshCw } from "lucide-react";
-import { UserIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { StyleBadge } from "./style-badge";
 
 interface ResultsDisplayProps {
   imageData: ImageData;
@@ -513,6 +514,7 @@ export default function ResultsDisplay({
               </AvatarFallback>
             </Avatar>
             <span className="font-medium">{getDisplayName()}</span>
+            <StyleBadge style={imageData.style} />
           </div>
         </div>
       )}

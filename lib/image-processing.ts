@@ -9,9 +9,12 @@ import { nanoid } from "nanoid";
 import { ANIMAL_TYPES } from "./constants";
 import getVisitorId from "./get-visitor-id";
 import {
-  ANIMAL_TO_HUMAN_PROMPT_V2 as ANIMAL_TO_HUMAN_PROMPT,
-  HUMAN_TO_ANIMAL_PROMPT_V2 as HUMAN_TO_ANIMAL_PROMPT,
-  ORIGINAL_IMAGE_PROMPT_V2 as ORIGINAL_IMAGE_PROMPT,
+  ANIMAL_TO_HUMAN_PROMPT_CHARMING as ANIMAL_TO_HUMAN_PROMPT,
+  ANIMAL_TO_HUMAN_PROMPT_REALISTIC,
+  HUMAN_TO_ANIMAL_PROMPT_CHARMING as HUMAN_TO_ANIMAL_PROMPT,
+  HUMAN_TO_ANIMAL_PROMPT_REALISTIC,
+  ORIGINAL_IMAGE_PROMPT_CHARMING as ORIGINAL_IMAGE_PROMPT,
+  ORIGINAL_IMAGE_PROMPT_REALISTIC,
 } from "./prompts";
 
 // const ORIGINAL_IMAGE_PROMPT = `Stylize this image with a touch of stylized realism, subtle sharpening, maintaining original composition,
@@ -55,6 +58,8 @@ type VoteRow = {
 type ImageWithVotes = ImageRow & {
   votes: VoteRow[];
 };
+
+export type TransformationStyle = "CHARMING" | "REALISTIC";
 
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
@@ -110,9 +115,12 @@ async function imageToBlobUrl(image: GeneratedFile) {
 }
 
 // Function to create an animated version of the image using Replicate API
-export async function createAnimatedVersion(imageUrl: string) {
+export async function createAnimatedVersion(
+  imageUrl: string,
+  style: TransformationStyle = "CHARMING",
+) {
   try {
-    console.log("Starting animated version creation...");
+    console.log(`Starting animated version creation with style: ${style}...`);
 
     // Check if the image URL is valid
     if (!imageUrl || typeof imageUrl !== "string") {
@@ -135,12 +143,17 @@ export async function createAnimatedVersion(imageUrl: string) {
     //   },
     // });
 
+    const prompt =
+      style === "CHARMING"
+        ? ORIGINAL_IMAGE_PROMPT
+        : ORIGINAL_IMAGE_PROMPT_REALISTIC;
+
     const result = await generateText({
       model: google("gemini-2.0-flash-exp"),
       messages: [
         {
           role: "user",
-          content: ORIGINAL_IMAGE_PROMPT,
+          content: prompt,
         },
         {
           role: "user",
@@ -175,6 +188,7 @@ export async function createOppositeVersion(
   imageUrl: string,
   type: string,
   targetAnimalType: string,
+  style: TransformationStyle = "CHARMING",
 ): Promise<string> {
   try {
     if (!targetAnimalType) {
@@ -182,7 +196,7 @@ export async function createOppositeVersion(
       targetAnimalType = type === "human" ? "cat" : "human";
     }
     console.log(
-      `Starting opposite version creation (${type} to ${targetAnimalType})...`,
+      `Starting opposite version creation (${type} to ${targetAnimalType}) with style: ${style}...`,
     );
 
     // Check if the image URL is valid
@@ -190,12 +204,18 @@ export async function createOppositeVersion(
       throw new Error(`Invalid image URL: ${imageUrl}`);
     }
 
-    // Create a specific prompt based on the detected animal type
+    // Create a specific prompt based on the detected animal type and style
     let prompt = "";
     if (type === "human") {
-      prompt = HUMAN_TO_ANIMAL_PROMPT(targetAnimalType);
+      prompt =
+        style === "CHARMING"
+          ? HUMAN_TO_ANIMAL_PROMPT(targetAnimalType)
+          : HUMAN_TO_ANIMAL_PROMPT_REALISTIC(targetAnimalType);
     } else {
-      prompt = ANIMAL_TO_HUMAN_PROMPT(type);
+      prompt =
+        style === "CHARMING"
+          ? ANIMAL_TO_HUMAN_PROMPT(type)
+          : ANIMAL_TO_HUMAN_PROMPT_REALISTIC(type);
     }
 
     console.debug("createOppositeVersion prompt:", prompt);
@@ -251,10 +271,11 @@ export async function createOppositeVersion(
 export async function saveImageData(
   originalUrl: string,
   animatedUrl: string,
-  oppositeUrl: string | null, // Can be null initially for human uploads
+  oppositeUrl: string | null,
   imageType: string,
   targetAnimalType: string,
-  isPrivate = true, // Changed default to true
+  style: TransformationStyle = "CHARMING",
+  isPrivate = true,
 ) {
   try {
     console.log("Saving image data to Supabase with params:", {
@@ -263,6 +284,7 @@ export async function saveImageData(
       oppositeUrl: oppositeUrl ? `${oppositeUrl.substring(0, 50)}...` : "null",
       imageType,
       targetAnimalType,
+      style,
       isPrivate,
     });
 
@@ -292,6 +314,7 @@ export async function saveImageData(
         opposite_url: oppositeUrl,
         image_type: imageType,
         target_animal_type: targetAnimalType,
+        style,
         uploader_id: userId,
         private: isPrivate,
       })
@@ -330,7 +353,7 @@ export async function getImageById(id: string): Promise<ImageData> {
     // Try to get the image data regardless of ID format
     const { data, error } = await supabase
       .from("images")
-      .select("*")
+      .select("*, votes(*)")
       .eq("id", id)
       .single();
 
@@ -471,21 +494,20 @@ export async function getRecentTransformations(limit = 100) {
     const userId = user?.id;
 
     // Base query to get images
-    let query = supabase.from("images").select(
-      `
-        id,
-        original_url,
-        animated_url,
-        opposite_url,
-        image_type,
-        created_at,
-        uploader_id,
-        private,
-        votes (
-          vote
-        )
-      `,
-    );
+    let query = supabase.from("images").select(`
+      id,
+      original_url,
+      animated_url,
+      opposite_url,
+      image_type,
+      style,
+      created_at,
+      uploader_id,
+      private,
+      votes (
+        vote
+      )
+    `);
 
     // Only show private/incomplete images to their owners
     if (userId) {
@@ -824,6 +846,7 @@ export async function getVoteInfo(imageId: string): Promise<{
 // Function to auto-generate missing opposite image
 export async function autoGenerateOppositeIfNeeded(
   imageData: ImageData,
+  style: TransformationStyle = "CHARMING",
 ): Promise<ImageData> {
   try {
     // If opposite_url exists, return as is
@@ -833,11 +856,12 @@ export async function autoGenerateOppositeIfNeeded(
 
     console.log("Auto-generating missing opposite image for:", imageData.id);
 
-    // Generate the opposite image
+    // Generate the opposite image with style
     const oppositeUrl = await createOppositeVersion(
       imageData.original_url,
       imageData.image_type,
       imageData.target_animal_type || "cat",
+      style,
     );
 
     // Update the image in the database

@@ -1,20 +1,20 @@
-import type { ANIMAL_TYPES } from "./constants";
+import type { TransformationStyle } from "./image-processing";
 
 // Define the ImageData type
-export interface ImageData {
+export type ImageData = {
   id: string;
-  animated_url: string;
-  opposite_url: string;
-  image_type: "human" | (typeof ANIMAL_TYPES)[number];
   original_url: string;
-  uploader_id: string;
-  target_animal_type: string;
+  animated_url?: string;
+  opposite_url?: string;
+  image_type: string;
+  target_animal_type?: string;
+  style: TransformationStyle;
   created_at: string;
-  updated_at?: string;
-  hasVotes: boolean;
-  isUploader: boolean;
+  uploader_id?: string;
   private: boolean;
-}
+  isUploader?: boolean;
+  hasVotes?: boolean;
+};
 
 // Update the vote stats interface
 export interface VoteStats {

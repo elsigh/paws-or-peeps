@@ -114,8 +114,7 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
       <div className="text-center mb-8">
         <p className="text-xl text-gray-600 relative inline-block">
-          Check out the transformation!
-          <span className="absolute -right-8 -top-4 text-2xl">😸</span>
+          Check out this transformation!
         </p>
       </div>
 

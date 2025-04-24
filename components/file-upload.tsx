@@ -7,6 +7,13 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
 import { AlertCircle, FileWarning, ImageIcon, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -42,6 +49,8 @@ const PET_FACTS = [
 // Maximum file size in bytes (4MB)
 const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
+type TransformationStyle = "CHARMING" | "REALISTIC";
+
 export default function FileUpload() {
   const router = useRouter();
   const { requireAuth } = useAuth();
@@ -65,6 +74,8 @@ export default function FileUpload() {
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isCompressing, setIsCompressing] = useState(false);
+  const [transformStyle, setTransformStyle] =
+    useState<TransformationStyle>("CHARMING");
 
   // Cycle through pet facts during loading
   useEffect(() => {
@@ -221,6 +232,7 @@ export default function FileUpload() {
         console.log("Creating FormData...");
         const formData = new FormData();
         formData.append("image", file);
+        formData.append("style", transformStyle);
 
         console.log("FormData created, sending request...");
         console.log("File details:", {
@@ -539,6 +551,44 @@ export default function FileUpload() {
 
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Style Selection */}
+          <div className="space-y-2 mb-4">
+            {/* <label
+              htmlFor="style-select"
+              className="text-sm font-medium text-gray-700"
+            >
+              Transformation Style
+            </label> */}
+            <Select
+              value={transformStyle}
+              onValueChange={(value: TransformationStyle) =>
+                setTransformStyle(value)
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a style" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="CHARMING">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-left">Delightful</span>
+                    <span className="text-xs text-gray-500">
+                      Charming, animated film style transformations
+                    </span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="REALISTIC">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-left">Realistic</span>
+                    <span className="text-xs text-gray-500">
+                      Photorealistic, detailed transformations
+                    </span>
+                  </div>
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           <div className="space-y-2">
             {/* Hidden file input */}
             <Input
