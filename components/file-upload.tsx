@@ -15,10 +15,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
-import { AlertCircle, FileWarning, ImageIcon, Upload, X } from "lucide-react";
+import {
+  AlertCircle,
+  Crop as CropIcon,
+  FileWarning,
+  ImageIcon,
+  Upload,
+  X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import ReactCrop, { type Crop } from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 
 import type { ANIMAL_TYPES } from "@/lib/constants";
 
@@ -73,9 +82,13 @@ export default function FileUpload() {
     useState<string>("Transforming...");
   const dropZoneRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [transformStyle, setTransformStyle] =
     useState<TransformationStyle>("CHARMING");
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<Crop>();
+  const [isCropping, setIsCropping] = useState(false);
 
   // Cycle through pet facts during loading
   useEffect(() => {
@@ -139,6 +152,9 @@ export default function FileUpload() {
       setError(null);
       setErrorDetails(null);
       setDebugInfo(null);
+      setCrop(undefined);
+      setCompletedCrop(undefined);
+      setIsCropping(false);
 
       if (selectedFile) {
         // Check if user is authenticated first
@@ -207,11 +223,20 @@ export default function FileUpload() {
       return;
     }
 
+    // Get cropped image if cropping is complete
+    let fileToUpload = file;
+    if (completedCrop) {
+      const croppedFile = await getCroppedImg();
+      if (croppedFile) {
+        fileToUpload = croppedFile;
+      }
+    }
+
     // Double-check file size before submission
-    if (file.size > MAX_FILE_SIZE) {
+    if (fileToUpload.size > MAX_FILE_SIZE) {
       setError(
         `Image size (${formatFileSize(
-          file.size,
+          fileToUpload.size,
         )}) exceeds the 4MB limit. Please select a smaller image.`,
       );
       return;
@@ -231,14 +256,14 @@ export default function FileUpload() {
       try {
         console.log("Creating FormData...");
         const formData = new FormData();
-        formData.append("image", file);
+        formData.append("image", fileToUpload);
         formData.append("style", transformStyle);
 
         console.log("FormData created, sending request...");
         console.log("File details:", {
-          name: file.name,
-          type: file.type,
-          size: file.size,
+          name: fileToUpload.name,
+          type: fileToUpload.type,
+          size: fileToUpload.size,
         });
 
         const response = await fetch("/api/process-image", {
@@ -534,6 +559,73 @@ export default function FileUpload() {
     setError(null);
   };
 
+  // Function to get the cropped image as a blob
+  const getCroppedImg = useCallback(async (): Promise<File | null> => {
+    if (!completedCrop || !imgRef.current || !file) return null;
+
+    const canvas = document.createElement("canvas");
+    const scaleX = imgRef.current.naturalWidth / imgRef.current.width;
+    const scaleY = imgRef.current.naturalHeight / imgRef.current.height;
+
+    canvas.width = completedCrop.width;
+    canvas.height = completedCrop.height;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+
+    ctx.drawImage(
+      imgRef.current,
+      completedCrop.x * scaleX,
+      completedCrop.y * scaleY,
+      completedCrop.width * scaleX,
+      completedCrop.height * scaleY,
+      0,
+      0,
+      completedCrop.width,
+      completedCrop.height,
+    );
+
+    // Convert canvas to blob
+    return new Promise((resolve) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          resolve(null);
+          return;
+        }
+        const croppedFile = new File([blob], file.name, {
+          type: file.type,
+          lastModified: Date.now(),
+        });
+        resolve(croppedFile);
+      }, file.type);
+    });
+  }, [completedCrop, file]);
+
+  // Modify toggleCrop function to better handle initial crop dimensions
+  const toggleCrop = () => {
+    setIsCropping(!isCropping);
+    if (!isCropping && imgRef.current) {
+      // Calculate a more appropriate initial crop size
+      const imageWidth = imgRef.current.width;
+      const imageHeight = imgRef.current.height;
+
+      // Use 90% of the smaller dimension for the initial crop size
+      const cropSize = Math.min(imageWidth, imageHeight) * 0.9;
+
+      // Center the crop
+      const x = (imageWidth - cropSize) / 2;
+      const y = (imageHeight - cropSize) / 2;
+
+      setCrop({
+        unit: "%", // Use percentage instead of pixels for better responsiveness
+        x: (x / imageWidth) * 100,
+        y: (y / imageHeight) * 100,
+        width: (cropSize / imageWidth) * 100,
+        height: (cropSize / imageHeight) * 100,
+      });
+    }
+  };
+
   return (
     <Card className="w-full max-w-md mx-auto relative border-rose-200">
       {/* Decorative paw prints on the card */}
@@ -604,44 +696,75 @@ export default function FileUpload() {
             {/* Custom drop zone */}
             <div
               ref={dropZoneRef}
-              onClick={handleDropZoneClick}
+              onClick={!preview ? handleDropZoneClick : undefined}
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
               className={`
-                relative border-2 border-dashed rounded-lg p-6 cursor-pointer
+                relative border-2 border-dashed rounded-lg p-6
                 transition-colors duration-200 ease-in-out
                 flex flex-col items-center justify-center
-                ${
-                  isDragging
-                    ? "border-rose-400 bg-rose-50"
-                    : "border-rose-200 hover:border-rose-400"
-                }
+                ${isDragging ? "border-rose-400 bg-rose-50" : "border-rose-200 hover:border-rose-400"}
                 ${loading ? "opacity-50 cursor-not-allowed" : ""}
                 ${isFileTooLarge && !isCompressing ? "border-red-400 bg-red-50" : ""}
+                ${preview ? "" : "cursor-pointer"}
               `}
             >
               {preview ? (
                 <div className="relative aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg">
-                  <img
-                    src={preview || "/placeholder.svg"}
-                    alt="Preview"
-                    className={`object-cover w-full h-full ${isCompressing ? "blur-sm" : ""}`}
-                  />
+                  {isCropping ? (
+                    <ReactCrop
+                      crop={crop}
+                      onChange={(c) => setCrop(c)}
+                      onComplete={(c) => setCompletedCrop(c)}
+                      aspect={1}
+                      className="w-full h-full"
+                      minWidth={100} // Minimum crop width in pixels
+                      minHeight={100} // Minimum crop height in pixels
+                    >
+                      <img
+                        ref={imgRef}
+                        src={preview}
+                        alt="Preview"
+                        className="w-full h-auto object-contain"
+                        style={{ maxHeight: "70vh" }} // Limit maximum height while maintaining aspect ratio
+                      />
+                    </ReactCrop>
+                  ) : (
+                    <img
+                      ref={imgRef}
+                      src={preview}
+                      alt="Preview"
+                      className={`object-cover w-full h-full ${isCompressing ? "blur-sm" : ""}`}
+                    />
+                  )}
 
-                  {/* Add X button to remove the image */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent triggering the drop zone click
-                      clearSelectedFile();
-                      setError(null);
-                    }}
-                    className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
-                    aria-label="Remove image"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
+                  {/* Control buttons */}
+                  <div className="absolute top-2 right-2 flex gap-2">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleCrop();
+                      }}
+                      className="bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                      aria-label={isCropping ? "Finish cropping" : "Crop image"}
+                    >
+                      <CropIcon className="h-5 w-5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        clearSelectedFile();
+                        setError(null);
+                      }}
+                      className="bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                      aria-label="Remove image"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
 
                   {/* Compression loading overlay */}
                   {isCompressing && (
