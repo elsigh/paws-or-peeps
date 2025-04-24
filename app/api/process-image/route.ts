@@ -2,7 +2,6 @@ import { uploadToBlob } from "@/lib/blob";
 import {
   type TransformationStyle,
   createAnimatedVersion,
-  createOppositeVersion,
   detectImageContent,
   saveImageData,
 } from "@/lib/image-processing";
@@ -191,60 +190,8 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        const oppositeUrl = await createOppositeVersion(
-          originalUrl,
-          detectionResult,
-          detectionResult === "human" ? "cat" : "human",
-          style,
-        );
+        const oppositeUrl = null; // Do it in the results page
         const targetAnimalType = detectionResult === "human" ? "cat" : "human";
-
-        // // Generate opposite version
-        // controller.enqueue(
-        //   encoder.encode(
-        //     `${JSON.stringify({
-        //       status: "progress",
-        //       step: "transforming",
-        //       message: "Creating opposite version...",
-        //       progress: 75,
-        //     })}\n`,
-        //   ),
-        // );
-
-        // console.log("Generating opposite version...");
-        // let oppositeUrl = "";
-        // try {
-        //   oppositeUrl = await createOppositeVersion(
-        //     originalUrl,
-        //     detectionResult,
-        //     targetAnimalType,
-        //   );
-        //   controller.enqueue(
-        //     encoder.encode(
-        //       `${JSON.stringify({
-        //         status: "progress",
-        //         step: "transformed",
-        //         message: "Opposite version created",
-        //         progress: 85,
-        //       })}\n`,
-        //     ),
-        //   );
-        // } catch (error) {
-        //   console.error("Error creating opposite version:", error);
-        //   throw error;
-        // }
-
-        // // Save to database
-        // controller.enqueue(
-        //   encoder.encode(
-        //     `${JSON.stringify({
-        //       status: "progress",
-        //       step: "saving",
-        //       message: "Saving to database...",
-        //       progress: 90,
-        //     })}\n`,
-        //   ),
-        // );
 
         // Try to save the image data to the database
         let imageData = null;

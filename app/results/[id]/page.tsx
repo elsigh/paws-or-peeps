@@ -34,7 +34,7 @@ export async function generateMetadata(
   // Determine the type of transformation
   const transformationType =
     imageData.image_type === "human"
-      ? "human to cat"
+      ? `human to ${imageData.target_animal_type}`
       : `${imageData.image_type} to human`;
 
   // Get the base URL for absolute URLs
@@ -114,7 +114,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
       <div className="text-center mb-8">
         <p className="text-xl text-gray-600 relative inline-block">
-          Check out this transformation!
+          Check out the transformation!
+          <span className="absolute -right-8 -top-4 text-2xl">😸</span>
         </p>
       </div>
 

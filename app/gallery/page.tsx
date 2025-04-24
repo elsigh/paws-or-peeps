@@ -111,6 +111,7 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
           type={item.image_type}
           voteStats={item.voteStats}
           createdAt={item.created_at}
+          private={item.private}
         />
       ))}
     </div>
