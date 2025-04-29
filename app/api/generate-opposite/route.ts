@@ -6,7 +6,7 @@ import { type NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { imageId, newType } = await request.json();
+    const { imageId, newType, style: styleFromClient } = await request.json();
 
     if (!imageId) {
       return NextResponse.json(
@@ -82,6 +82,7 @@ export async function POST(request: NextRequest) {
       imageData.original_url,
       imageData.image_type,
       newType || imageData.target_animal_type,
+      styleFromClient || imageData.style,
     );
 
     // Update the image in the database

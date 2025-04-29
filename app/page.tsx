@@ -55,7 +55,7 @@ export default function Home() {
             clipboard
           </li>
           <li>Our AI detects if it's a pet or human</li>
-          <li>We transform it into an animated version</li>
+          <li>We transform it into a stylized version</li>
           <li>Then we create its opposite (pet to human or human to pet)</li>
           <li>Get your pals to vote on which one is the original!</li>
         </ol>

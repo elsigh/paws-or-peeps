@@ -58,7 +58,7 @@ const PET_FACTS = [
 // Maximum file size in bytes (4MB)
 const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
-type TransformationStyle = "CHARMING" | "REALISTIC";
+type TransformationStyle = "CHARMING" | "REALISTIC" | "APOCALYPTIC";
 
 export default function FileUpload() {
   const router = useRouter();
@@ -89,6 +89,7 @@ export default function FileUpload() {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<Crop>();
   const [isCropping, setIsCropping] = useState(false);
+  const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
 
   // Cycle through pet facts during loading
   useEffect(() => {
@@ -155,6 +156,7 @@ export default function FileUpload() {
       setCrop(undefined);
       setCompletedCrop(undefined);
       setIsCropping(false);
+      setCroppedPreview(null);
 
       if (selectedFile) {
         // Check if user is authenticated first
@@ -229,7 +231,13 @@ export default function FileUpload() {
       const croppedFile = await getCroppedImg();
       if (croppedFile) {
         fileToUpload = croppedFile;
+        // Generate a Data URL for the cropped image
+        const reader = new FileReader();
+        reader.onload = () => setCroppedPreview(reader.result as string);
+        reader.readAsDataURL(croppedFile);
       }
+    } else {
+      setCroppedPreview(null);
     }
 
     // Double-check file size before submission
@@ -342,11 +350,20 @@ export default function FileUpload() {
         }
       } catch (err) {
         console.error("Error in handleSubmit:", err);
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred",
-        );
+        if (err instanceof Error) {
+          setError(err.message);
+          if (typeof (err as { details?: unknown }).details === "string") {
+            setErrorDetails((err as unknown as { details: string }).details);
+          } else {
+            setErrorDetails(null);
+          }
+        } else {
+          setError("An unknown error occurred");
+          setErrorDetails(null);
+        }
         setLoading(false);
       }
+      setCroppedPreview(null);
     });
   };
 
@@ -677,6 +694,14 @@ export default function FileUpload() {
                     </span>
                   </div>
                 </SelectItem>
+                <SelectItem value="APOCALYPTIC">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-left">Apocalyptic</span>
+                    <span className="text-xs text-gray-500">
+                      Dark, evil-fantasy, demonic transformations
+                    </span>
+                  </div>
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -710,7 +735,13 @@ export default function FileUpload() {
                 ${preview ? "" : "cursor-pointer"}
               `}
             >
-              {preview ? (
+              {loading && croppedPreview ? (
+                <img
+                  src={croppedPreview}
+                  alt="Cropped Preview"
+                  className="object-cover w-full h-full"
+                />
+              ) : preview ? (
                 <div className="relative aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg">
                   {isCropping ? (
                     <ReactCrop
@@ -874,9 +905,7 @@ export default function FileUpload() {
           <CatButton
             type="submit"
             className="w-full bg-rose-500 hover:bg-rose-600"
-            disabled={
-              loading || !file || Boolean(isFileTooLarge) || Boolean(error)
-            }
+            disabled={loading || !file || Boolean(isFileTooLarge)}
           >
             {loading ? (
               <span className="flex items-center gap-2">

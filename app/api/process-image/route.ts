@@ -1,7 +1,7 @@
 import { uploadToBlob } from "@/lib/blob";
 import {
   type TransformationStyle,
-  createAnimatedVersion,
+  createStylizedVersion,
   detectImageContent,
   saveImageData,
 } from "@/lib/image-processing";
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        // Generate animated version
+        // Generate stylized version
         controller.enqueue(
           encoder.encode(
             `${JSON.stringify({
@@ -154,27 +154,28 @@ export async function POST(request: NextRequest) {
               step: "animating",
               message: "Creating stylized version...",
               progress: 40,
+              style,
             })}\n`,
           ),
         );
 
-        console.log("Generating animated version...");
+        console.log(`Generating stylized ${style} version...`);
         let animatedUrl = "";
         try {
-          animatedUrl = await createAnimatedVersion(originalUrl, style);
+          animatedUrl = await createStylizedVersion(originalUrl, style);
           controller.enqueue(
             encoder.encode(
               `${JSON.stringify({
                 status: "progress",
                 step: "animated",
-                message: "Animated version created",
+                message: "Stylized version created",
                 progress: 60,
               })}\n`,
             ),
           );
         } catch (error) {
           console.error(
-            "Error creating animated version:",
+            "Error creating stylized version:",
             JSON.stringify(error, null, 2),
           );
 
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
             encoder.encode(
               `${JSON.stringify({
                 status: "error",
-                message: `Failed to create animated version: ${error}`,
+                message: `Failed to create stylized version: ${error}`,
               })}\n`,
             ),
           );

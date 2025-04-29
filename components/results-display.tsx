@@ -94,6 +94,7 @@ export default function ResultsDisplay({
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [imageData, setImageData] = useState(initialImageData);
   const [isGeneratingOpposite, setIsGeneratingOpposite] = useState(false);
+  const isGeneratingOppositeRef = useRef(false);
 
   const { requireAuth } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -251,20 +252,13 @@ export default function ResultsDisplay({
   // Effect to trigger opposite image generation on client
   // biome-ignore lint/correctness/useExhaustiveDependencies: We only want to run this when id or opposite_url changes
   useEffect(() => {
-    //console.log("useEffect onload", { imageData, isGeneratingOpposite });
     const generateOpposite = async () => {
-      // Don't generate if we already have an opposite URL, are currently generating,
-      // or if this is a regeneration request (has target_animal_type)
-      if (imageData.opposite_url || isGeneratingOpposite) {
+      if (imageData.opposite_url || isGeneratingOppositeRef.current) {
         return;
       }
-      console.log("generateOpposite onload", {
-        imageData,
-        isGeneratingOpposite,
-      });
-
+      isGeneratingOppositeRef.current = true;
+      setIsGeneratingOpposite(true);
       try {
-        setIsGeneratingOpposite(true);
         console.log("fetch /api/generate-opposite", { imageId: imageData.id });
         const response = await fetch("/api/generate-opposite", {
           method: "POST",
@@ -289,11 +283,12 @@ export default function ResultsDisplay({
         console.error("Error generating opposite image:", error);
       } finally {
         setIsGeneratingOpposite(false);
+        isGeneratingOppositeRef.current = false;
       }
     };
 
     generateOpposite();
-  }, [imageData.id, imageData.opposite_url]); // Track both id and opposite_url
+  }, [imageData.id, imageData.opposite_url]);
 
   const handleVote = async (vote: UserVote) => {
     if (!vote) return;
@@ -380,6 +375,7 @@ export default function ResultsDisplay({
         body: JSON.stringify({
           imageId: imageData.id,
           newType: selectedAnimal,
+          style: imageData.style,
         }),
       });
 
@@ -685,11 +681,6 @@ export default function ResultsDisplay({
             <PawPrint size="md" color="text-rose-300" rotation={45} />
           </div>
 
-          {/* Tiny cat peeking from corner */}
-          <div className="absolute -right-3 -top-3 z-10 transform rotate-12">
-            <RandomCat size="tiny" index={1} />
-          </div>
-
           <CardContent className="pt-6">
             <h3 className="text-lg font-semibold text-center mb-4 flex items-center justify-center">
               <span>Which one do you think is the original?</span>
@@ -980,10 +971,6 @@ export default function ResultsDisplay({
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       onLoad={() => setOriginalImageLoaded(true)}
                     />
-                    {/* Add a tiny cat in the corner of the original image */}
-                    <div className="absolute right-2 bottom-2 z-10">
-                      <RandomCat size="tiny" index={2} />
-                    </div>
                   </div>
                 </CardContent>
               )}

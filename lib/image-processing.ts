@@ -59,7 +59,9 @@ type ImageWithVotes = ImageRow & {
   votes: VoteRow[];
 };
 
-export type TransformationStyle = "CHARMING" | "REALISTIC";
+export type TransformationStyle = "CHARMING" | "REALISTIC" | "APOCALYPTIC";
+
+const VERBOSE_DEBUG = false;
 
 export async function detectImageContent(imageUrl: string): Promise<string> {
   try {
@@ -114,34 +116,62 @@ async function imageToBlobUrl(image: GeneratedFile) {
   return blob.url;
 }
 
-// Function to create an animated version of the image using Replicate API
-export async function createAnimatedVersion(
+function hasStringField(
+  obj: unknown,
+  field: string,
+): obj is Record<string, string> {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof (obj as Record<string, unknown>)[field] === "string"
+  );
+}
+
+// Utility to deeply truncate long strings in an object
+function truncateLongStrings(obj: unknown, maxLength = 300): unknown {
+  if (typeof obj === "string") {
+    return obj.length > maxLength
+      ? `${obj.slice(0, maxLength)}... [truncated]`
+      : obj;
+  }
+  if (Array.isArray(obj)) {
+    return obj.map((item) => truncateLongStrings(item, maxLength));
+  }
+  if (typeof obj === "object" && obj !== null) {
+    const newObj: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(obj)) {
+      newObj[key] = truncateLongStrings(value, maxLength);
+    }
+    return newObj;
+  }
+  return obj;
+}
+
+function isCandidateArray(obj: unknown): obj is { finishReason?: string }[] {
+  return (
+    Array.isArray(obj) &&
+    obj.every(
+      (item) =>
+        typeof item === "object" && item !== null && "finishReason" in item,
+    )
+  );
+}
+
+// Function to create a stylized version of the image using Replicate API
+export async function createStylizedVersion(
   imageUrl: string,
   style: TransformationStyle = "CHARMING",
 ) {
   try {
-    console.log(`Starting animated version creation with style: ${style}...`);
+    console.log(
+      `[createStylizedVersion] Starting stylized version creation with style: ${style}...`,
+      { style, imageUrl },
+    );
 
     // Check if the image URL is valid
     if (!imageUrl || typeof imageUrl !== "string") {
       throw new Error(`Invalid image URL: ${imageUrl}`);
     }
-
-    // const { image } = await generateImage({
-    //   model: luma.image("photon-flash-1"),
-    //   prompt: "light cartoon style",
-    //   aspectRatio: "1:1",
-    //   providerOptions: {
-    //     luma: {
-    //       image_ref: [
-    //         {
-    //           url: imageUrl,
-    //           weight: 1.0,
-    //         },
-    //       ],
-    //     },
-    //   },
-    // });
 
     const prompt =
       style === "CHARMING"
@@ -170,15 +200,75 @@ export async function createAnimatedVersion(
       },
     });
 
-    console.log("Animated image response received");
+    // Enhanced error logging
+    const safeResult = truncateLongStrings(result);
+    if (VERBOSE_DEBUG) {
+      console.log(
+        `[createStylizedVersion] AI SDK generateText result (style: ${style}):`,
+        JSON.stringify(safeResult, null, 2),
+      );
+    }
+
+    // Check for finishReason: 'IMAGE_SAFETY' in candidates or elsewhere
+    if (typeof result === "object" && result !== null) {
+      const candidates = (result as { candidates?: unknown }).candidates;
+      if (isCandidateArray(candidates)) {
+        for (const candidate of candidates) {
+          if (candidate && candidate.finishReason === "IMAGE_SAFETY") {
+            const err = new Error(
+              "Your image was flagged as potentially unsafe and could not be processed. Please try a different image.",
+            ) as Error & { details?: string };
+            err.details = JSON.stringify(truncateLongStrings(result), null, 2);
+            throw err;
+          }
+        }
+      }
+    }
+
+    // Also check for finishReason: 'content-filter' at the top level
+    if (
+      (result as { finishReason?: string }).finishReason === "content-filter"
+    ) {
+      const err = new Error(
+        "Your image was flagged as potentially unsafe and could not be processed. Please try a different image.",
+      ) as Error & { details?: string };
+      err.details = JSON.stringify(truncateLongStrings(result), null, 2);
+      throw err;
+    }
 
     if (!result.files || result.files.length === 0) {
-      throw new Error("No image files returned");
+      if (hasStringField(result, "error")) {
+        console.error("AI SDK error:", result.error);
+        throw new Error(`AI SDK error: ${result.error}`);
+      }
+      if (hasStringField(result, "message")) {
+        console.error("AI SDK message:", result.message);
+        throw new Error(`AI SDK message: ${result.message}`);
+      }
+      throw new Error(
+        `No image files returned. Full result: ${JSON.stringify(truncateLongStrings(result), null, 2)}`,
+      );
     }
 
     return imageToBlobUrl(result.files[0]);
   } catch (error) {
-    console.error("Error in createAnimatedVersion:", error);
+    console.error("Error in createStylizedVersion:", error);
+    if (error instanceof Error) {
+      const errObj = error as unknown as Record<string, unknown>;
+      if (error.message?.includes("Invalid JSON response")) {
+        // User-friendly error for invalid JSON
+        throw new Error(
+          "The AI service returned an unexpected response. Please try again later or with a different image.",
+        );
+      }
+      if (errObj.response) {
+        console.error("AI SDK error response:", errObj.response);
+      }
+      if (errObj.data) {
+        console.error("AI SDK error data:", errObj.data);
+      }
+      throw new Error(`AI SDK error: ${error.message}`);
+    }
     throw error;
   }
 }
@@ -196,7 +286,8 @@ export async function createOppositeVersion(
       targetAnimalType = type === "human" ? "cat" : "human";
     }
     console.log(
-      `Starting opposite version creation (${type} to ${targetAnimalType}) with style: ${style}...`,
+      `[createOppositeVersion] Starting opposite version creation (${type} to ${targetAnimalType}) with style: ${style}...`,
+      { style, type, targetAnimalType, imageUrl },
     );
 
     // Check if the image URL is valid
@@ -220,19 +311,6 @@ export async function createOppositeVersion(
 
     console.debug("createOppositeVersion prompt:", prompt);
 
-    // const { image } = await generateImage({
-    //   model: luma.image("photon-flash-1"),
-    //   prompt,
-    //   providerOptions: {
-    //     luma: {
-    //       modify_image_ref: {
-    //         url: imageUrl,
-    //         weight: 1.0,
-    //       },
-    //     },
-    //   },
-    // });
-
     const result = await generateText({
       model: google("gemini-2.0-flash-exp"),
       messages: [
@@ -255,14 +333,76 @@ export async function createOppositeVersion(
       },
     });
 
+    // Enhanced error logging
+    const safeResult = truncateLongStrings(result);
+    if (VERBOSE_DEBUG) {
+      console.log(
+        `[createOppositeVersion] AI SDK generateText result (style: ${style}):`,
+        JSON.stringify(safeResult, null, 2),
+      );
+    }
+
+    // Check for finishReason: 'IMAGE_SAFETY' in candidates or elsewhere
+    if (typeof result === "object" && result !== null) {
+      const candidates = (result as { candidates?: unknown }).candidates;
+      if (isCandidateArray(candidates)) {
+        for (const candidate of candidates) {
+          if (candidate && candidate.finishReason === "IMAGE_SAFETY") {
+            const err = new Error(
+              "Your image was flagged as potentially unsafe and could not be processed. Please try a different image.",
+            ) as Error & { details?: string };
+            err.details = JSON.stringify(truncateLongStrings(result), null, 2);
+            throw err;
+          }
+        }
+      }
+    }
+
+    // Also check for finishReason: 'content-filter' at the top level
+    if (
+      (result as { finishReason?: string }).finishReason === "content-filter"
+    ) {
+      const err = new Error(
+        "Your image was flagged as potentially unsafe and could not be processed. Please try a different image.",
+      ) as Error & { details?: string };
+      err.details = JSON.stringify(truncateLongStrings(result), null, 2);
+      throw err;
+    }
+
     if (!result.files || result.files.length === 0) {
-      throw new Error("No image files returned");
+      if (hasStringField(result, "error")) {
+        console.error("AI SDK error:", result.error);
+        throw new Error(`AI SDK error: ${result.error}`);
+      }
+      if (hasStringField(result, "message")) {
+        console.error("AI SDK message:", result.message);
+        throw new Error(`AI SDK message: ${result.message}`);
+      }
+      throw new Error(
+        `No image files returned. Full result: ${JSON.stringify(truncateLongStrings(result), null, 2)}`,
+      );
     }
 
     console.log("Opposite version image response received");
     return imageToBlobUrl(result.files[0]);
   } catch (error) {
     console.error("Error in createOppositeVersion:", error);
+    if (error instanceof Error) {
+      const errObj = error as unknown as Record<string, unknown>;
+      if (error.message?.includes("Invalid JSON response")) {
+        // User-friendly error for invalid JSON
+        throw new Error(
+          "The AI service returned an unexpected response. Please try again later or with a different image.",
+        );
+      }
+      if (errObj.response) {
+        console.error("AI SDK error response:", errObj.response);
+      }
+      if (errObj.data) {
+        console.error("AI SDK error data:", errObj.data);
+      }
+      throw new Error(`AI SDK error: ${error.message}`);
+    }
     throw error;
   }
 }
@@ -485,14 +625,12 @@ export async function recordVote(
 }
 
 // Function to get recent transformations
-export async function getRecentTransformations(limit = 100) {
+export async function getRecentTransformations(
+  limit = 100,
+  uploaderId?: string,
+) {
   try {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    const userId = user?.id;
-
     // Base query to get images
     let query = supabase.from("images").select(`
       id,
@@ -509,13 +647,22 @@ export async function getRecentTransformations(limit = 100) {
       )
     `);
 
-    // Only show private/incomplete images to their owners
-    if (userId) {
-      query = query.or(
-        `and(private.eq.false,opposite_url.neq.''),uploader_id.eq.${userId}`,
-      );
+    if (uploaderId) {
+      // Only show images uploaded by this user
+      query = query.eq("uploader_id", uploaderId);
     } else {
-      query = query.eq("private", false).neq("opposite_url", "");
+      // Only show private/incomplete images to their owners
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const userId = user?.id;
+      if (userId) {
+        query = query.or(
+          `and(private.eq.false,opposite_url.neq.''),uploader_id.eq.${userId}`,
+        );
+      } else {
+        query = query.eq("private", false).neq("opposite_url", "");
+      }
     }
 
     const { data: images, error } = await query
@@ -530,10 +677,9 @@ export async function getRecentTransformations(limit = 100) {
     // Process and validate each image
     const validImages = (images as ImageWithVotes[]).filter((image) => {
       // For non-owners, require both original and opposite URLs
-      if (image.uploader_id !== userId) {
+      if (uploaderId || image.uploader_id !== uploaderId) {
         return image.original_url && image.opposite_url;
       }
-
       // For owners, just check if required URLs exist
       return image.original_url && (image.animated_url || image.opposite_url);
     });
