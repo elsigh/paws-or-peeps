@@ -92,11 +92,15 @@ export function NotificationBell() {
     if (!user?.id) return;
     // Optimistically update UI
     const prevNotifications = [...notifications];
+    const prevUnreadCount = unreadCount;
     setNotifications(notifications.map((n) => ({ ...n, is_read: true })));
+    setUnreadCount(0);
     try {
       await markAllNotificationsAsRead(user.id);
     } catch (err) {
+      // Revert UI on error
       setNotifications(prevNotifications);
+      setUnreadCount(prevUnreadCount);
       toast({
         title: "Failed to mark all as read",
         description: "Please try again.",

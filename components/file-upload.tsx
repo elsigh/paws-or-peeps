@@ -59,7 +59,12 @@ const PET_FACTS = [
 // Maximum file size in bytes (4MB)
 const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
-type TransformationStyle = "CHARMING" | "REALISTIC" | "APOCALYPTIC" | "CHIBI";
+type TransformationStyle =
+  | "CHARMING"
+  | "REALISTIC"
+  | "APOCALYPTIC"
+  | "CHIBI"
+  | "ANGELIC";
 
 export default function FileUpload() {
   const router = useRouter();
@@ -623,24 +628,36 @@ export default function FileUpload() {
   const toggleCrop = () => {
     setIsCropping(!isCropping);
     if (!isCropping && imgRef.current) {
-      // Calculate a more appropriate initial crop size
-      const imageWidth = imgRef.current.width;
-      const imageHeight = imgRef.current.height;
+      // Get the actual rendered dimensions of the image
+      const imageElement = imgRef.current;
+      const rect = imageElement.getBoundingClientRect();
+      const visibleWidth = rect.width;
+      const visibleHeight = rect.height;
 
-      // Use 90% of the smaller dimension for the initial crop size
-      const cropSize = Math.min(imageWidth, imageHeight) * 0.9;
+      // Calculate a crop size that's 80% of the image dimensions
+      const cropWidth = visibleWidth * 0.8;
+      const cropHeight = visibleHeight * 0.8;
 
-      // Center the crop
-      const x = (imageWidth - cropSize) / 2;
-      const y = (imageHeight - cropSize) / 2;
+      // Center the crop within the visible area
+      const x = (visibleWidth - cropWidth) / 2;
+      const y = (visibleHeight - cropHeight) / 2;
 
+      // Convert to percentages based on the actual visible dimensions
+      const cropX = (x / visibleWidth) * 100;
+      const cropY = (y / visibleHeight) * 100;
+      const cropWidthPercent = (cropWidth / visibleWidth) * 100;
+      const cropHeightPercent = (cropHeight / visibleHeight) * 100;
+
+      // Set the crop with percentage units, ensuring it stays within bounds
       setCrop({
-        unit: "%", // Use percentage instead of pixels for better responsiveness
-        x: (x / imageWidth) * 100,
-        y: (y / imageHeight) * 100,
-        width: (cropSize / imageWidth) * 100,
-        height: (cropSize / imageHeight) * 100,
+        unit: "%",
+        x: Math.max(0, Math.min(cropX, 100 - cropWidthPercent)),
+        y: Math.max(0, Math.min(cropY, 100 - cropHeightPercent)),
+        width: Math.min(cropWidthPercent, 100),
+        height: Math.min(cropHeightPercent, 100),
       });
+    } else {
+      setCrop(undefined);
     }
   };
 
@@ -697,7 +714,7 @@ export default function FileUpload() {
                       {STYLE_EMOJI_MAP.REALISTIC.label}
                     </span>
                     <span className="text-xs text-gray-500">
-                      Photorealistic, detailed transformations
+                      Photorealistic transformations
                     </span>
                   </div>
                 </SelectItem>
@@ -708,7 +725,7 @@ export default function FileUpload() {
                       {STYLE_EMOJI_MAP.APOCALYPTIC.label}
                     </span>
                     <span className="text-xs text-gray-500">
-                      Dark, evil-fantasy, demonic transformations
+                      Dark, post-apocalyptic transformations
                     </span>
                   </div>
                 </SelectItem>
@@ -719,7 +736,18 @@ export default function FileUpload() {
                       {STYLE_EMOJI_MAP.CHIBI.label}
                     </span>
                     <span className="text-xs text-gray-500">
-                      Small, cute, and simplified transformations
+                      Cute Japanese chibi style transformations
+                    </span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="ANGELIC">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-left">
+                      {STYLE_EMOJI_MAP.ANGELIC.emoji}{" "}
+                      {STYLE_EMOJI_MAP.ANGELIC.label}
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Divine, ethereal transformations
                     </span>
                   </div>
                 </SelectItem>
@@ -769,17 +797,16 @@ export default function FileUpload() {
                       crop={crop}
                       onChange={(c) => setCrop(c)}
                       onComplete={(c) => setCompletedCrop(c)}
-                      aspect={1}
                       className="w-full h-full"
-                      minWidth={100} // Minimum crop width in pixels
-                      minHeight={100} // Minimum crop height in pixels
+                      minWidth={50}
+                      minHeight={50}
                     >
                       <img
                         ref={imgRef}
                         src={preview}
                         alt="Preview"
-                        className="w-full h-auto object-contain"
-                        style={{ maxHeight: "70vh" }} // Limit maximum height while maintaining aspect ratio
+                        className="max-w-full max-h-[70vh] h-auto w-auto mx-auto object-contain"
+                        style={{ display: "block" }}
                       />
                     </ReactCrop>
                   ) : (
@@ -787,7 +814,8 @@ export default function FileUpload() {
                       ref={imgRef}
                       src={preview}
                       alt="Preview"
-                      className={`object-cover w-full h-full ${isCompressing ? "blur-sm" : ""}`}
+                      className={`max-w-full max-h-[70vh] h-auto w-auto mx-auto object-contain ${isCompressing ? "blur-sm" : ""}`}
+                      style={{ display: "block" }}
                     />
                   )}
 

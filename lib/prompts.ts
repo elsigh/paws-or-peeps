@@ -270,3 +270,60 @@ Use the ${type}'s features as inspiration:
 - ${type}'s personality → Reflected in the pose and demeanor
 
 The final image MUST be a high-quality chibi human that combines cute stylization with realistic rendering techniques.`;
+
+export const ORIGINAL_IMAGE_PROMPT_ANGELIC = `Transform this image into a heavenly, ethereal portrait with divine aesthetics.
+
+Requirements:
+- Celestial, ethereal atmosphere with soft glowing light
+- Delicate, luminous skin tones with subtle iridescence
+- Flowing, ethereal fabrics in white and gold
+- Soft, warm lighting with divine rays and halos
+- Gentle, serene expression
+- Incorporate subtle floating elements like feathers or light particles
+- Add a subtle golden aura or nimbus
+- Maintain a peaceful, tranquil composition
+- Use a color palette of whites, golds, and soft pastels
+- Include delicate, ethereal details like gossamer textures
+- Create a sense of weightlessness and grace
+
+The final image should evoke a sense of divine beauty, peace, and celestial grace while maintaining the subject's core essence.`;
+
+export const HUMAN_TO_ANIMAL_PROMPT_ANGELIC = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${gender} human into a divine, ethereal ${targetAnimalType} with angelic qualities.
+
+Requirements:
+- Create a majestic, celestial ${targetAnimalType} with divine features
+- Add subtle glowing effects and halos
+- Use a palette of whites, golds, and soft pastels
+- Include ethereal elements like floating feathers or light particles
+- Maintain a gentle, peaceful expression
+- Add luminous fur/scales/feathers with an otherworldly sheen
+- Create a heavenly atmosphere with divine lighting
+- Incorporate subtle golden accents
+- Keep the pose graceful and serene
+- Add delicate, ethereal details
+
+The final image should portray a divine, angelic ${targetAnimalType} that emanates peace and celestial beauty.`;
+
+export const ANIMAL_TO_HUMAN_PROMPT_ANGELIC = (
+  sourceAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${sourceAnimalType} into a divine, ethereal ${gender} human with angelic qualities.
+
+Requirements:
+- Create a celestial human figure with ethereal features
+- Incorporate subtle elements from the original ${sourceAnimalType}
+- Add flowing, ethereal white and gold garments
+- Include a soft, divine glow or halo
+- Use luminous skin tones with subtle iridescence
+- Create a heavenly atmosphere with gentle lighting
+- Add floating elements like feathers or light particles
+- Maintain a serene, peaceful expression
+- Use a palette of whites, golds, and soft pastels
+- Include delicate, ethereal details
+
+The final image should be a divine human interpretation that captures the ${sourceAnimalType}'s essence in an angelic form.`;

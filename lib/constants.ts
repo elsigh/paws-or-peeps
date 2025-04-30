@@ -18,6 +18,8 @@ export const ANIMAL_TYPES = [
 ] as const;
 [];
 
+export const OG_HEADLINE = "Which was the original picture?";
+
 export const STYLE_EMOJI_MAP: Record<
   TransformationStyle,
   { emoji: string; label: string }
@@ -26,6 +28,7 @@ export const STYLE_EMOJI_MAP: Record<
   REALISTIC: { emoji: "📸", label: "Realistic" },
   APOCALYPTIC: { emoji: "👿", label: "Apocalyptic" },
   CHIBI: { emoji: "🎎", label: "Chibi" },
+  ANGELIC: { emoji: "👼", label: "Angelic" },
 };
 
 export const DEFAULT_RESULT_IMG_SRC = "/images/cat-yawning.png";

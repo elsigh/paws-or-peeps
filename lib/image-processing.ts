@@ -15,14 +15,17 @@ import { nanoid } from "nanoid";
 import { ANIMAL_TYPES } from "./constants";
 import getVisitorId from "./get-visitor-id";
 import {
+  ANIMAL_TO_HUMAN_PROMPT_ANGELIC,
   ANIMAL_TO_HUMAN_PROMPT_APOCALYPTIC,
   ANIMAL_TO_HUMAN_PROMPT_CHARMING,
   ANIMAL_TO_HUMAN_PROMPT_CHIBI,
   ANIMAL_TO_HUMAN_PROMPT_REALISTIC,
+  HUMAN_TO_ANIMAL_PROMPT_ANGELIC,
   HUMAN_TO_ANIMAL_PROMPT_APOCALYPTIC,
   HUMAN_TO_ANIMAL_PROMPT_CHARMING,
   HUMAN_TO_ANIMAL_PROMPT_CHIBI,
   HUMAN_TO_ANIMAL_PROMPT_REALISTIC,
+  ORIGINAL_IMAGE_PROMPT_ANGELIC,
   ORIGINAL_IMAGE_PROMPT_APOCALYPTIC,
   ORIGINAL_IMAGE_PROMPT_CHARMING,
   ORIGINAL_IMAGE_PROMPT_CHIBI,
@@ -178,14 +181,16 @@ export async function createStylizedVersion(
     if (type === "human") {
       // Prepend gender info to the prompt
       const promptMap = {
-        CHARMING: (g: string) => `The human subject is ${g}.
-${ORIGINAL_IMAGE_PROMPT_CHARMING}`,
-        REALISTIC: (g: string) => `The human subject is ${g}.
-${ORIGINAL_IMAGE_PROMPT_REALISTIC}`,
-        APOCALYPTIC: (g: string) => `The human subject is ${g}.
-${ORIGINAL_IMAGE_PROMPT_APOCALYPTIC}`,
-        CHIBI: (g: string) => `The human subject is ${g}.
-${ORIGINAL_IMAGE_PROMPT_CHIBI}`,
+        CHARMING: (g: string) =>
+          `The human subject is ${g}.\n${ORIGINAL_IMAGE_PROMPT_CHARMING}`,
+        REALISTIC: (g: string) =>
+          `The human subject is ${g}.\n${ORIGINAL_IMAGE_PROMPT_REALISTIC}`,
+        APOCALYPTIC: (g: string) =>
+          `The human subject is ${g}.\n${ORIGINAL_IMAGE_PROMPT_APOCALYPTIC}`,
+        CHIBI: (g: string) =>
+          `The human subject is ${g}.\n${ORIGINAL_IMAGE_PROMPT_CHIBI}`,
+        ANGELIC: (g: string) =>
+          `The human subject is ${g}.\n${ORIGINAL_IMAGE_PROMPT_ANGELIC}`,
       };
       prompt = promptMap[style](gender || "other");
     } else {
@@ -194,6 +199,7 @@ ${ORIGINAL_IMAGE_PROMPT_CHIBI}`,
         REALISTIC: ORIGINAL_IMAGE_PROMPT_REALISTIC,
         APOCALYPTIC: ORIGINAL_IMAGE_PROMPT_APOCALYPTIC,
         CHIBI: ORIGINAL_IMAGE_PROMPT_CHIBI,
+        ANGELIC: ORIGINAL_IMAGE_PROMPT_ANGELIC,
       };
       prompt = promptMap[style];
     }
@@ -323,6 +329,7 @@ export async function createOppositeVersion(
       REALISTIC: HUMAN_TO_ANIMAL_PROMPT_REALISTIC,
       APOCALYPTIC: HUMAN_TO_ANIMAL_PROMPT_APOCALYPTIC,
       CHIBI: HUMAN_TO_ANIMAL_PROMPT_CHIBI,
+      ANGELIC: HUMAN_TO_ANIMAL_PROMPT_ANGELIC,
     };
 
     const animalToHumanPrompts = {
@@ -330,6 +337,7 @@ export async function createOppositeVersion(
       REALISTIC: ANIMAL_TO_HUMAN_PROMPT_REALISTIC,
       APOCALYPTIC: ANIMAL_TO_HUMAN_PROMPT_APOCALYPTIC,
       CHIBI: ANIMAL_TO_HUMAN_PROMPT_CHIBI,
+      ANGELIC: ANIMAL_TO_HUMAN_PROMPT_ANGELIC,
     };
 
     const prompt =

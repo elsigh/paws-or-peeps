@@ -1,3 +1,4 @@
+import { OG_HEADLINE } from "@/lib/constants";
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
             color: "#333",
           }}
         >
-          Which was the real picture?
+          {OG_HEADLINE}
         </div>
 
         <div

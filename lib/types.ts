@@ -2,7 +2,8 @@ export type TransformationStyle =
   | "CHARMING"
   | "REALISTIC"
   | "APOCALYPTIC"
-  | "CHIBI";
+  | "CHIBI"
+  | "ANGELIC";
 
 export type ImageData = {
   id: string;

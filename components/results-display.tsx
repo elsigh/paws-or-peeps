@@ -30,7 +30,11 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth-context";
-import { ANIMAL_TYPES, DEFAULT_RESULT_IMG_SRC } from "@/lib/constants";
+import {
+  ANIMAL_TYPES,
+  DEFAULT_RESULT_IMG_SRC,
+  OG_HEADLINE,
+} from "@/lib/constants";
 import { createClient } from "@/lib/supabase-client";
 import type { ImageData, UserProfile, UserVote, VoteStats } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
@@ -683,7 +687,7 @@ export default function ResultsDisplay({
 
           <CardContent className="pt-6">
             <h3 className="text-lg font-semibold text-center mb-4 flex items-center justify-center">
-              <span>Which one do you think is the original?</span>
+              <span>{OG_HEADLINE}</span>
               <span className="ml-2 text-xl">🤔</span>
             </h3>
             <div className="flex justify-center gap-4">
