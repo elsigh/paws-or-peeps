@@ -9,6 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/auth-context";
 import {
   getUnreadNotificationCount,
@@ -18,13 +19,26 @@ import {
 } from "@/lib/notification-service-client";
 import type { Notification } from "@/lib/types";
 import { showWebNotification } from "@/lib/web-notification-service";
-import { Bell, BellRing } from "lucide-react";
+import { Bell, BellRing, X } from "lucide-react";
 import { useEffect, useState } from "react";
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 640);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+  return isMobile;
+}
 
 export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const { user } = useAuth();
+  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!user?.id) return;
@@ -75,14 +89,84 @@ export function NotificationBell() {
   };
 
   const handleMarkAllAsRead = async () => {
-    console.debug("NotificationBell handleMarkAllAsRead", { user });
     if (!user?.id) return;
-    setNotifications(notifications.map((n) => ({ ...n, read: true })));
-    await markAllNotificationsAsRead(user.id);
+    // Optimistically update UI
+    const prevNotifications = [...notifications];
+    setNotifications(notifications.map((n) => ({ ...n, is_read: true })));
+    try {
+      await markAllNotificationsAsRead(user.id);
+    } catch (err) {
+      setNotifications(prevNotifications);
+      toast({
+        title: "Failed to mark all as read",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+      throw err;
+    }
   };
 
   if (!user) return null;
 
+  // Mobile full-screen overlay
+  if (isMobile && isMobileOpen) {
+    return (
+      <div className="fixed inset-0 z-[200] bg-white dark:bg-black flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b">
+          <span className="text-lg font-semibold">Notifications</span>
+          <button
+            onClick={() => setIsMobileOpen(false)}
+            aria-label="Close notifications"
+            type="button"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto">
+          {notifications.length === 0 ? (
+            <div className="p-4 text-center text-sm text-muted-foreground">
+              No notifications yet
+            </div>
+          ) : (
+            notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className="p-4 border-b flex flex-col gap-1 cursor-pointer"
+                onClick={(e) => handleMarkAsRead(notification.id, e)}
+              >
+                <div className="flex w-full items-center justify-between">
+                  <span className="font-medium">{notification.type}</span>
+                  {!notification.is_read && (
+                    <span className="h-2 w-2 rounded-full bg-blue-500" />
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {notification.message}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(notification.created_at).toLocaleString()}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+        <div className="p-4 border-t flex justify-end">
+          {unreadCount > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleMarkAllAsRead}
+              className="text-xs"
+            >
+              Mark all as read
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop dropdown
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -90,6 +174,9 @@ export function NotificationBell() {
           variant="ghost"
           size="icon"
           className="relative focus-visible:ring-0"
+          onClick={() => {
+            if (isMobile) setIsMobileOpen(true);
+          }}
         >
           {unreadCount > 0 ? (
             <BellRing className="h-6 w-6 text-yellow-500" />
@@ -97,14 +184,14 @@ export function NotificationBell() {
             <Bell className="h-6 w-6" />
           )}
           {unreadCount > 0 && (
-            <span
-              className="absolute
-						 right-1 top-1 h-2 w-2 rounded-full bg-blue-500"
-            />
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-blue-500" />
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80">
+      <DropdownMenuContent
+        align="end"
+        className="w-80 max-h-[50vh] overflow-y-auto"
+      >
         <div className="flex items-center justify-between p-2">
           <span className="text-sm font-medium">Notifications</span>
           {unreadCount > 0 && (

@@ -30,8 +30,12 @@ Apply a warm, inviting style reminiscent of high-end animated films, with:
 - Preservation of the original composition and emotional expression
 Make it feel like a moment from a beloved animated feature film.`;
 
-export const HUMAN_TO_ANIMAL_PROMPT_CHARMING = (targetAnimalType: string) =>
-  `IMPORTANT: The emotional expression and mood MUST match the original human image exactly. Do NOT make the ${targetAnimalType} appear happier, more cheerful, or more delightful than the original. If the human is sad, angry, or neutral, the ${targetAnimalType} must reflect that same mood.
+export const HUMAN_TO_ANIMAL_PROMPT_CHARMING = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `The human subject is ${gender}.
+IMPORTANT: The emotional expression and mood MUST match the original human image exactly. Do NOT make the ${targetAnimalType} appear happier, more cheerful, or more delightful than the original. If the human is sad, angry, or neutral, the ${targetAnimalType} must reflect that same mood.
 
 Create a heartwarming ${targetAnimalType} portrait that captures the human's personality and spirit.
 
@@ -56,8 +60,9 @@ Character Translation:
    - Create an immediate sense of recognition between the original and transformed image
    - The emotional presence must be identical to the original photo, whether it is warmth, sadness, anger, or any other mood.`;
 
-export const ANIMAL_TO_HUMAN_PROMPT_CHARMING = (type: string) =>
-  `IMPORTANT: The emotional expression and mood MUST match the original ${type} image exactly. Do NOT make the human appear happier, more cheerful, or more delightful than the original. If the ${type} is sad, angry, or neutral, the human must reflect that same mood.
+export const ANIMAL_TO_HUMAN_PROMPT_CHARMING = (type: string, gender: string) =>
+  `The human subject is ${gender}.
+IMPORTANT: The emotional expression and mood MUST match the original ${type} image exactly. Do NOT make the human appear happier, more cheerful, or more delightful than the original. If the ${type} is sad, angry, or neutral, the human must reflect that same mood.
 
 Create a delightful animated human character portrait that captures the spirit of this ${type}. 
 
@@ -100,8 +105,12 @@ export const ORIGINAL_IMAGE_PROMPT_REALISTIC = `Enhance this image to profession
 
 The final image should look like it was taken by a professional photographer with high-end equipment.`;
 
-export const HUMAN_TO_ANIMAL_PROMPT_REALISTIC = (targetAnimalType: string) =>
-  `IMPORTANT: The emotional expression and mood MUST match the original human image exactly. Do NOT alter the mood or emotional tone. If the human is sad, angry, or neutral, the ${targetAnimalType} must reflect that same mood.
+export const HUMAN_TO_ANIMAL_PROMPT_REALISTIC = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `The human subject is ${gender}.
+IMPORTANT: The emotional expression and mood MUST match the original human image exactly. Do NOT alter the mood or emotional tone. If the human is sad, angry, or neutral, the ${targetAnimalType} must reflect that same mood.
 
 Transform this human into a photorealistic ${targetAnimalType} portrait.
 
@@ -122,8 +131,12 @@ Example translation:
 
 The final image MUST be a photorealistic ${targetAnimalType} portrait that looks like a professional wildlife photo, while capturing the essence and personality of the original human.`;
 
-export const ANIMAL_TO_HUMAN_PROMPT_REALISTIC = (type: string) =>
-  `IMPORTANT: The emotional expression and mood MUST match the original ${type} image exactly. Do NOT alter the mood or emotional tone. If the ${type} is sad, angry, or neutral, the human must reflect that same mood.
+export const ANIMAL_TO_HUMAN_PROMPT_REALISTIC = (
+  type: string,
+  gender: string,
+) =>
+  `The human subject is ${gender}.
+IMPORTANT: The emotional expression and mood MUST match the original ${type} image exactly. Do NOT alter the mood or emotional tone. If the ${type} is sad, angry, or neutral, the human must reflect that same mood.
 
 Transform this ${type} into a photorealistic human portrait. 
 
@@ -155,8 +168,12 @@ Apply a bold, infernal style inspired by classic depictions of Hell, with:
 The final image should look like a character or creature from a hellish, high-fantasy underworld, with unmistakable devilish and magical elements.
 The result should be unapologetically infernal, fantastical, and visually striking.`;
 
-export const HUMAN_TO_ANIMAL_PROMPT_APOCALYPTIC = (targetAnimalType: string) =>
-  `Transform this human into a ${targetAnimalType} as if reborn in the infernal depths of Hell.
+export const HUMAN_TO_ANIMAL_PROMPT_APOCALYPTIC = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `The human subject is ${gender}.
+Transform this human into a ${targetAnimalType} as if reborn in the infernal depths of Hell.
 Style Guide:
 - Go all-in on hellish, demonic, and fantasy horror: horns, fangs, glowing red or orange eyes, bat wings, spiked tails, and infernal runes
 - Place the creature in a volcanic, brimstone-filled landscape with rivers of lava, burning skies, and magical fire
@@ -166,8 +183,12 @@ Style Guide:
 - Mirror the human's emotional expression, but amplify it with infernal energy and fantasy horror
 The result should be a visually stunning, devilish, and magical ${targetAnimalType} straight out of a hellish fantasy realm.`;
 
-export const ANIMAL_TO_HUMAN_PROMPT_APOCALYPTIC = (type: string) =>
-  `Transform this ${type} into a human as if they were a lord or denizen of Hell in a high-fantasy universe.
+export const ANIMAL_TO_HUMAN_PROMPT_APOCALYPTIC = (
+  type: string,
+  gender: string,
+) =>
+  `The human subject is ${gender}.
+Transform this ${type} into a human as if they were a lord or denizen of Hell in a high-fantasy universe.
 Style Guide:
 - Give the human demonic and infernal features: horns, fangs, glowing red or orange eyes, bat wings, magical tattoos, and infernal runes or pentagrams
 - Place the character in a volcanic, hellish landscape with rivers of lava, burning skies, and magical fire

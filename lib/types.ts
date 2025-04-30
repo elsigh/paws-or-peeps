@@ -13,24 +13,14 @@ export type ImageData = {
   private: boolean;
   isUploader?: boolean;
   hasVotes?: boolean;
-};
-
-export type ImageRow = {
-  id: string;
-  original_url: string;
-  animated_url?: string;
-  opposite_url?: string;
-  image_type: string;
-  created_at: string;
-  uploader_id?: string;
-  private: boolean;
+  gender?: string | null;
 };
 
 export type VoteRow = {
   vote: "animal" | "human";
 };
 
-export type ImageWithVotes = ImageRow & {
+export type ImageWithVotes = ImageData & {
   votes: VoteRow[];
 };
 

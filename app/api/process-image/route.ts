@@ -1,10 +1,10 @@
 import { uploadToBlob } from "@/lib/blob";
 import {
-  type TransformationStyle,
   createStylizedVersion,
   detectImageContent,
   saveImageData,
 } from "@/lib/image-processing";
+import type { TransformationStyle } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
 import type { NextRequest } from "next/server";
 
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         );
 
         console.log("Detecting image content...");
-        let detectionResult = "";
+        let detectionResult: { type: string; gender: string | null };
         try {
           detectionResult = await detectImageContent(originalUrl);
           console.log("Detection result:", detectionResult);
@@ -128,17 +128,28 @@ export async function POST(request: NextRequest) {
               `${JSON.stringify({
                 status: "progress",
                 step: "detected",
-                message: `Detected: ${capitalize(detectionResult)}`,
+                message: `Detected: ${capitalize(detectionResult.type)}`,
                 progress: 35,
               })}\n`,
             ),
           );
         } catch (error) {
+          console.error("Detection error:", error);
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Error detecting image content";
+          const errorDetails =
+            error instanceof Error && "details" in error
+              ? (error as { details: string }).details
+              : undefined;
+
           controller.enqueue(
             encoder.encode(
               `${JSON.stringify({
                 status: "error",
-                message: `Error detecting image content: ${error}`,
+                message: errorMessage,
+                details: errorDetails,
               })}\n`,
             ),
           );
@@ -162,7 +173,12 @@ export async function POST(request: NextRequest) {
         console.log(`Generating stylized ${style} version...`);
         let animatedUrl = "";
         try {
-          animatedUrl = await createStylizedVersion(originalUrl, style);
+          animatedUrl = await createStylizedVersion(
+            originalUrl,
+            style,
+            detectionResult.gender,
+            detectionResult.type,
+          );
           controller.enqueue(
             encoder.encode(
               `${JSON.stringify({
@@ -192,7 +208,8 @@ export async function POST(request: NextRequest) {
         }
 
         const oppositeUrl = null; // Do it in the results page
-        const targetAnimalType = detectionResult === "human" ? "cat" : "human";
+        const targetAnimalType =
+          detectionResult.type === "human" ? "cat" : "human";
 
         // Try to save the image data to the database
         let imageData = null;
@@ -202,7 +219,7 @@ export async function POST(request: NextRequest) {
             originalUrl,
             animatedUrl,
             oppositeUrl,
-            detectionResult,
+            detectionResult.type,
             targetAnimalType,
             style,
             isPrivate,
@@ -240,7 +257,7 @@ export async function POST(request: NextRequest) {
               originalUrl,
               animatedUrl,
               oppositeUrl: null,
-              type: detectionResult,
+              type: detectionResult.type,
             })}\n`,
           ),
         );

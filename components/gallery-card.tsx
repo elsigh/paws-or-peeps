@@ -4,6 +4,7 @@ import { RandomCat } from "@/components/random-cat";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import type { ANIMAL_TYPES } from "@/lib/constants";
+import { STYLE_EMOJI_MAP } from "@/lib/constants";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -13,6 +14,7 @@ interface GalleryCardProps {
   animatedUrl: string;
   oppositeUrl: string;
   type: "human" | (typeof ANIMAL_TYPES)[number];
+  style: keyof typeof STYLE_EMOJI_MAP;
   voteStats: {
     animalVotes: number;
     humanVotes: number;
@@ -29,6 +31,7 @@ export function GalleryCard({
   animatedUrl,
   oppositeUrl,
   type,
+  style,
   voteStats,
   createdAt,
   private: isPrivate,
@@ -63,26 +66,23 @@ export function GalleryCard({
           <div className="absolute top-2 left-2 bg-white/80 backdrop-blur-sm rounded-full px-2 py-1 text-xs font-medium flex items-center gap-1">
             {type === "human" ? (
               <>
-                <span>Human</span>
                 <span className="text-sm">👤</span>
               </>
             ) : (
               <>
-                <span>Animal</span>
                 <span className="text-sm">🐾</span>
               </>
             )}
           </div>
-
-          {/* Tiny cat in corner */}
-          <div className="absolute bottom-2 right-2 z-10">
-            <RandomCat size="tiny" index={type === "human" ? 2 : 0} />
+          <div className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full px-2 py-1 text-xs font-medium flex items-center gap-1">
+            <span className="text-sm">{STYLE_EMOJI_MAP[style]}</span>
           </div>
 
           {/* Hover instruction */}
           {isHovered && (
             <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-sm font-medium">
               <span>View Details</span>
+              <RandomCat size="tiny" index={type === "human" ? 2 : 0} />
             </div>
           )}
         </div>

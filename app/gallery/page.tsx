@@ -103,6 +103,7 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
           animatedUrl={item.animated_url || ""}
           oppositeUrl={item.opposite_url || ""}
           type={item.image_type as "human" | (typeof ANIMAL_TYPES)[number]}
+          style={item.style}
           voteStats={item.voteStats}
           createdAt={item.created_at}
           private={item.private}

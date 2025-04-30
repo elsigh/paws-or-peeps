@@ -51,7 +51,9 @@ import {
 
 const VERBOSE_DEBUG = false;
 
-export async function detectImageContent(imageUrl: string): Promise<string> {
+export async function detectImageContent(
+  imageUrl: string,
+): Promise<{ type: string; gender: string | null }> {
   try {
     // Validate URL
     new URL(imageUrl);
@@ -68,15 +70,16 @@ export async function detectImageContent(imageUrl: string): Promise<string> {
               text: `
             Analyze the attached image.
             
-        Determine if the image contains a Human or one of these animals: ${ANIMAL_TYPES.join(
-          ", ",
-        )}
-        
-        If it contains a human, respond with exactly "human".
-        If it contains one of the listed animals, respond with an animal type in lowercase (e.g., "cat", "dog", etc.).
-        
-        Respond with ONLY the classification result, no additional text.
-      `,
+            Determine if the image contains a Human or one of these animals: ${ANIMAL_TYPES.join(", ")}
+            
+            If it contains a human, respond with exactly this format:
+            human,gender
+            Where gender is one of: male, female, other (if unclear or ambiguous, use 'other').
+            
+            If it contains one of the listed animals, respond with an animal type in lowercase (e.g., "cat", "dog", etc.).
+            
+            Respond with ONLY the classification result, no additional text.
+          `,
             },
             {
               type: "image",
@@ -87,7 +90,12 @@ export async function detectImageContent(imageUrl: string): Promise<string> {
       ],
     });
 
-    return text.trim().toLowerCase();
+    const result = text.trim().toLowerCase();
+    if (result.startsWith("human")) {
+      const parts = result.split(",");
+      return { type: "human", gender: parts[1] ? parts[1].trim() : "other" };
+    }
+    return { type: result, gender: null };
   } catch (error) {
     console.error("Classification error:", error);
     if (error instanceof Error) {
@@ -149,11 +157,13 @@ function isCandidateArray(obj: unknown): obj is { finishReason?: string }[] {
 export async function createStylizedVersion(
   imageUrl: string,
   style: TransformationStyle = "CHARMING",
+  gender: string | null = null,
+  type: string | null = null,
 ) {
   try {
     console.log(
       `[createStylizedVersion] Starting stylized version creation with style: ${style}...`,
-      { style, imageUrl },
+      { style, imageUrl, gender, type },
     );
 
     // Check if the image URL is valid
@@ -161,12 +171,26 @@ export async function createStylizedVersion(
       throw new Error(`Invalid image URL: ${imageUrl}`);
     }
 
-    const promptMap = {
-      CHARMING: ORIGINAL_IMAGE_PROMPT_CHARMING,
-      REALISTIC: ORIGINAL_IMAGE_PROMPT_REALISTIC,
-      APOCALYPTIC: ORIGINAL_IMAGE_PROMPT_APOCALYPTIC,
-    };
-    const prompt = promptMap[style];
+    let prompt = "";
+    if (type === "human") {
+      // Prepend gender info to the prompt
+      const promptMap = {
+        CHARMING: (g: string) => `The human subject is ${g}.
+${ORIGINAL_IMAGE_PROMPT_CHARMING}`,
+        REALISTIC: (g: string) => `The human subject is ${g}.
+${ORIGINAL_IMAGE_PROMPT_REALISTIC}`,
+        APOCALYPTIC: (g: string) => `The human subject is ${g}.
+${ORIGINAL_IMAGE_PROMPT_APOCALYPTIC}`,
+      };
+      prompt = promptMap[style](gender || "other");
+    } else {
+      const promptMap = {
+        CHARMING: ORIGINAL_IMAGE_PROMPT_CHARMING,
+        REALISTIC: ORIGINAL_IMAGE_PROMPT_REALISTIC,
+        APOCALYPTIC: ORIGINAL_IMAGE_PROMPT_APOCALYPTIC,
+      };
+      prompt = promptMap[style];
+    }
     console.debug("createStylizedVersion prompt:", prompt);
 
     const result = await generateText({
@@ -270,6 +294,7 @@ export async function createOppositeVersion(
   type: string,
   targetAnimalType: string,
   style: TransformationStyle = "CHARMING",
+  gender: string | null = null,
 ): Promise<string> {
   try {
     if (!targetAnimalType) {
@@ -278,7 +303,7 @@ export async function createOppositeVersion(
     }
     console.log(
       `[createOppositeVersion] Starting opposite version creation (${type} to ${targetAnimalType}) with style: ${style}...`,
-      { style, type, targetAnimalType, imageUrl },
+      { style, type, targetAnimalType, imageUrl, gender },
     );
 
     // Check if the image URL is valid
@@ -301,8 +326,8 @@ export async function createOppositeVersion(
 
     const prompt =
       type === "human"
-        ? humanToAnimalPrompts[style](targetAnimalType)
-        : animalToHumanPrompts[style](type);
+        ? humanToAnimalPrompts[style](targetAnimalType, gender || "other")
+        : animalToHumanPrompts[style](type, gender || "other");
 
     console.debug("createOppositeVersion prompt:", prompt);
 
@@ -411,6 +436,7 @@ export async function saveImageData(
   targetAnimalType: string,
   style: TransformationStyle = "CHARMING",
   isPrivate = true,
+  gender: string | null = null,
 ) {
   try {
     console.log("Saving image data to Supabase with params:", {
@@ -421,6 +447,7 @@ export async function saveImageData(
       targetAnimalType,
       style,
       isPrivate,
+      gender,
     });
 
     // Validate image type against allowed values
@@ -452,6 +479,7 @@ export async function saveImageData(
         style,
         uploader_id: userId,
         private: isPrivate,
+        gender,
       })
       .select()
       .single();
@@ -1003,6 +1031,7 @@ export async function autoGenerateOppositeIfNeeded(
       imageData.image_type,
       imageData.target_animal_type || "cat",
       style,
+      imageData.gender,
     );
 
     // Update the image in the database
