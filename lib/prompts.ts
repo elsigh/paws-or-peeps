@@ -198,69 +198,75 @@ Style Guide:
 - Mirror the animal's emotional expression, but amplify it with infernal energy and fantasy horror
 The result should be a visually stunning, devilish, and magical human straight out of a hellish fantasy underworld.`;
 
-export const ORIGINAL_IMAGE_PROMPT_CHIBI = `Transform this image into an adorable chibi-style portrait with kawaii aesthetics.
+export const ORIGINAL_IMAGE_PROMPT_CHIBI = `Transform this image into a high-quality chibi-style portrait that balances cute aesthetics with realistic details.
 
 Requirements:
-- Super cute, diminutive Japanese chibi art style
+- Professional chibi art style with realistic texturing and lighting
 - Large head relative to body (approximately 1:2 or 1:3 ratio)
-- Big, expressive anime-style eyes
-- Simplified, exaggerated features
-- Soft, rounded shapes
-- Bright, vibrant colors
+- Detailed, expressive anime-style eyes with realistic reflections and depth
+- Semi-realistic facial features while maintaining chibi proportions
+- Soft yet defined shapes with proper volume and form
+- Natural color palette with subtle gradients
 - Maintain core personality and expression
-- Add subtle blush marks on cheeks
-- Keep the composition simple and focused
-- Maintain a playful, kawaii atmosphere
+- Add subtle shading and highlights for dimensionality
+- Keep the composition balanced and focused
+- Professional lighting with soft shadows
+- High-resolution details in hair, skin, and clothing
+- Maintain a cute aesthetic while avoiding oversimplification
 
-The final image should be an ultra-cute chibi interpretation that captures the subject's essence in an adorable, simplified form.`;
+The final image should be a high-quality chibi interpretation that combines cute stylization with realistic rendering techniques.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_CHIBI = (
   targetAnimalType: string,
   gender: string,
 ) =>
   `The human subject is ${gender}.
-Transform this human into an adorable chibi-style ${targetAnimalType} with kawaii aesthetics.
+Transform this human into a high-quality chibi-style ${targetAnimalType} that balances cute aesthetics with realistic details.
 
 Requirements:
-- Super cute, diminutive Japanese chibi art style for the ${targetAnimalType}
+- Professional chibi art style with realistic texturing and lighting
 - Large head relative to body (approximately 1:2 ratio)
-- Big, expressive anime-style eyes
-- Simplified, exaggerated features
-- Soft, rounded shapes
-- Bright, vibrant colors
+- Detailed, expressive anime-style eyes with realistic reflections
+- Semi-realistic animal features while maintaining chibi proportions
+- Natural fur/feather textures with proper volume
+- Realistic color gradients and shading
 - Maintain the emotional expression and personality exactly
-- Add subtle blush marks on cheeks
-- Keep the composition simple and focused
-- Maintain a playful, kawaii atmosphere
+- Add depth through careful shading and highlights
+- Keep the composition balanced and focused
+- Professional lighting with soft shadows
+- High-resolution details in fur/feathers/features
+- Maintain a cute aesthetic while preserving realism
 
 Use the human's features as inspiration:
-- Human's hair color → Similar-toned fur/feathers
-- Human's eye color → Similar ${targetAnimalType} eye color
-- Human's expression → Equivalent chibi ${targetAnimalType} expression
-- Human's personality → Reflected in the chibi style
+- Human's hair color → Similar-toned fur/feathers with realistic texturing
+- Human's eye color → Similar ${targetAnimalType} eye color with depth and shine
+- Human's expression → Equivalent chibi ${targetAnimalType} expression with anatomical accuracy
+- Human's personality → Reflected in the pose and demeanor
 
-The final image MUST be an ultra-cute chibi ${targetAnimalType} that captures the essence of the original human in an adorable, simplified form.`;
+The final image MUST be a high-quality chibi ${targetAnimalType} that combines cute stylization with realistic rendering techniques.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_CHIBI = (type: string, gender: string) =>
   `The human subject is ${gender}.
-Transform this ${type} into an adorable chibi-style human with kawaii aesthetics.
+Transform this ${type} into a high-quality chibi-style human that balances cute aesthetics with realistic details.
 
 Requirements:
-- Super cute, diminutive Japanese chibi art style
+- Professional chibi art style with realistic texturing and lighting
 - Large head relative to body (approximately 1:2 ratio)
-- Big, expressive anime-style eyes
-- Simplified, exaggerated features
-- Soft, rounded shapes
-- Bright, vibrant colors
+- Detailed, expressive anime-style eyes with realistic reflections
+- Semi-realistic facial features while maintaining chibi proportions
+- Natural skin texture and hair with proper volume
+- Realistic color gradients and shading
 - Maintain the emotional expression and personality exactly
-- Add subtle blush marks on cheeks
-- Keep the composition simple and focused
-- Maintain a playful, kawaii atmosphere
+- Add depth through careful shading and highlights
+- Keep the composition balanced and focused
+- Professional lighting with soft shadows
+- High-resolution details in hair, skin, and clothing
+- Maintain a cute aesthetic while preserving realism
 
 Use the ${type}'s features as inspiration:
-- ${type}'s fur/feather color → Similar-toned hair
-- ${type}'s eye color → Similar human eye color
-- ${type}'s expression → Equivalent chibi human expression
-- ${type}'s personality → Reflected in the chibi style
+- ${type}'s fur/feather color → Similar-toned hair with realistic texturing
+- ${type}'s eye color → Similar human eye color with depth and shine
+- ${type}'s expression → Equivalent chibi human expression with anatomical accuracy
+- ${type}'s personality → Reflected in the pose and demeanor
 
-The final image MUST be an ultra-cute chibi human that captures the essence of the original ${type} in an adorable, simplified form.`;
+The final image MUST be a high-quality chibi human that combines cute stylization with realistic rendering techniques.`;
