@@ -1,5 +1,11 @@
 import { createClient } from "@/lib/supabase-server";
-import type { ImageData, VoteStats } from "@/lib/types";
+import type {
+  ImageData,
+  ImageWithVotes,
+  TransformationStyle,
+  VoteRow,
+  VoteStats,
+} from "@/lib/types";
 import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { put } from "@vercel/blob";
@@ -9,11 +15,14 @@ import { nanoid } from "nanoid";
 import { ANIMAL_TYPES } from "./constants";
 import getVisitorId from "./get-visitor-id";
 import {
-  ANIMAL_TO_HUMAN_PROMPT_CHARMING as ANIMAL_TO_HUMAN_PROMPT,
+  ANIMAL_TO_HUMAN_PROMPT_APOCALYPTIC,
+  ANIMAL_TO_HUMAN_PROMPT_CHARMING,
   ANIMAL_TO_HUMAN_PROMPT_REALISTIC,
-  HUMAN_TO_ANIMAL_PROMPT_CHARMING as HUMAN_TO_ANIMAL_PROMPT,
+  HUMAN_TO_ANIMAL_PROMPT_APOCALYPTIC,
+  HUMAN_TO_ANIMAL_PROMPT_CHARMING,
   HUMAN_TO_ANIMAL_PROMPT_REALISTIC,
-  ORIGINAL_IMAGE_PROMPT_CHARMING as ORIGINAL_IMAGE_PROMPT,
+  ORIGINAL_IMAGE_PROMPT_APOCALYPTIC,
+  ORIGINAL_IMAGE_PROMPT_CHARMING,
   ORIGINAL_IMAGE_PROMPT_REALISTIC,
 } from "./prompts";
 
@@ -39,27 +48,6 @@ import {
 // with shot-on-iPhone level quality. Maintain the essential features and overall composition of the original photo.
 // Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics
 // like fur, feathers, tails, claws, or animal-like features.`;
-
-type ImageRow = {
-  id: string;
-  original_url: string;
-  animated_url?: string;
-  opposite_url?: string;
-  image_type: string;
-  created_at: string;
-  uploader_id?: string;
-  private: boolean;
-};
-
-type VoteRow = {
-  vote: "animal" | "human";
-};
-
-type ImageWithVotes = ImageRow & {
-  votes: VoteRow[];
-};
-
-export type TransformationStyle = "CHARMING" | "REALISTIC" | "APOCALYPTIC";
 
 const VERBOSE_DEBUG = false;
 
@@ -173,10 +161,13 @@ export async function createStylizedVersion(
       throw new Error(`Invalid image URL: ${imageUrl}`);
     }
 
-    const prompt =
-      style === "CHARMING"
-        ? ORIGINAL_IMAGE_PROMPT
-        : ORIGINAL_IMAGE_PROMPT_REALISTIC;
+    const promptMap = {
+      CHARMING: ORIGINAL_IMAGE_PROMPT_CHARMING,
+      REALISTIC: ORIGINAL_IMAGE_PROMPT_REALISTIC,
+      APOCALYPTIC: ORIGINAL_IMAGE_PROMPT_APOCALYPTIC,
+    };
+    const prompt = promptMap[style];
+    console.debug("createStylizedVersion prompt:", prompt);
 
     const result = await generateText({
       model: google("gemini-2.0-flash-exp"),
@@ -296,18 +287,22 @@ export async function createOppositeVersion(
     }
 
     // Create a specific prompt based on the detected animal type and style
-    let prompt = "";
-    if (type === "human") {
-      prompt =
-        style === "CHARMING"
-          ? HUMAN_TO_ANIMAL_PROMPT(targetAnimalType)
-          : HUMAN_TO_ANIMAL_PROMPT_REALISTIC(targetAnimalType);
-    } else {
-      prompt =
-        style === "CHARMING"
-          ? ANIMAL_TO_HUMAN_PROMPT(type)
-          : ANIMAL_TO_HUMAN_PROMPT_REALISTIC(type);
-    }
+    const humanToAnimalPrompts = {
+      CHARMING: HUMAN_TO_ANIMAL_PROMPT_CHARMING,
+      REALISTIC: HUMAN_TO_ANIMAL_PROMPT_REALISTIC,
+      APOCALYPTIC: HUMAN_TO_ANIMAL_PROMPT_APOCALYPTIC,
+    };
+
+    const animalToHumanPrompts = {
+      CHARMING: ANIMAL_TO_HUMAN_PROMPT_CHARMING,
+      REALISTIC: ANIMAL_TO_HUMAN_PROMPT_REALISTIC,
+      APOCALYPTIC: ANIMAL_TO_HUMAN_PROMPT_APOCALYPTIC,
+    };
+
+    const prompt =
+      type === "human"
+        ? humanToAnimalPrompts[style](targetAnimalType)
+        : animalToHumanPrompts[style](type);
 
     console.debug("createOppositeVersion prompt:", prompt);
 

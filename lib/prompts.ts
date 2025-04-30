@@ -145,62 +145,34 @@ Example translation:
 
 The final image MUST be a photorealistic human portrait that looks like a professional headshot, while capturing the essence and personality of the original ${type}.`;
 
-export const ORIGINAL_IMAGE_PROMPT_APOCALYPTIC = `Transform this image into a dramatic, high-fantasy, and hellish portrait inspired by epic fantasy and infernal realms.
-Apply a cinematic, powerful style reminiscent of dark fantasy, with:
-- Dramatic, high-contrast lighting and moody, magical shadows
-- Striking, magical, and hellish details: fire, brimstone, glowing runes, demonic horns, infernal wings, lava, and otherworldly textures
-- A mood of awe, mystery, and infernal energy, with a sense of epic adventure and danger
-- Preservation of the original composition and emotional expression, but filtered through a high-fantasy, hellish, and magical lens
-The final image should look like a character from an epic fantasy or infernal world, with unmistakable hellish and magical elements.
-The result should be more fantastical and infernal than scary or violent.`;
+export const ORIGINAL_IMAGE_PROMPT_APOCALYPTIC = `Transform this image into an epic, hellish fantasy portrait as if it were forged in the depths of the underworld.
+Apply a bold, infernal style inspired by classic depictions of Hell, with:
+- Rivers of lava, volcanic landscapes, and burning skies
+- Demonic and devilish features: horns, fangs, bat wings, glowing red or orange eyes, and infernal runes or pentagrams
+- Fiery, high-contrast lighting, magical embers, and swirling brimstone smoke
+- Sinister, magical, and otherworldly details: chains, spiked armor, obsidian, and hellfire
+- Preservation of the original composition and emotional expression, but filtered through a lens of demonic fantasy and infernal horror
+The final image should look like a character or creature from a hellish, high-fantasy underworld, with unmistakable devilish and magical elements.
+The result should be unapologetically infernal, fantastical, and visually striking.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_APOCALYPTIC = (targetAnimalType: string) =>
-  `Create a dramatic, high-fantasy, and hellish ${targetAnimalType} portrait inspired by epic fantasy, infernal mythology, and magical realms.
-
-IMPORTANT: The emotional expression and mood MUST match the original human image exactly. Do NOT make the ${targetAnimalType} appear happier or more cheerful than the original. If the human is serious, intense, or somber, the ${targetAnimalType} must reflect that same mood.
-
+  `Transform this human into a ${targetAnimalType} as if reborn in the infernal depths of Hell.
 Style Guide:
-- Use a dark, cinematic, high-fantasy, and hellish aesthetic (think epic fantasy movies, Diablo, Dungeons & Dragons, or dark magical realms)
-- Emphasize striking, demonic, and magical features: glowing eyes, infernal horns, shadowy or fiery fur/feathers, runes, lava cracks, and otherworldly details
-- Lighting should be dramatic, with high contrast, magical glows, and hellish fire or brimstone
-- The ${targetAnimalType} should look majestic, powerful, otherworldly, and have a sense of infernal magic and fantasy
-
-Character Translation:
-1. Personality Mapping:
-   - Mirror the human's facial expression and emotional energy exactly, but amplify it with mythic and infernal intensity
-   - Infuse the ${targetAnimalType} with a sense of power, mystery, and hellish energy, as appropriate to the original mood
-
-2. Detail Enhancement:
-   - Add fantasy and hellish elements: demonic horns, glowing runes, magical fire, lava, infernal wings, and unique markings
-   - Use the human's features as inspiration for the ${targetAnimalType}'s coloring, but with a magical, legendary, and infernal twist
-
-3. Emotional Connection:
-   - The final image should evoke awe, intrigue, wonder, and a sense of epic fantasy, while still being recognizable as a transformation of the original human
-   - The emotional presence must be identical to the original photo, but filtered through a high-fantasy, hellish, and magical lens.
-   - The result should be more fantastical and infernal than scary or violent.`;
+- Go all-in on hellish, demonic, and fantasy horror: horns, fangs, glowing red or orange eyes, bat wings, spiked tails, and infernal runes
+- Place the creature in a volcanic, brimstone-filled landscape with rivers of lava, burning skies, and magical fire
+- Use dramatic, fiery lighting, magical embers, and swirling smoke
+- Add sinister, magical, and otherworldly details: chains, spiked armor, obsidian, pentagrams, and hellfire
+- The ${targetAnimalType} should look like a powerful demon or hellbeast, but still recognizable as a transformation of the original human
+- Mirror the human's emotional expression, but amplify it with infernal energy and fantasy horror
+The result should be a visually stunning, devilish, and magical ${targetAnimalType} straight out of a hellish fantasy realm.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_APOCALYPTIC = (type: string) =>
-  `Create a dramatic, high-fantasy, and hellish human character portrait inspired by epic fantasy, infernal mythology, and magical realms, capturing the spirit of this ${type}.
-
-IMPORTANT: The emotional expression and mood MUST match the original ${type} image exactly. Do NOT make the human appear happier or more cheerful than the original. If the ${type} is serious, intense, or somber, the human must reflect that same mood.
-
+  `Transform this ${type} into a human as if they were a lord or denizen of Hell in a high-fantasy universe.
 Style Guide:
-- Use a dark, cinematic, high-fantasy, and hellish aesthetic (think epic fantasy movies, Diablo, Dungeons & Dragons, or dark magical realms)
-- The human should have striking, demonic, and magical features: glowing eyes, infernal horns, magical tattoos, fire, brimstone, unique hair, and otherworldly details
-- Lighting should be dramatic, with high contrast, magical glows, and hellish fire or brimstone
-- The result must be a human, but with clear high-fantasy, infernal, and magical influence
-
-Character Translation Rules:
-1. Human Features Required:
-   - Must have a human face, but can include fantasy/magical and hellish elements (demonic horns, glowing runes, magical tattoos, fire, brimstone, etc.)
-   - Human anatomy, but with mythic, legendary, and infernal-inspired elements
-   - NO animal features like fur, feathers, tails, etc., but inspiration from the ${type}'s features is encouraged
-
-2. Personality Transfer:
-   - Transform the ${type}'s personality and emotional expression into a human, matching the original mood exactly, but with mythic, infernal, and magical intensity
-   - Use the ${type}'s colors and patterns as inspiration for hair, eye color, magical effects, and infernal details
-
-3. High-Fantasy & Infernal Style:
-   - The final image should evoke awe, intrigue, wonder, and a sense of epic fantasy, while still being recognizable as a transformation of the original
-   - The emotional presence must be identical to the original, but filtered through a high-fantasy, hellish, and magical lens.
-   - The result should be more fantastical and infernal than scary or violent.`;
+- Give the human demonic and infernal features: horns, fangs, glowing red or orange eyes, bat wings, magical tattoos, and infernal runes or pentagrams
+- Place the character in a volcanic, hellish landscape with rivers of lava, burning skies, and magical fire
+- Use dramatic, fiery lighting, magical embers, and swirling brimstone smoke
+- Add sinister, magical, and otherworldly details: chains, spiked armor, obsidian, pentagrams, and hellfire
+- The human should look like a powerful demon, warlock, or hell-prince(ss), but still echo the original ${type}'s spirit and expression
+- Mirror the animal's emotional expression, but amplify it with infernal energy and fantasy horror
+The result should be a visually stunning, devilish, and magical human straight out of a hellish fantasy underworld.`;

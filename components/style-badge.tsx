@@ -1,5 +1,6 @@
 import { Badge } from "@/components/ui/badge";
-import type { TransformationStyle } from "@/lib/image-processing";
+import { STYLE_EMOJI_MAP } from "@/lib/constants";
+import type { TransformationStyle } from "@/lib/types";
 
 export function StyleBadge({ style }: { style: TransformationStyle }) {
   let label = "";
@@ -30,7 +31,7 @@ export function StyleBadge({ style }: { style: TransformationStyle }) {
         font-medium
       `}
     >
-      {label}
+      {STYLE_EMOJI_MAP[style]} {label}
     </Badge>
   );
 }

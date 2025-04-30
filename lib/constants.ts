@@ -1,3 +1,5 @@
+import type { TransformationStyle } from "./types";
+
 // Define the animal types
 export const ANIMAL_TYPES = [
   "bird",
@@ -15,3 +17,11 @@ export const ANIMAL_TYPES = [
   "turtle",
 ] as const;
 [];
+
+export const STYLE_EMOJI_MAP: Record<TransformationStyle, string> = {
+  CHARMING: "🌟",
+  REALISTIC: "📸",
+  APOCALYPTIC: "👿",
+};
+
+export const DEFAULT_RESULT_IMG_SRC = "/images/cat-yawning.png";

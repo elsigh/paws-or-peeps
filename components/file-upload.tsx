@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
+import { STYLE_EMOJI_MAP } from "@/lib/constants";
 import {
   AlertCircle,
   Crop as CropIcon,
@@ -680,7 +681,9 @@ export default function FileUpload() {
               <SelectContent>
                 <SelectItem value="CHARMING">
                   <div className="flex flex-col">
-                    <span className="font-medium text-left">Delightful</span>
+                    <span className="font-medium text-left">
+                      {STYLE_EMOJI_MAP.CHARMING} Delightful
+                    </span>
                     <span className="text-xs text-gray-500">
                       Charming, animated film style transformations
                     </span>
@@ -688,7 +691,9 @@ export default function FileUpload() {
                 </SelectItem>
                 <SelectItem value="REALISTIC">
                   <div className="flex flex-col">
-                    <span className="font-medium text-left">Realistic</span>
+                    <span className="font-medium text-left">
+                      {STYLE_EMOJI_MAP.REALISTIC} Realistic
+                    </span>
                     <span className="text-xs text-gray-500">
                       Photorealistic, detailed transformations
                     </span>
@@ -696,7 +701,9 @@ export default function FileUpload() {
                 </SelectItem>
                 <SelectItem value="APOCALYPTIC">
                   <div className="flex flex-col">
-                    <span className="font-medium text-left">Apocalyptic</span>
+                    <span className="font-medium text-left">
+                      {STYLE_EMOJI_MAP.APOCALYPTIC} Apocalyptic
+                    </span>
                     <span className="text-xs text-gray-500">
                       Dark, evil-fantasy, demonic transformations
                     </span>

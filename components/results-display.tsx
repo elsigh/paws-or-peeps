@@ -30,7 +30,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth-context";
-import { ANIMAL_TYPES } from "@/lib/constants";
+import { ANIMAL_TYPES, DEFAULT_RESULT_IMG_SRC } from "@/lib/constants";
 import { createClient } from "@/lib/supabase-client";
 import type { ImageData, UserProfile, UserVote, VoteStats } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
@@ -546,8 +546,8 @@ export default function ResultsDisplay({
                 <Image
                   src={
                     type === "human"
-                      ? animatedUrl || "/images/whimsical-forest-creatures.png"
-                      : oppositeUrl || "/images/whimsical-forest-creatures.png"
+                      ? animatedUrl || DEFAULT_RESULT_IMG_SRC
+                      : oppositeUrl || DEFAULT_RESULT_IMG_SRC
                   }
                   alt=""
                   className={`object-cover w-full h-full transition-opacity duration-300 ${
@@ -598,8 +598,8 @@ export default function ResultsDisplay({
                 <Image
                   src={
                     type === "human"
-                      ? oppositeUrl || "/images/whimsical-forest-creatures.png"
-                      : animatedUrl || "/images/whimsical-forest-creatures.png"
+                      ? oppositeUrl || DEFAULT_RESULT_IMG_SRC
+                      : animatedUrl || DEFAULT_RESULT_IMG_SRC
                   }
                   alt=""
                   className={`object-cover w-full h-full transition-opacity duration-300 ${

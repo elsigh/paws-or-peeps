@@ -1,6 +1,5 @@
-import type { TransformationStyle } from "./image-processing";
+export type TransformationStyle = "CHARMING" | "REALISTIC" | "APOCALYPTIC";
 
-// Define the ImageData type
 export type ImageData = {
   id: string;
   original_url: string;
@@ -14,6 +13,25 @@ export type ImageData = {
   private: boolean;
   isUploader?: boolean;
   hasVotes?: boolean;
+};
+
+export type ImageRow = {
+  id: string;
+  original_url: string;
+  animated_url?: string;
+  opposite_url?: string;
+  image_type: string;
+  created_at: string;
+  uploader_id?: string;
+  private: boolean;
+};
+
+export type VoteRow = {
+  vote: "animal" | "human";
+};
+
+export type ImageWithVotes = ImageRow & {
+  votes: VoteRow[];
 };
 
 // Update the vote stats interface
