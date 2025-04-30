@@ -47,7 +47,7 @@ export async function GET(
             color: "#333",
           }}
         >
-          Which was the real picture?
+          Which one came from an original picture?
         </div>
 
         <div

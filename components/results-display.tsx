@@ -789,21 +789,6 @@ export default function ResultsDisplay({
               </div>
 
               <div className="flex flex-wrap justify-center items-center gap-4 mt-4">
-                <Link href="/">
-                  <CatButton className="bg-rose-500 hover:bg-rose-600">
-                    <span className="flex items-center gap-2">
-                      Upload Another
-                      <span className="text-sm">🐾</span>
-                    </span>
-                  </CatButton>
-                </Link>
-                <Link href="/gallery">
-                  <Button variant="outline" className="gap-2 border-rose-200">
-                    <ImageIcon className="h-4 w-4" />
-                    View Gallery
-                  </Button>
-                </Link>
-
                 {isUploader && (
                   <Button
                     variant="outline"
