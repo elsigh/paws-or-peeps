@@ -22,6 +22,7 @@ export const STYLE_EMOJI_MAP: Record<TransformationStyle, string> = {
   CHARMING: "🌟",
   REALISTIC: "📸",
   APOCALYPTIC: "👿",
+  CHIBI: "🎎",
 };
 
 export const DEFAULT_RESULT_IMG_SRC = "/images/cat-yawning.png";

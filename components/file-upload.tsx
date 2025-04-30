@@ -59,7 +59,7 @@ const PET_FACTS = [
 // Maximum file size in bytes (4MB)
 const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
-type TransformationStyle = "CHARMING" | "REALISTIC" | "APOCALYPTIC";
+type TransformationStyle = "CHARMING" | "REALISTIC" | "APOCALYPTIC" | "CHIBI";
 
 export default function FileUpload() {
   const router = useRouter();
@@ -706,6 +706,16 @@ export default function FileUpload() {
                     </span>
                     <span className="text-xs text-gray-500">
                       Dark, evil-fantasy, demonic transformations
+                    </span>
+                  </div>
+                </SelectItem>
+                <SelectItem value="CHIBI">
+                  <div className="flex flex-col">
+                    <span className="font-medium text-left">
+                      {STYLE_EMOJI_MAP.CHIBI} Chibi
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Small, cute, and simplified transformations
                     </span>
                   </div>
                 </SelectItem>

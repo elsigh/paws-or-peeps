@@ -197,3 +197,70 @@ Style Guide:
 - The human should look like a powerful demon, warlock, or hell-prince(ss), but still echo the original ${type}'s spirit and expression
 - Mirror the animal's emotional expression, but amplify it with infernal energy and fantasy horror
 The result should be a visually stunning, devilish, and magical human straight out of a hellish fantasy underworld.`;
+
+export const ORIGINAL_IMAGE_PROMPT_CHIBI = `Transform this image into an adorable chibi-style portrait with kawaii aesthetics.
+
+Requirements:
+- Super cute, diminutive Japanese chibi art style
+- Large head relative to body (approximately 1:2 or 1:3 ratio)
+- Big, expressive anime-style eyes
+- Simplified, exaggerated features
+- Soft, rounded shapes
+- Bright, vibrant colors
+- Maintain core personality and expression
+- Add subtle blush marks on cheeks
+- Keep the composition simple and focused
+- Maintain a playful, kawaii atmosphere
+
+The final image should be an ultra-cute chibi interpretation that captures the subject's essence in an adorable, simplified form.`;
+
+export const HUMAN_TO_ANIMAL_PROMPT_CHIBI = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `The human subject is ${gender}.
+Transform this human into an adorable chibi-style ${targetAnimalType} with kawaii aesthetics.
+
+Requirements:
+- Super cute, diminutive Japanese chibi art style for the ${targetAnimalType}
+- Large head relative to body (approximately 1:2 ratio)
+- Big, expressive anime-style eyes
+- Simplified, exaggerated features
+- Soft, rounded shapes
+- Bright, vibrant colors
+- Maintain the emotional expression and personality exactly
+- Add subtle blush marks on cheeks
+- Keep the composition simple and focused
+- Maintain a playful, kawaii atmosphere
+
+Use the human's features as inspiration:
+- Human's hair color → Similar-toned fur/feathers
+- Human's eye color → Similar ${targetAnimalType} eye color
+- Human's expression → Equivalent chibi ${targetAnimalType} expression
+- Human's personality → Reflected in the chibi style
+
+The final image MUST be an ultra-cute chibi ${targetAnimalType} that captures the essence of the original human in an adorable, simplified form.`;
+
+export const ANIMAL_TO_HUMAN_PROMPT_CHIBI = (type: string, gender: string) =>
+  `The human subject is ${gender}.
+Transform this ${type} into an adorable chibi-style human with kawaii aesthetics.
+
+Requirements:
+- Super cute, diminutive Japanese chibi art style
+- Large head relative to body (approximately 1:2 ratio)
+- Big, expressive anime-style eyes
+- Simplified, exaggerated features
+- Soft, rounded shapes
+- Bright, vibrant colors
+- Maintain the emotional expression and personality exactly
+- Add subtle blush marks on cheeks
+- Keep the composition simple and focused
+- Maintain a playful, kawaii atmosphere
+
+Use the ${type}'s features as inspiration:
+- ${type}'s fur/feather color → Similar-toned hair
+- ${type}'s eye color → Similar human eye color
+- ${type}'s expression → Equivalent chibi human expression
+- ${type}'s personality → Reflected in the chibi style
+
+The final image MUST be an ultra-cute chibi human that captures the essence of the original ${type} in an adorable, simplified form.`;

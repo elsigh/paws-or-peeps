@@ -1,4 +1,8 @@
-export type TransformationStyle = "CHARMING" | "REALISTIC" | "APOCALYPTIC";
+export type TransformationStyle =
+  | "CHARMING"
+  | "REALISTIC"
+  | "APOCALYPTIC"
+  | "CHIBI";
 
 export type ImageData = {
   id: string;
