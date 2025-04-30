@@ -18,11 +18,14 @@ export const ANIMAL_TYPES = [
 ] as const;
 [];
 
-export const STYLE_EMOJI_MAP: Record<TransformationStyle, string> = {
-  CHARMING: "🌟",
-  REALISTIC: "📸",
-  APOCALYPTIC: "👿",
-  CHIBI: "🎎",
+export const STYLE_EMOJI_MAP: Record<
+  TransformationStyle,
+  { emoji: string; label: string }
+> = {
+  CHARMING: { emoji: "🌟", label: "Delightful" },
+  REALISTIC: { emoji: "📸", label: "Realistic" },
+  APOCALYPTIC: { emoji: "👿", label: "Apocalyptic" },
+  CHIBI: { emoji: "🎎", label: "Chibi" },
 };
 
 export const DEFAULT_RESULT_IMG_SRC = "/images/cat-yawning.png";

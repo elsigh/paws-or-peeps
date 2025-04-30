@@ -682,7 +682,8 @@ export default function FileUpload() {
                 <SelectItem value="CHARMING">
                   <div className="flex flex-col">
                     <span className="font-medium text-left">
-                      {STYLE_EMOJI_MAP.CHARMING} Delightful
+                      {STYLE_EMOJI_MAP.CHARMING.emoji}{" "}
+                      {STYLE_EMOJI_MAP.CHARMING.label}
                     </span>
                     <span className="text-xs text-gray-500">
                       Charming, animated film style transformations
@@ -692,7 +693,8 @@ export default function FileUpload() {
                 <SelectItem value="REALISTIC">
                   <div className="flex flex-col">
                     <span className="font-medium text-left">
-                      {STYLE_EMOJI_MAP.REALISTIC} Realistic
+                      {STYLE_EMOJI_MAP.REALISTIC.emoji}{" "}
+                      {STYLE_EMOJI_MAP.REALISTIC.label}
                     </span>
                     <span className="text-xs text-gray-500">
                       Photorealistic, detailed transformations
@@ -702,7 +704,8 @@ export default function FileUpload() {
                 <SelectItem value="APOCALYPTIC">
                   <div className="flex flex-col">
                     <span className="font-medium text-left">
-                      {STYLE_EMOJI_MAP.APOCALYPTIC} Apocalyptic
+                      {STYLE_EMOJI_MAP.APOCALYPTIC.emoji}{" "}
+                      {STYLE_EMOJI_MAP.APOCALYPTIC.label}
                     </span>
                     <span className="text-xs text-gray-500">
                       Dark, evil-fantasy, demonic transformations
@@ -712,7 +715,8 @@ export default function FileUpload() {
                 <SelectItem value="CHIBI">
                   <div className="flex flex-col">
                     <span className="font-medium text-left">
-                      {STYLE_EMOJI_MAP.CHIBI} Chibi
+                      {STYLE_EMOJI_MAP.CHIBI.emoji}{" "}
+                      {STYLE_EMOJI_MAP.CHIBI.label}
                     </span>
                     <span className="text-xs text-gray-500">
                       Small, cute, and simplified transformations
