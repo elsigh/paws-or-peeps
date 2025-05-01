@@ -3,7 +3,12 @@ export type TransformationStyle =
   | "REALISTIC"
   | "APOCALYPTIC"
   | "CHIBI"
-  | "ANGELIC";
+  | "ANGELIC"
+  | "GOTHIC"
+  | "DECO"
+  | "LEGO"
+  | "KOGAL"
+  | "LOLITA";
 
 export type ImageData = {
   id: string;

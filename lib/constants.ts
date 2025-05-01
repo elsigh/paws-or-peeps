@@ -26,9 +26,14 @@ export const STYLE_EMOJI_MAP: Record<
 > = {
   CHARMING: { emoji: "🌟", label: "Delightful" },
   REALISTIC: { emoji: "📸", label: "Realistic" },
-  APOCALYPTIC: { emoji: "👿", label: "Apocalyptic" },
+  APOCALYPTIC: { emoji: "👿", label: "Demonic" },
   CHIBI: { emoji: "🎎", label: "Chibi" },
   ANGELIC: { emoji: "👼", label: "Angelic" },
+  GOTHIC: { emoji: "🦇", label: "Gothic" },
+  DECO: { emoji: "🎭", label: "Art Deco" },
+  LEGO: { emoji: "🧱", label: "Lego" },
+  KOGAL: { emoji: "👗", label: "Kogal" },
+  LOLITA: { emoji: "🎀", label: "Lolita" },
 };
 
 export const DEFAULT_RESULT_IMG_SRC = "/images/cat-yawning.png";

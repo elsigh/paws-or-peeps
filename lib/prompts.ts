@@ -327,3 +327,283 @@ Requirements:
 - Include delicate, ethereal details
 
 The final image should be a divine human interpretation that captures the ${sourceAnimalType}'s essence in an angelic form.`;
+
+export const ORIGINAL_IMAGE_PROMPT_GOTHIC = `Transform this image into a dark, Victorian Gothic masterpiece.
+
+Requirements:
+- Dark, brooding atmosphere with dramatic shadows
+- Rich, deep colors with emphasis on blacks, deep purples, and dark reds
+- Victorian-era architectural elements in the background
+- Gothic fashion elements like lace, velvet, and ornate details
+- Dramatic lighting with candlelight or moonlight effects
+- Incorporate Gothic motifs like gargoyles, ravens, or thorny roses
+- Add a sense of elegant melancholy
+- Maintain the subject's core features but enhance with Gothic aesthetics
+- Include period-appropriate details and textures
+- Create a haunting, romantic atmosphere
+
+The final image should evoke the essence of Victorian Gothic art while maintaining the subject's identity.`;
+
+export const HUMAN_TO_ANIMAL_PROMPT_GOTHIC = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${gender} human into a Gothic ${targetAnimalType} with Victorian-era aesthetics.
+
+Requirements:
+- Create a dark, brooding ${targetAnimalType} with Gothic features
+- Incorporate Victorian-era fashion elements and details
+- Use dramatic lighting with candlelight or moonlight effects
+- Add Gothic motifs like thorny roses or ravens in the background
+- Maintain the emotional expression exactly as in the original
+- Include period-appropriate accessories or decorative elements
+- Create a haunting, romantic atmosphere
+- Use rich, deep colors with emphasis on blacks and dark tones
+- Keep the pose elegant and dramatic
+- Add Gothic architectural elements in the background
+
+The final image should be a Gothic ${targetAnimalType} that captures both the Victorian era's darkness and the original subject's essence.`;
+
+export const ANIMAL_TO_HUMAN_PROMPT_GOTHIC = (
+  sourceAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${sourceAnimalType} into a Gothic Victorian ${gender} human.
+
+Requirements:
+- Create a dark, brooding human figure with Gothic features
+- Include Victorian-era fashion (lace, velvet, ornate details)
+- Use dramatic lighting with candlelight or moonlight effects
+- Add Gothic motifs and architectural elements
+- Maintain the original ${sourceAnimalType}'s expression and personality
+- Include period-appropriate accessories and hairstyles
+- Create a haunting, romantic atmosphere
+- Use rich, deep colors with emphasis on blacks and dark tones
+- Keep the pose elegant and dramatic
+- Add Gothic background elements
+
+The final image should be a Gothic Victorian human that captures the ${sourceAnimalType}'s essence in a darkly romantic way.`;
+
+export const ORIGINAL_IMAGE_PROMPT_DECO = `Transform this image into an Art Deco masterpiece.
+
+Requirements:
+- Bold geometric patterns and shapes
+- Luxurious, metallic color palette (gold, silver, bronze)
+- Clean lines and symmetrical composition
+- Incorporate classic Art Deco motifs (sunbursts, zigzags, chevrons)
+- Elegant, streamlined design elements
+- Rich textures inspired by 1920s and 1930s aesthetics
+- Maintain the subject's core features but enhance with Deco style
+- Add decorative borders or frames in Deco style
+- Use bold, contrasting colors
+- Create a sense of luxury and sophistication
+
+The final image should embody the glamour and sophistication of the Art Deco period.`;
+
+export const HUMAN_TO_ANIMAL_PROMPT_DECO = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${gender} human into an Art Deco styled ${targetAnimalType}.
+
+Requirements:
+- Create a stylized ${targetAnimalType} with Art Deco aesthetics
+- Incorporate geometric patterns and clean lines
+- Use metallic colors (gold, silver, bronze)
+- Add classic Art Deco motifs and designs
+- Maintain the emotional expression exactly as in the original
+- Include decorative elements from the 1920s/30s era
+- Create a luxurious, sophisticated atmosphere
+- Use bold, contrasting colors
+- Keep the pose elegant and refined
+- Add Art Deco architectural elements or frames
+
+The final image should be an elegant ${targetAnimalType} that embodies Art Deco style while maintaining the original subject's character.`;
+
+export const ANIMAL_TO_HUMAN_PROMPT_DECO = (
+  sourceAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${sourceAnimalType} into an Art Deco styled ${gender} human.
+
+Requirements:
+- Create a stylized human figure with Art Deco aesthetics
+- Include geometric patterns and clean lines
+- Use metallic colors and bold contrasts
+- Add classic Art Deco motifs and designs
+- Maintain the original ${sourceAnimalType}'s expression and personality
+- Include 1920s/30s fashion and hairstyles
+- Create a luxurious, sophisticated atmosphere
+- Use the characteristic Art Deco color palette
+- Keep the pose elegant and refined
+- Add Art Deco architectural elements or frames
+
+The final image should be a sophisticated Art Deco human that captures the ${sourceAnimalType}'s essence in a glamorous way.`;
+
+export const ORIGINAL_IMAGE_PROMPT_LEGO = `Transform this image into a LEGO-style creation.
+
+Requirements:
+- Convert all elements into LEGO brick and piece aesthetics
+- Maintain the characteristic LEGO minifigure style
+- Use bright, plastic-like colors with slight reflection
+- Add subtle studs and brick patterns
+- Create a playful, toy-like atmosphere
+- Include recognizable LEGO piece shapes and connections
+- Maintain core features but adapt to LEGO limitations
+- Add characteristic LEGO texture and shine
+- Keep the composition clear and well-structured
+- Create a sense of buildable reality
+
+The final image should look like an authentic LEGO creation while maintaining recognizable features of the subject.`;
+
+export const HUMAN_TO_ANIMAL_PROMPT_LEGO = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${gender} human into a LEGO ${targetAnimalType}.
+
+Requirements:
+- Create a ${targetAnimalType} using LEGO brick aesthetics
+- Use the characteristic LEGO color palette
+- Add visible studs and brick patterns
+- Maintain the emotional expression as much as possible within LEGO limitations
+- Include recognizable LEGO piece shapes
+- Create a playful, toy-like atmosphere
+- Use plastic-like textures with slight reflection
+- Keep the design buildable and realistic to LEGO
+- Add characteristic LEGO joints and connections
+- Include LEGO-style background elements
+
+The final image should be a convincing LEGO ${targetAnimalType} that captures the essence of both LEGO and the original subject.`;
+
+export const ANIMAL_TO_HUMAN_PROMPT_LEGO = (
+  sourceAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${sourceAnimalType} into a LEGO minifigure ${gender} human.
+
+Requirements:
+- Create a LEGO minifigure with characteristic proportions
+- Use the classic LEGO color palette
+- Add visible studs and brick patterns
+- Maintain the original ${sourceAnimalType}'s expression within LEGO limitations
+- Include standard LEGO minifigure features
+- Create a playful, toy-like atmosphere
+- Use plastic-like textures with slight reflection
+- Keep the design true to LEGO minifigure capabilities
+- Add characteristic LEGO accessories
+- Include LEGO-style background elements
+
+The final image should be an authentic LEGO minifigure that captures the ${sourceAnimalType}'s personality in LEGO form.`;
+
+export const ORIGINAL_IMAGE_PROMPT_KOGAL = `Transform this image into a vibrant Kogal fashion style portrait.
+
+Requirements:
+- Contemporary Japanese high school fashion aesthetics
+- Loose socks, platform shoes, and trendy accessories
+- Bleached or dyed hair (typically blonde or brown)
+- Playful and energetic pose
+- Bright, colorful makeup with emphasis on eye makeup
+- Modern street fashion elements
+- Maintain core facial features while adding Kogal style
+- Include fashionable accessories like phone decorations or bags
+- Create a lively, youthful atmosphere
+- Add contemporary urban background elements
+
+The final image should embody the energetic, fashion-forward Kogal style while maintaining the subject's identity.`;
+
+export const HUMAN_TO_ANIMAL_PROMPT_KOGAL = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${gender} human into a Kogal-styled ${targetAnimalType}.
+
+Requirements:
+- Create a ${targetAnimalType} with modern Japanese fashion elements
+- Add Kogal-inspired accessories and styling
+- Include trendy decorations and embellishments
+- Maintain the emotional expression exactly as in the original
+- Use bright, vibrant colors
+- Keep the pose energetic and playful
+- Add fashionable accessories appropriate for a ${targetAnimalType}
+- Create a contemporary urban atmosphere
+- Use modern, street-style lighting
+- Include playful background elements
+
+The final image should be a fashion-forward ${targetAnimalType} that captures both Kogal style and the original subject's personality.`;
+
+export const ANIMAL_TO_HUMAN_PROMPT_KOGAL = (
+  sourceAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${sourceAnimalType} into a Kogal-styled ${gender} human.
+
+Requirements:
+- Create a modern Japanese high school fashion look
+- Include signature Kogal elements (loose socks, platform shoes)
+- Add trendy accessories and phone decorations
+- Maintain the original ${sourceAnimalType}'s expression and personality
+- Use contemporary makeup styles
+- Keep the pose energetic and confident
+- Add fashionable bags or accessories
+- Create a lively urban atmosphere
+- Use bright, modern lighting
+- Include street fashion elements
+
+The final image should be a Kogal-styled human that captures the ${sourceAnimalType}'s personality in a contemporary fashion context.`;
+
+export const ORIGINAL_IMAGE_PROMPT_LOLITA = `Transform this image into an elegant Lolita fashion style portrait.
+
+Requirements:
+- Classic Lolita fashion aesthetics with Victorian influences
+- Elaborate dresses with petticoats and frills
+- Delicate lace, ribbons, and bows
+- Elegant hairstyles with decorative accessories
+- Soft, doll-like makeup
+- Maintain core facial features while adding Lolita style
+- Include classic accessories like parasols or tea party elements
+- Create a romantic, fairy-tale atmosphere
+- Use pastel or rich jewel-toned colors
+- Add decorative background elements
+
+The final image should embody the elegant, doll-like Lolita fashion style while maintaining the subject's identity.`;
+
+export const HUMAN_TO_ANIMAL_PROMPT_LOLITA = (
+  targetAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${gender} human into a Lolita-styled ${targetAnimalType}.
+
+Requirements:
+- Create a ${targetAnimalType} with elegant Lolita fashion elements
+- Add Victorian-inspired accessories and styling
+- Include lace, ribbons, and decorative elements
+- Maintain the emotional expression exactly as in the original
+- Use soft, romantic colors
+- Keep the pose elegant and graceful
+- Add classic Lolita accessories adapted for a ${targetAnimalType}
+- Create a fairy-tale atmosphere
+- Use soft, dreamy lighting
+- Include romantic background elements
+
+The final image should be an elegant ${targetAnimalType} that captures both Lolita fashion and the original subject's essence.`;
+
+export const ANIMAL_TO_HUMAN_PROMPT_LOLITA = (
+  sourceAnimalType: string,
+  gender: string,
+) =>
+  `Transform this ${sourceAnimalType} into a Lolita-styled ${gender} human.
+
+Requirements:
+- Create an elegant Lolita fashion ensemble
+- Include signature elements (petticoats, frills, lace)
+- Add decorative accessories and hair ornaments
+- Maintain the original ${sourceAnimalType}'s expression and personality
+- Use doll-like makeup styling
+- Keep the pose graceful and refined
+- Add classic Lolita accessories
+- Create a romantic atmosphere
+- Use soft, flattering lighting
+- Include Victorian-inspired elements
+
+The final image should be a Lolita-styled human that captures the ${sourceAnimalType}'s personality in an elegant, doll-like fashion context.`;
