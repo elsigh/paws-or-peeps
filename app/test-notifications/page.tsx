@@ -4,31 +4,31 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth-context";
 import { createClient } from "@/lib/supabase-client";
-import type { Settings } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 import { showWebNotification } from "@/lib/web-notification-service";
 import { useEffect, useState } from "react";
 
 export default function TestNotificationsPage() {
   const { user } = useAuth();
-  const [settings, setSettings] = useState<Settings | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
 
   useEffect(() => {
-    const fetchSettings = async () => {
+    const fetchProfile = async () => {
       if (!user?.id) return;
 
       const supabase = createClient();
       const { data, error } = await supabase
-        .from("settings")
+        .from("profiles")
         .select("*")
         .eq("user_id", user.id)
         .single();
 
       if (!error && data) {
-        setSettings(data);
+        setProfile(data);
       }
     };
 
-    fetchSettings();
+    fetchProfile();
   }, [user?.id]);
 
   const handleTestNotification = async () => {
@@ -70,7 +70,7 @@ export default function TestNotificationsPage() {
       <div className="space-y-4">
         <Card>
           <CardHeader>
-            <CardTitle>User Settings</CardTitle>
+            <CardTitle>User Profile</CardTitle>
           </CardHeader>
           <CardContent>
             {user ? (
@@ -78,19 +78,27 @@ export default function TestNotificationsPage() {
                 <p>
                   <strong>User ID:</strong> {user.id}
                 </p>
-                {settings && (
+                {profile && (
                   <>
                     <p>
                       <strong>Last Notified ID:</strong>{" "}
-                      {settings.last_notified_id || "None"}
+                      {profile.last_notified_id || "None"}
                     </p>
                     <p>
-                      <strong>Settings Created:</strong>{" "}
-                      {new Date(settings.created_at).toLocaleString()}
+                      <strong>Profile Created:</strong>{" "}
+                      {new Date(profile.created_at).toLocaleString()}
                     </p>
                     <p>
-                      <strong>Settings Updated:</strong>{" "}
-                      {new Date(settings.updated_at).toLocaleString()}
+                      <strong>Profile Updated:</strong>{" "}
+                      {new Date(profile.updated_at).toLocaleString()}
+                    </p>
+                    <p>
+                      <strong>Display Name:</strong>{" "}
+                      {profile.display_name || "None"}
+                    </p>
+                    <p>
+                      <strong>Avatar URL:</strong>{" "}
+                      {profile.avatar_url || "None"}
                     </p>
                   </>
                 )}
@@ -102,7 +110,7 @@ export default function TestNotificationsPage() {
               </div>
             ) : (
               <p className="text-muted-foreground">
-                Please log in to view settings
+                Please log in to view profile
               </p>
             )}
           </CardContent>

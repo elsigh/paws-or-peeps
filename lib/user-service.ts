@@ -22,7 +22,7 @@ function createServiceRoleClient() {
 }
 
 export async function getUserProfile(
-  userId: string
+  userId: string,
 ): Promise<UserProfile | null> {
   // Use service role client for admin operations
   const adminClient = createServiceRoleClient();
@@ -67,4 +67,37 @@ export async function getCurrentUserProfile(): Promise<UserProfile | null> {
       user.user_metadata?.display_name || user.user_metadata?.full_name,
     avatar_url: user.user_metadata?.avatar_url,
   };
+}
+
+export async function syncProfileFromAuthUser(userId: string) {
+  // Use service role client for admin operations
+  const adminClient = createServiceRoleClient();
+  if (!adminClient) return null;
+
+  try {
+    const { data, error } = await adminClient.auth.admin.getUserById(userId);
+    const { user } = data;
+    if (error || !user) return null;
+    const display_name =
+      user.user_metadata?.display_name || user.user_metadata?.full_name || null;
+    const avatar_url = user.user_metadata?.avatar_url || null;
+    // Upsert into profiles
+    const { error: upsertError } = await adminClient.from("profiles").upsert(
+      {
+        user_id: user.id,
+        display_name,
+        avatar_url,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id" },
+    );
+    if (upsertError) {
+      console.error("Error upserting profile:", upsertError);
+      return null;
+    }
+    return { user_id: user.id, display_name, avatar_url };
+  } catch (error) {
+    console.error("Error in syncProfileFromAuthUser:", error);
+    return null;
+  }
 }

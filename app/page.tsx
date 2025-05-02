@@ -1,6 +1,7 @@
 import FileUpload from "@/components/file-upload";
 import { PawPrint } from "@/components/paw-print";
 import { RandomCat } from "@/components/random-cat";
+import { LockIcon } from "lucide-react";
 //import { DatabaseStatus } from "@/components/database-status";
 
 export default function Home() {
@@ -33,6 +34,12 @@ export default function Home() {
 
       <div className="max-w-md mx-auto">
         <FileUpload />
+        <div className="mt-4 p-4 bg-rose-50 rounded-lg text-sm text-rose-700">
+          <p className="flex items-center gap-2">
+            <LockIcon className="h-4 w-4" />
+            Uploads are private by default.
+          </p>
+        </div>
       </div>
 
       <div className="mt-12 max-w-lg mx-auto relative">
@@ -44,28 +51,20 @@ export default function Home() {
         </div>
 
         <h2 className="text-xl font-semibold text-center mb-4 relative">
-          <span className="relative">
-            How It Works
-            <span className="absolute -right-6 -top-4 text-2xl">😺</span>
-          </span>
+          <span className="relative">How It Works</span>
         </h2>
         <ol className="list-decimal pl-6 space-y-2">
           <li>
             Upload an image by clicking, dragging & dropping, or pasting from
             clipboard
           </li>
-          <li>Our AI detects if it's a pet or human</li>
-          <li>We transform it into a stylized version</li>
-          <li>Then we create its opposite (pet to human or human to pet)</li>
+          <li>Our AI detects if it's a animal or human</li>
+          <li>We stylize</li>
+          <li>
+            Then we create an opposite (animal to human or human to animal)
+          </li>
           <li>Get your pals to vote on which one is the original!</li>
         </ol>
-      </div>
-
-      <div className="mt-8 text-center text-sm text-gray-500">
-        <p>
-          🐾 PawsOrPeeps 💁 uses AI to detect pets and humans in your photos and
-          transform them into their opposite.
-        </p>
       </div>
     </div>
   );

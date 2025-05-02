@@ -45,7 +45,7 @@ export async function getUserNotifications(): Promise<Notification[]> {
 
 // Mark a notification as read
 export async function markNotificationAsRead(
-  notificationId: number
+  notificationId: number,
 ): Promise<boolean> {
   try {
     const supabase = await createClient();
@@ -149,7 +149,7 @@ export async function getUserAnalytics(): Promise<UserAnalytics> {
     const { data: images, error: imagesError } = await supabase
       .from("images")
       .select("id, created_at, image_type, target_animal_type, private")
-      .eq("uploader_id", session.session.user.id);
+      .eq("user_id", session.session.user.id);
 
     if (imagesError) {
       console.error("Error fetching user images:", imagesError);
@@ -178,10 +178,10 @@ export async function getUserAnalytics(): Promise<UserAnalytics> {
       images?.map((image) => {
         const imageVotes = votes.filter((vote) => vote.image_id === image.id);
         const animalVotes = imageVotes.filter(
-          (vote) => vote.vote === "animal"
+          (vote) => vote.vote === "animal",
         ).length;
         const humanVotes = imageVotes.filter(
-          (vote) => vote.vote === "human"
+          (vote) => vote.vote === "human",
         ).length;
         const totalVotes = animalVotes + humanVotes;
 
@@ -203,14 +203,16 @@ export async function getUserAnalytics(): Promise<UserAnalytics> {
     const totalUploads = imagesWithVotes.length;
     const totalVotes = votes.length;
     const totalAnimalVotes = votes.filter(
-      (vote) => vote.vote === "animal"
+      (vote) => vote.vote === "animal",
     ).length;
     const totalHumanVotes = votes.filter(
-      (vote) => vote.vote === "human"
+      (vote) => vote.vote === "human",
     ).length;
 
     // Group by date for trend analysis
-    const votesByDate = votes.reduce<Record<string, { animal: number; human: number; total: number }>>((acc, vote) => {
+    const votesByDate = votes.reduce<
+      Record<string, { animal: number; human: number; total: number }>
+    >((acc, vote) => {
       const date = new Date(vote.created_at).toISOString().split("T")[0];
       if (!acc[date]) acc[date] = { animal: 0, human: 0, total: 0 };
 

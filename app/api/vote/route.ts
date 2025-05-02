@@ -109,7 +109,7 @@ export async function POST(request: Request) {
     // Get the image details to check if the user is voting on their own image
     const { data: imageData, error: imageError } = await supabase
       .from("images")
-      .select("uploader_id")
+      .select("user_id")
       .eq("id", imageId)
       .single();
 
@@ -118,6 +118,10 @@ export async function POST(request: Request) {
         { error: "Failed to fetch image details" },
         { status: 500 },
       );
+    }
+
+    if (imageData.user_id !== userId) {
+      throw new Error("You are not the owner of this image.");
     }
 
     // Check if user has already voted on this image
@@ -157,13 +161,13 @@ export async function POST(request: Request) {
     }
 
     // Create notification for the uploader if different from voter
-    if (imageData.uploader_id !== userId) {
+    if (imageData.user_id !== userId) {
       try {
         const voteType = vote === "animal" ? "🐾 Animal" : "👤 Human";
         const voterName = sessionResponse.session.user.user_metadata.name;
         const notificationMessage = `${voterName} voted "${voteType}" on your upload!`;
         console.log("Creating notification for user:", {
-          uploaderId: imageData.uploader_id,
+          uploaderId: imageData.user_id,
           voterId: userId,
           imageId,
           voteType,
@@ -172,7 +176,7 @@ export async function POST(request: Request) {
         const { error: notificationError } = await supabase
           .from("notifications")
           .insert({
-            user_id: imageData.uploader_id,
+            user_id: imageData.user_id,
             type: "vote",
             message: notificationMessage,
             image_id: imageId,
@@ -182,7 +186,7 @@ export async function POST(request: Request) {
         if (notificationError) {
           console.error("Failed to create notification:", {
             error: notificationError,
-            uploaderId: imageData.uploader_id,
+            uploaderId: imageData.user_id,
             voterId: userId,
             imageId,
             voteType,
@@ -191,7 +195,7 @@ export async function POST(request: Request) {
       } catch (notificationError) {
         console.error("Unexpected error creating notification:", {
           error: notificationError,
-          uploaderId: imageData.uploader_id,
+          uploaderId: imageData.user_id,
           voterId: userId,
           imageId,
           voteType: vote === "animal" ? "🐾 Animal" : "👤 Human",

@@ -1,7 +1,7 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { createClient } from "@/lib/supabase-server";
-import type { Settings } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 import type { Session } from "@supabase/supabase-js";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { ClientTest } from "./client-test";
@@ -14,7 +14,7 @@ export default async function TestDbPage() {
   let recentImages: { id: number; original_url: string; created_at: string }[] =
     [];
   let serverSession: Session | null = null;
-  let userSettings: Settings | null = null;
+  let userProfile: Profile | null = null;
 
   try {
     // Test database connection
@@ -32,16 +32,15 @@ export default async function TestDbPage() {
         serverSession = session;
         //console.debug("serverSession:", serverSession);
 
-        // Get user settings if logged in
+        // Get user profile if logged in
         if (session?.user?.id) {
-          const { data: settings, error: settingsError } = await supabase
-            .from("settings")
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
             .select("*")
             .eq("user_id", session.user.id)
             .single();
-
-          if (!settingsError && settings) {
-            userSettings = settings;
+          if (!profileError && profile) {
+            userProfile = profile;
           }
         }
 
@@ -126,21 +125,29 @@ export default async function TestDbPage() {
                   </AlertDescription>
                 </Alert>
 
-                {userSettings && (
+                {userProfile && (
                   <div className="mt-4">
-                    <h3 className="font-medium mb-2">User Settings</h3>
+                    <h3 className="font-medium mb-2">User Profile</h3>
                     <div className="space-y-2 text-sm">
                       <p>
                         <strong>Last Notified ID:</strong>{" "}
-                        {userSettings.last_notified_id || "None"}
+                        {userProfile.last_notified_id || "None"}
                       </p>
                       <p>
                         <strong>Created:</strong>{" "}
-                        {new Date(userSettings.created_at).toLocaleString()}
+                        {new Date(userProfile.created_at).toLocaleString()}
                       </p>
                       <p>
                         <strong>Updated:</strong>{" "}
-                        {new Date(userSettings.updated_at).toLocaleString()}
+                        {new Date(userProfile.updated_at).toLocaleString()}
+                      </p>
+                      <p>
+                        <strong>Display Name:</strong>{" "}
+                        {userProfile.display_name || "None"}
+                      </p>
+                      <p>
+                        <strong>Avatar URL:</strong>{" "}
+                        {userProfile.avatar_url || "None"}
                       </p>
                     </div>
                   </div>

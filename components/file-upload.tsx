@@ -15,7 +15,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useAuth } from "@/lib/auth-context";
-import { STYLE_EMOJI_MAP } from "@/lib/constants";
+import {
+  ANIMAL_EMOJI_MAP,
+  ANIMAL_TYPES,
+  STYLE_EMOJI_MAP,
+} from "@/lib/constants";
+import type { TransformationStyle } from "@/lib/types";
+import localforage from "localforage";
 import {
   AlertCircle,
   Crop as CropIcon,
@@ -30,7 +36,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import ReactCrop, { type Crop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 
-import type { ANIMAL_TYPES } from "@/lib/constants";
+// Constants for localStorage keys
+const LAST_USED_STYLE_KEY = "lastUsedStyle";
+const LAST_USED_ANIMAL_KEY = "lastUsedAnimal";
+
+// Type for debug info
+type DebugInfo = {
+  message: string;
+  details?: unknown;
+} | null;
 
 // Pet facts about similarities and differences between pets and humans
 const PET_FACTS = [
@@ -59,12 +73,10 @@ const PET_FACTS = [
 // Maximum file size in bytes (4MB)
 const MAX_FILE_SIZE = 4 * 1024 * 1024;
 
-type TransformationStyle =
-  | "CHARMING"
-  | "REALISTIC"
-  | "APOCALYPTIC"
-  | "CHIBI"
-  | "ANGELIC";
+// Helper to capitalize the first letter
+function capitalize(str: string) {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
 export default function FileUpload() {
   const router = useRouter();
@@ -78,8 +90,7 @@ export default function FileUpload() {
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [currentCatIndex, setCurrentCatIndex] = useState(0);
   const [_fileSize, setFileSize] = useState<number>(0);
-  // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-  const [debugInfo, setDebugInfo] = useState<any>(null);
+  const [debugInfo, setDebugInfo] = useState<DebugInfo>(null);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [detectedType, setDetectedType] = useState<
     keyof typeof ANIMAL_TYPES | "human" | "other" | null
@@ -92,10 +103,58 @@ export default function FileUpload() {
   const [isCompressing, setIsCompressing] = useState(false);
   const [transformStyle, setTransformStyle] =
     useState<TransformationStyle>("CHARMING");
+  const [selectedAnimal, setSelectedAnimal] =
+    useState<(typeof ANIMAL_TYPES)[number]>("cat");
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<Crop>();
   const [isCropping, setIsCropping] = useState(false);
   const [croppedPreview, setCroppedPreview] = useState<string | null>(null);
+
+  // Load last used settings from localStorage
+  useEffect(() => {
+    const loadLastUsedSettings = async () => {
+      try {
+        const lastStyle =
+          await localforage.getItem<TransformationStyle>(LAST_USED_STYLE_KEY);
+        const lastAnimal =
+          await localforage.getItem<(typeof ANIMAL_TYPES)[number]>(
+            LAST_USED_ANIMAL_KEY,
+          );
+
+        if (lastStyle) {
+          setTransformStyle(lastStyle);
+        }
+        if (lastAnimal) {
+          setSelectedAnimal(lastAnimal);
+        }
+      } catch (error) {
+        console.error("Error loading last used settings:", error);
+      }
+    };
+
+    loadLastUsedSettings();
+  }, []);
+
+  // Save settings when they change
+  const handleStyleChange = async (value: TransformationStyle) => {
+    setTransformStyle(value);
+    try {
+      await localforage.setItem(LAST_USED_STYLE_KEY, value);
+    } catch (error) {
+      console.error("Error saving style preference:", error);
+    }
+  };
+
+  const handleAnimalChange = async (value: (typeof ANIMAL_TYPES)[number]) => {
+    setSelectedAnimal(value);
+    if (ANIMAL_TYPES.includes(value)) {
+      try {
+        await localforage.setItem(LAST_USED_ANIMAL_KEY, value);
+      } catch (error) {
+        console.error("Error saving animal preference:", error);
+      }
+    }
+  };
 
   // Cycle through pet facts during loading
   useEffect(() => {
@@ -272,12 +331,20 @@ export default function FileUpload() {
         const formData = new FormData();
         formData.append("image", fileToUpload);
         formData.append("style", transformStyle);
+        // If detectedType is not human, set animal to 'human' for the upload (but don't store in localStorage)
+        if (detectedType && detectedType !== "human") {
+          formData.append("animal", "human");
+        } else {
+          formData.append("animal", selectedAnimal);
+        }
 
         console.log("FormData created, sending request...");
         console.log("File details:", {
           name: fileToUpload.name,
           type: fileToUpload.type,
           size: fileToUpload.size,
+          style: transformStyle,
+          animal: selectedAnimal,
         });
 
         const response = await fetch("/api/process-image", {
@@ -678,79 +745,63 @@ export default function FileUpload() {
 
       <CardContent className="pt-6">
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Style Selection */}
-          <div className="space-y-2 mb-4">
-            {/* <label
-              htmlFor="style-select"
-              className="text-sm font-medium text-gray-700"
-            >
-              Transformation Style
-            </label> */}
+          {/* Split Button for Style and Animal Selection */}
+          <div className="flex justify-between gap-4">
             <Select
               value={transformStyle}
-              onValueChange={(value: TransformationStyle) =>
-                setTransformStyle(value)
-              }
+              onValueChange={handleStyleChange}
+              disabled={loading}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a style" />
+              <SelectTrigger className="w-[140px]" disabled={loading}>
+                <SelectValue placeholder="Select style">
+                  {STYLE_EMOJI_MAP[transformStyle].emoji}{" "}
+                  {STYLE_EMOJI_MAP[transformStyle].label}
+                </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="CHARMING">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-left">
-                      {STYLE_EMOJI_MAP.CHARMING.emoji}{" "}
-                      {STYLE_EMOJI_MAP.CHARMING.label}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Charming, animated film style transformations
-                    </span>
-                  </div>
+                {Object.entries(STYLE_EMOJI_MAP).map(
+                  ([style, { emoji, label }]) => (
+                    <SelectItem
+                      key={style}
+                      value={style as TransformationStyle}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium text-left">
+                          {emoji} {label}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ),
+                )}
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={selectedAnimal}
+              onValueChange={handleAnimalChange}
+              disabled={loading}
+            >
+              <SelectTrigger className="w-[140px]" disabled={loading}>
+                <SelectValue placeholder="Select animal">
+                  {ANIMAL_EMOJI_MAP[selectedAnimal]}{" "}
+                  {capitalize(selectedAnimal)}
+                </SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="note" disabled>
+                  <span className="text-xs text-gray-500">
+                    Applies when you upload a human
+                  </span>
                 </SelectItem>
-                <SelectItem value="REALISTIC">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-left">
-                      {STYLE_EMOJI_MAP.REALISTIC.emoji}{" "}
-                      {STYLE_EMOJI_MAP.REALISTIC.label}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Photorealistic transformations
-                    </span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="APOCALYPTIC">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-left">
-                      {STYLE_EMOJI_MAP.APOCALYPTIC.emoji}{" "}
-                      {STYLE_EMOJI_MAP.APOCALYPTIC.label}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Dark, post-apocalyptic transformations
-                    </span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="CHIBI">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-left">
-                      {STYLE_EMOJI_MAP.CHIBI.emoji}{" "}
-                      {STYLE_EMOJI_MAP.CHIBI.label}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Cute Japanese chibi style transformations
-                    </span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="ANGELIC">
-                  <div className="flex flex-col">
-                    <span className="font-medium text-left">
-                      {STYLE_EMOJI_MAP.ANGELIC.emoji}{" "}
-                      {STYLE_EMOJI_MAP.ANGELIC.label}
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Divine, ethereal transformations
-                    </span>
-                  </div>
-                </SelectItem>
+                {ANIMAL_TYPES.map((animal) => (
+                  <SelectItem key={animal} value={animal}>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-left capitalize">
+                        {ANIMAL_EMOJI_MAP[animal]} {capitalize(animal)}
+                      </span>
+                    </div>
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

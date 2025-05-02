@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase-server";
-import { nanoid } from "nanoid";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { nanoid } from "nanoid";
+import { NextResponse } from "next/server";
 
 export async function GET() {
   try {
@@ -10,7 +10,7 @@ export async function GET() {
     if (!supabase) {
       return NextResponse.json(
         { error: "Failed to create Supabase client" },
-        { status: 500 }
+        { status: 500 },
       );
     }
 
@@ -40,7 +40,7 @@ export async function GET() {
           error instanceof Error ? error.message : String(error)
         }`,
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -87,7 +87,7 @@ async function testInsert(supabase: SupabaseClient) {
         animated_url: `https://test-url.com/animated-${testId}`,
         opposite_url: `https://test-url.com/opposite-${testId}`,
         image_type: "human",
-        uploader_id: `test-${testId}`,
+        user_id: `test-${testId}`,
       })
       .select()
       .single();

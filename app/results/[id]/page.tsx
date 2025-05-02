@@ -78,8 +78,8 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
 
   // Fetch uploader profile on the server
   let uploaderProfile = null;
-  if (imageData.uploader_id) {
-    uploaderProfile = await getUserProfile(imageData.uploader_id);
+  if (imageData.user_id) {
+    uploaderProfile = await getUserProfile(imageData.user_id);
   }
 
   // Get vote info on the server

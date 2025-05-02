@@ -1,12 +1,19 @@
 "use client";
 
 import { RandomCat } from "@/components/random-cat";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { ANIMAL_TYPES } from "@/lib/constants";
 import { STYLE_EMOJI_MAP } from "@/lib/constants";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 interface GalleryCardProps {
@@ -24,6 +31,12 @@ interface GalleryCardProps {
   };
   createdAt: string;
   private: boolean;
+  userId: string;
+  uploader_profile?: {
+    user_id: string;
+    display_name?: string | null;
+    avatar_url?: string | null;
+  } | null;
 }
 
 export function GalleryCard({
@@ -35,8 +48,11 @@ export function GalleryCard({
   voteStats,
   createdAt,
   private: isPrivate,
+  userId,
+  uploader_profile,
 }: GalleryCardProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const router = useRouter();
   const formattedDate = new Date(createdAt).toLocaleString("en-US", {
     month: "numeric",
     day: "numeric",
@@ -44,6 +60,12 @@ export function GalleryCard({
     minute: "2-digit",
     hour12: true,
   });
+
+  const handleFilterByUploader = (e: React.MouseEvent | React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/gallery?user_id=${userId}`);
+  };
 
   return (
     <Link href={`/results/${id}`}>
@@ -89,11 +111,47 @@ export function GalleryCard({
         </div>
 
         <CardContent className="p-3">
-          <div className="flex justify-between">
-            <div className="text-xs text-gray-500 mb-2">{formattedDate}</div>
-            <div className="text-xs text-gray-500 mb-2">
+          <div className="flex items-center gap-2 mb-2">
+            {/* Uploader avatar + tooltip (always rendered) */}
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="focus:outline-none"
+                  onClick={handleFilterByUploader}
+                  onTouchEnd={handleFilterByUploader}
+                  tabIndex={0}
+                >
+                  <Avatar className="h-6 w-6 border border-gray-200">
+                    <AvatarImage
+                      src={uploader_profile?.avatar_url || undefined}
+                      alt={uploader_profile?.display_name || "Uploader"}
+                    />
+                    <AvatarFallback>?</AvatarFallback>
+                  </Avatar>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="flex flex-col items-center gap-2 p-3"
+              >
+                <Avatar className="h-12 w-12 border border-gray-200">
+                  <AvatarImage
+                    src={uploader_profile?.avatar_url || undefined}
+                    alt={uploader_profile?.display_name || "Uploader"}
+                  />
+                  <AvatarFallback>?</AvatarFallback>
+                </Avatar>
+                <span className="font-medium text-base">
+                  {uploader_profile?.display_name || "Uploader"}
+                </span>
+                <span className="text-xs text-gray-400">See all uploads</span>
+              </TooltipContent>
+            </Tooltip>
+            <span className="text-xs text-gray-500">{formattedDate}</span>
+            <span className="text-xs text-gray-500">
               {isPrivate ? "🔐" : ""}
-            </div>
+            </span>
           </div>
 
           {voteStats.totalVotes > 0 && (

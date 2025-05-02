@@ -32,7 +32,7 @@ export async function getLastNotifiedId(
   const supabase = createClient();
   try {
     const { data, error } = await supabase
-      .from("settings")
+      .from("profiles")
       .select("last_notified_id")
       .eq("user_id", userId)
       .single();
@@ -57,7 +57,7 @@ export async function updateLastNotifiedId(
   const supabase = createClient();
   try {
     const { error } = await supabase
-      .from("settings")
+      .from("profiles")
       .upsert({
         user_id: userId,
         last_notified_id: notificationId,

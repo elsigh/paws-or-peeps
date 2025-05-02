@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -10,11 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Filter } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { Filter } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export function GalleryFilter() {
   const router = useRouter();
@@ -24,6 +24,7 @@ export function GalleryFilter() {
   const [isOpen, setIsOpen] = useState(false);
   const [type, setType] = useState(searchParams.get("type") || "all");
   const [sort, setSort] = useState(searchParams.get("sort") || "newest");
+  const user_id = searchParams.get("user_id");
 
   // Update type if URL params change
   useEffect(() => {
@@ -40,6 +41,10 @@ export function GalleryFilter() {
 
     if (sort !== "newest") {
       params.set("sort", sort);
+    }
+
+    if (user_id) {
+      params.set("user_id", user_id);
     }
 
     const queryString = params.toString();

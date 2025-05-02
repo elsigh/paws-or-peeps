@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         const image = formData.get("image") as File;
         const style =
           (formData.get("style") as TransformationStyle) || "CHARMING";
-        const isPrivate = formData.get("private") === "true";
+        const isPrivate = formData.get("private") !== "false";
 
         if (!image) {
           controller.enqueue(

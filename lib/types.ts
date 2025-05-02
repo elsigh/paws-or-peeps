@@ -19,7 +19,7 @@ export type ImageData = {
   target_animal_type: string;
   style: TransformationStyle;
   created_at: string;
-  uploader_id?: string;
+  user_id: string;
   private: boolean;
   isUploader?: boolean;
   hasVotes?: boolean;
@@ -53,11 +53,13 @@ export interface Notification {
   image_id?: string;
 }
 
-export interface Settings {
+export interface Profile {
   user_id: string;
   last_notified_id: string | null;
   created_at: string;
   updated_at: string;
+  display_name?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface UserAnalyticsDetail {

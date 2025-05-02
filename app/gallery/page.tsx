@@ -2,11 +2,10 @@ import { GalleryCard } from "@/components/gallery-card";
 import { GalleryFilter } from "@/components/gallery-filter";
 import { GalleryWrapper } from "@/components/gallery-wrapper";
 import { PawPrint } from "@/components/paw-print";
-import { Button } from "@/components/ui/button";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import type { ANIMAL_TYPES } from "@/lib/constants";
 import { getRecentTransformations } from "@/lib/image-processing";
 import { createClient } from "@/lib/supabase-server";
-import Link from "next/link";
 import { Suspense } from "react";
 
 export const dynamic = "force-dynamic";
@@ -19,22 +18,21 @@ interface GalleryContentProps {
   searchParams: Promise<{
     type?: ValidType;
     sort?: ValidSort;
+    user_id?: string;
   }>;
 }
 
 async function GalleryContent({ searchParams }: GalleryContentProps) {
-  const { type = "all", sort = "newest" } = await searchParams;
+  const { type = "all", sort = "newest", user_id } = await searchParams;
 
-  // Get current user if we need to filter by "mine"
-  let currentUserId = null;
+  // If 'mine' is selected, get the current user's id and use it as the user_id param
+  let effectiveUserId = user_id;
   if (type === "mine") {
     const supabase = await createClient();
     const {
       data: { session },
     } = await supabase.auth.getSession();
-    currentUserId = session?.user?.id;
-
-    // If user is not logged in but "mine" filter is selected, show no results
+    const currentUserId = session?.user?.id;
     if (!currentUserId) {
       return (
         <div className="text-center py-12">
@@ -45,15 +43,13 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
         </div>
       );
     }
+    effectiveUserId = currentUserId;
   }
 
-  // Fetch transformations, passing uploaderId for 'mine' filter
-  let transformations = await getRecentTransformations(
-    24,
-    type === "mine" && currentUserId ? currentUserId : undefined,
-  );
+  // Fetch transformations, passing user_id if present
+  let transformations = await getRecentTransformations(24, effectiveUserId);
 
-  // Apply type filter (except for 'mine')
+  // Apply type filter (except for 'all' and 'mine')
   if (type && type !== "all" && type !== "mine") {
     transformations = transformations.filter(
       (item) => item.image_type === type,
@@ -81,15 +77,8 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
   if (transformations.length === 0) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-xl font-semibold mb-4">No transformations found</h2>
-        <p className="text-gray-500 mb-6">
-          Try adjusting your filters or create a new transformation
-        </p>
-        <Link href="/">
-          <Button className="bg-rose-500 hover:bg-rose-600">
-            Create a Transformation
-          </Button>
-        </Link>
+        <h2 className="text-xl font-semibold mb-4">No images found</h2>
+        <p className="text-gray-500 mb-6">Try adjusting your filters.</p>
       </div>
     );
   }
@@ -107,6 +96,8 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
           voteStats={item.voteStats}
           createdAt={item.created_at}
           private={item.private}
+          userId={item.user_id}
+          uploader_profile={item.uploader_profile}
         />
       ))}
     </div>
@@ -118,44 +109,44 @@ export default async function GalleryPage({
 }: GalleryContentProps) {
   return (
     <GalleryWrapper>
-      <div className="container relative mx-auto px-4 py-12">
-        {/* Decorative paw prints */}
-        <div className="pointer-events-none absolute left-4 top-20 opacity-20">
-          <PawPrint size="lg" rotation={-15} />
-        </div>
-        <div className="pointer-events-none absolute right-10 top-40 opacity-20">
-          <PawPrint size="md" rotation={20} />
-        </div>
-        <div className="pointer-events-none absolute bottom-20 left-1/4 opacity-20">
-          <PawPrint size="lg" rotation={45} />
-        </div>
-        <div className="pointer-events-none absolute bottom-40 right-1/4 opacity-20">
-          <PawPrint size="md" rotation={-30} />
-        </div>
+      <TooltipProvider>
+        <div className="container relative mx-auto px-4 py-12">
+          {/* Decorative paw prints */}
+          <div className="pointer-events-none absolute left-4 top-20 opacity-20">
+            <PawPrint size="lg" rotation={-15} />
+          </div>
+          <div className="pointer-events-none absolute right-10 top-40 opacity-20">
+            <PawPrint size="md" rotation={20} />
+          </div>
+          <div className="pointer-events-none absolute bottom-20 left-1/4 opacity-20">
+            <PawPrint size="lg" rotation={45} />
+          </div>
+          <div className="pointer-events-none absolute bottom-40 right-1/4 opacity-20">
+            <PawPrint size="md" rotation={-30} />
+          </div>
 
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-center mb-2">
-            Transformation Gallery
-          </h1>
-          <p className="text-center text-gray-600 mb-8">
-            Browse recent cat-human transformations created by our users
-          </p>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-center mb-2">Gallery</h1>
+            <p className="text-center text-gray-600 mb-8">
+              Browse recent public creations
+            </p>
 
-          <GalleryFilter />
+            <GalleryFilter />
 
-          <div className="relative">
-            <Suspense
-              fallback={
-                <div className="text-center py-12">
-                  <p className="text-gray-500">Loading ...</p>
-                </div>
-              }
-            >
-              <GalleryContent searchParams={searchParams} />
-            </Suspense>
+            <div className="relative">
+              <Suspense
+                fallback={
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">Loading ...</p>
+                  </div>
+                }
+              >
+                <GalleryContent searchParams={searchParams} />
+              </Suspense>
+            </div>
           </div>
         </div>
-      </div>
+      </TooltipProvider>
     </GalleryWrapper>
   );
 }

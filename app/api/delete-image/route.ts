@@ -43,9 +43,9 @@ export async function DELETE(request: Request) {
     }
 
     // Verify ownership
-    if (imageData.uploader_id !== userId) {
+    if (imageData.user_id !== userId) {
       console.error("Permission denied - user does not own image", {
-        imageUploaderId: imageData.uploader_id,
+        imageUserId: imageData.user_id,
         requestingUserId: userId,
       });
       return NextResponse.json(
@@ -107,7 +107,11 @@ export async function DELETE(request: Request) {
       );
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      imageId,
+      imageUserId: imageData.user_id,
+    });
   } catch (error) {
     console.error("Error in delete-image API:", error);
     return NextResponse.json(

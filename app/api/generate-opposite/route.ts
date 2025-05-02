@@ -46,9 +46,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user is the uploader
-    if (imageData.uploader_id !== currentUserId) {
+    if (imageData.user_id !== currentUserId) {
       return NextResponse.json(
-        { error: "Only the uploader can modify this image" },
+        { error: "You are not the owner of this image." },
         { status: 403 },
       );
     }

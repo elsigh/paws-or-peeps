@@ -533,7 +533,7 @@ export async function saveImageData(
         image_type: imageType,
         target_animal_type: targetAnimalType,
         style,
-        uploader_id: userId,
+        user_id: userId,
         private: isPrivate,
         gender,
       })
@@ -587,11 +587,11 @@ export async function getImageById(id: string): Promise<ImageData> {
     }
 
     console.log(
-      `Image data retrieved. Uploader ID: ${data.uploader_id}, Current user ID: ${currentUserId}`,
+      `Image data retrieved. Uploader ID: ${data.user_id}, Current user ID: ${currentUserId}`,
     );
 
     // Check if the current user is the uploader
-    const isUploader = data.uploader_id === currentUserId;
+    const isUploader = data.user_id === currentUserId;
 
     // Check if there are votes for this image
     const { count, error: voteError } = await supabase
@@ -710,25 +710,25 @@ export async function getRecentTransformations(
 ) {
   try {
     const supabase = await createClient();
-    // Base query to get images
+    // Base query to get images with uploader profile
     let query = supabase.from("images").select(`
       id,
       original_url,
       animated_url,
       opposite_url,
       image_type,
+      target_animal_type,
       style,
       created_at,
-      uploader_id,
+      user_id,
       private,
-      votes (
-        vote
-      )
+      votes (vote),
+      uploader_profile:profiles!user_id(user_id, display_name, avatar_url)
     `);
 
     if (uploaderId) {
       // Only show images uploaded by this user
-      query = query.eq("uploader_id", uploaderId);
+      query = query.eq("user_id", uploaderId);
     } else {
       // Only show private/incomplete images to their owners
       const {
@@ -737,7 +737,7 @@ export async function getRecentTransformations(
       const userId = user?.id;
       if (userId) {
         query = query.or(
-          `and(private.eq.false,opposite_url.neq.''),uploader_id.eq.${userId}`,
+          `and(private.eq.false,opposite_url.neq.''),user_id.eq.${userId}`,
         );
       } else {
         query = query.eq("private", false).neq("opposite_url", "");
@@ -754,13 +754,16 @@ export async function getRecentTransformations(
     }
 
     // Process and validate each image
-    const validImages = (images as ImageWithVotes[]).filter((image) => {
-      // For non-owners, require both original and opposite URLs
-      if (uploaderId || image.uploader_id !== uploaderId) {
-        return image.original_url && image.opposite_url;
-      }
-      // For owners, just check if required URLs exist
-      return image.original_url && (image.animated_url || image.opposite_url);
+    type ImageWithProfile = ImageWithVotes & {
+      uploader_profile?: {
+        user_id: string;
+        display_name?: string | null;
+        avatar_url?: string | null;
+      }[];
+    };
+    const validImages = (images as ImageWithProfile[]).filter((image) => {
+      // Only include images with both original and opposite URLs
+      return image.original_url && image.opposite_url;
     });
 
     return validImages.map((image) => {
@@ -784,6 +787,7 @@ export async function getRecentTransformations(
           humanPercentage:
             totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 50,
         },
+        uploader_profile: image.uploader_profile?.[0] || null,
       };
     });
   } catch (error) {
@@ -975,7 +979,7 @@ export async function toggleImagePrivacy(imageId: string): Promise<boolean> {
     // Get the current image data
     const { data: imageData, error: getError } = await supabase
       .from("images")
-      .select("private, uploader_id")
+      .select("private, user_id")
       .eq("id", imageId)
       .single();
 
@@ -984,7 +988,7 @@ export async function toggleImagePrivacy(imageId: string): Promise<boolean> {
     }
 
     // Check if user is the uploader
-    if (imageData.uploader_id !== currentUserId) {
+    if (imageData.user_id !== currentUserId) {
       throw new Error("Only the uploader can change privacy settings");
     }
 

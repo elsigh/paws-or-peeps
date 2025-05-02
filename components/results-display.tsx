@@ -5,6 +5,7 @@ import { PawPrint } from "@/components/paw-print";
 import { RandomCat } from "@/components/random-cat";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -23,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import {
   Tooltip,
   TooltipContent,
@@ -42,7 +44,7 @@ import {
   AlertCircle,
   Check,
   Copy,
-  ImageIcon,
+  Globe,
   LockIcon,
   RefreshCw,
   ThumbsUp,
@@ -50,7 +52,6 @@ import {
   UserIcon,
 } from "lucide-react";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -61,6 +62,44 @@ interface ResultsDisplayProps {
   uploaderProfile: UserProfile | null;
   userVote?: UserVote;
   voteStats?: VoteStats;
+}
+
+// Add debounce utility function at the top of the file
+function debounce<T extends (arg: boolean) => Promise<void>>(
+  func: T,
+  wait: number,
+): (arg: boolean) => void {
+  let timeout: NodeJS.Timeout;
+  return (arg: boolean) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(arg), wait);
+  };
+}
+
+// Add PrivacyBadge component near the top of the file
+function PrivacyBadge({ isPrivate }: { isPrivate: boolean }) {
+  return (
+    <Badge
+      variant="outline"
+      className={`flex items-center gap-1 ${
+        isPrivate
+          ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+          : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+      }`}
+    >
+      {isPrivate ? (
+        <>
+          <LockIcon className="h-3 w-3" />
+          <span>Private</span>
+        </>
+      ) : (
+        <>
+          <Globe className="h-3 w-3" />
+          <span>Public</span>
+        </>
+      )}
+    </Badge>
+  );
 }
 
 export default function ResultsDisplay({
@@ -95,10 +134,12 @@ export default function ResultsDisplay({
     initialImageData?.private || false,
   );
   const [privacyLoading, setPrivacyLoading] = useState(false);
+  const [privacyError, setPrivacyError] = useState<string | null>(null);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [imageData, setImageData] = useState(initialImageData);
   const [isGeneratingOpposite, setIsGeneratingOpposite] = useState(false);
   const isGeneratingOppositeRef = useRef(false);
+  const lastSuccessfulPrivateState = useRef(initialImageData?.private || false);
 
   const { requireAuth } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -453,47 +494,58 @@ export default function ResultsDisplay({
     return "Anonymous";
   };
 
-  const handleTogglePrivacy = async () => {
-    if (!imageId) return;
+  // Create a debounced version of the API call
+  const debouncedUpdatePrivacy = useRef(
+    debounce(async (newPrivateState: boolean) => {
+      try {
+        const response = await fetch("/api/toggle-privacy", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ imageId: imageData.id }),
+        });
 
-    setPrivacyLoading(true);
-    setError(null);
+        const data = await response.json();
 
-    try {
-      const response = await fetch("/api/toggle-privacy", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ imageId }),
-      });
-
-      const data = await response.json();
-      console.log("handleTogglePrivacy response:", { data });
-
-      if (!response.ok) {
-        if (data.requireAuth) {
-          // Redirect to login if authentication is required
-          router.push(
-            `/login?redirect=${encodeURIComponent(window.location.pathname)}`,
-          );
-          return;
+        if (!response.ok) {
+          if (data.requireAuth) {
+            router.push(
+              `/login?redirect=${encodeURIComponent(window.location.pathname)}`,
+            );
+            return;
+          }
+          throw new Error(data.error || "Failed to update privacy settings");
         }
-        throw new Error(data.error || "Failed to update privacy settings");
+
+        // Update the last successful state
+        lastSuccessfulPrivateState.current = data.private;
+        setPrivacyError(null);
+      } catch (err) {
+        // Revert to last successful state on error
+        setIsPrivate(lastSuccessfulPrivateState.current);
+        setPrivacyError(
+          err instanceof Error ? err.message : "An unknown error occurred",
+        );
+        toast.error("Failed to update privacy setting");
+      } finally {
+        setPrivacyLoading(false);
       }
+    }, 1000),
+  ).current;
 
-      // Update the local state with the new privacy status
-      setIsPrivate(data.private);
+  const handleTogglePrivacy = () => {
+    if (!imageData.id || privacyLoading) return;
 
-      // Show a toast or notification
-      toast("Privacy updated");
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "An unknown error occurred",
-      );
-    } finally {
-      setPrivacyLoading(false);
-    }
+    const newPrivateState = !isPrivate;
+
+    // Optimistically update the UI
+    setIsPrivate(newPrivateState);
+    setPrivacyLoading(true);
+    setPrivacyError(null);
+
+    // Trigger the debounced update
+    debouncedUpdatePrivacy(newPrivateState);
   };
 
   return (
@@ -515,12 +567,13 @@ export default function ResultsDisplay({
             </Avatar>
             <span className="font-medium">{getDisplayName()}</span>
             <StyleBadge style={imageData.style} />
+            <PrivacyBadge isPrivate={isPrivate} />
           </div>
         </div>
       )}
 
-      {isPrivate && (
-        <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-md">
+      {isPrivate && !isUploader && (
+        <div className="flex items-center gap-2 text-amber-600 bg-amber-50 px-3 py-2 rounded-md mb-4">
           <LockIcon className="h-4 w-4" />
           <span className="text-sm font-medium">
             This image is private and only visible to you
@@ -637,7 +690,7 @@ export default function ResultsDisplay({
               {isUploader && type === "human" && !hasVotes && (
                 <div className="mt-3 flex items-center gap-2">
                   <Select
-                    value={selectedAnimal || ""}
+                    value={selectedAnimal ?? ANIMAL_TYPES[0]}
                     onValueChange={setSelectedAnimal}
                   >
                     <SelectTrigger className="w-full">
@@ -653,8 +706,10 @@ export default function ResultsDisplay({
                   </Select>
                   <Button
                     size="sm"
-                    onClick={() => handleRegenerate(selectedAnimal || "")}
-                    disabled={!selectedAnimal || regenerating}
+                    onClick={() =>
+                      handleRegenerate(selectedAnimal ?? ANIMAL_TYPES[0])
+                    }
+                    disabled={regenerating}
                     className="bg-rose-500 hover:bg-rose-600 flex-shrink-0"
                   >
                     <RefreshCw className="h-4 w-4" />
@@ -665,6 +720,93 @@ export default function ResultsDisplay({
           </CardContent>
         </Card>
       </div>
+
+      {/* Share Card - Moved below results */}
+      {isUploader && (
+        <Card className="border-rose-200">
+          <CardContent className="pt-6 relative">
+            <div className="absolute right-4 top-4">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
+                onClick={handleDeleteImage}
+                disabled={loading}
+              >
+                <Trash2 className="h-4 w-4" />
+                Delete
+              </Button>
+            </div>
+
+            <div className="text-center space-y-4">
+              <div className="flex flex-col items-center gap-4">
+                <h3 className="text-lg font-semibold">Share Your Creation</h3>
+
+                <div className="w-full max-w-md flex flex-col items-center gap-4">
+                  <div className="flex items-center justify-center gap-4 py-2">
+                    <span
+                      className={`text-base font-medium ${isPrivate ? "text-rose-500" : "text-muted-foreground"}`}
+                    >
+                      Private 🔒
+                    </span>
+                    <Switch
+                      checked={isPrivate}
+                      onCheckedChange={handleTogglePrivacy}
+                      disabled={privacyLoading}
+                      className="data-[state=checked]:bg-rose-500 data-[state=unchecked]:bg-rose-500"
+                    />
+                    <span
+                      className={`text-base font-medium ${!isPrivate ? "text-rose-500" : "text-muted-foreground"}`}
+                    >
+                      🌎 Public
+                    </span>
+                  </div>
+                </div>
+
+                {!isPrivate && (
+                  <div className="w-full max-w-md space-y-3">
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={shareUrlRef}
+                        type="text"
+                        value={shareUrl}
+                        readOnly
+                        className="flex-1 px-3 py-2 border border-rose-200 rounded-md text-sm bg-rose-50/50"
+                        onClick={(e) => e.currentTarget.select()}
+                      />
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="icon"
+                              onClick={copyShareLink}
+                              className="border-rose-200 hover:bg-rose-50"
+                            >
+                              {copied ? (
+                                <Check className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>{copied ? "Copied!" : "Copy link"}</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+
+                    <p className="text-gray-600 text-sm">
+                      Share this link with friends.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {error && (
         <Alert variant="destructive">
@@ -713,118 +855,6 @@ export default function ResultsDisplay({
                   Animal 🐾
                 </span>
               </CatButton>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {isUploader && (
-        /* For uploaders who can't vote, show a share card */
-        <Card className="border-rose-200 relative">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-4">
-              <h3
-                className={`text-lg font-semibold flex items-center justify-center gap-2 ${
-                  isPrivate ? "line-through text-gray-400" : ""
-                }`}
-              >
-                <span>Share with Friends</span>
-                <span className="text-xl">🔗</span>
-              </h3>
-
-              <p className={`text-gray-600 ${isPrivate ? "line-through" : ""}`}>
-                This is your upload! Share this link with friends so they can
-                vote on which image they think is the original.
-              </p>
-
-              {isPrivate && (
-                <p className="text-amber-600 text-sm font-medium flex items-center justify-center gap-2">
-                  <LockIcon className="h-4 w-4" />
-                  Make this image public to enable sharing
-                </p>
-              )}
-
-              <div className="flex items-center gap-2 mt-4">
-                <input
-                  ref={shareUrlRef}
-                  type="text"
-                  value={shareUrl}
-                  readOnly
-                  disabled={isPrivate}
-                  className={`flex-1 px-3 py-2 border border-gray-300 rounded-md text-sm ${
-                    isPrivate
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : ""
-                  }`}
-                  onClick={(e) => !isPrivate && e.currentTarget.select()}
-                />
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={copyShareLink}
-                        disabled={isPrivate}
-                        className={`border-rose-200 ${
-                          isPrivate
-                            ? "opacity-50 cursor-not-allowed"
-                            : "hover:bg-rose-50"
-                        }`}
-                      >
-                        {copied ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {isPrivate
-                          ? "Sharing disabled"
-                          : copied
-                            ? "Copied!"
-                            : "Copy link"}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </div>
-
-              <div className="flex flex-wrap justify-center items-center gap-4 mt-4">
-                {isUploader && (
-                  <Button
-                    variant="outline"
-                    className="border-red-200 hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
-                    onClick={handleTogglePrivacy}
-                    disabled={loading || privacyLoading}
-                  >
-                    <label
-                      htmlFor="private"
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                    >
-                      {privacyLoading
-                        ? "Loading..."
-                        : isPrivate
-                          ? "Make Public 📢"
-                          : "Make Private 🔐"}
-                    </label>
-                  </Button>
-                )}
-
-                {isUploader && (
-                  <Button
-                    variant="outline"
-                    className="text-red-500 border-red-200 hover:bg-red-50 hover:text-red-600 flex items-center gap-2"
-                    onClick={handleDeleteImage}
-                    disabled={loading}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete Image
-                  </Button>
-                )}
-              </div>
             </div>
           </CardContent>
         </Card>
@@ -963,25 +993,6 @@ export default function ResultsDisplay({
                   </div>
                 </CardContent>
               )}
-            </div>
-
-            <div className="mt-6 text-center flex justify-center gap-4">
-              <CatButton
-                onClick={() => router.push("/")}
-                className="bg-rose-500 hover:bg-rose-600"
-              >
-                <span className="flex items-center gap-2">
-                  Try Another Image
-                  <span className="text-sm">🐾</span>
-                </span>
-              </CatButton>
-
-              <Link href="/gallery">
-                <Button variant="outline" className="gap-2 border-rose-200">
-                  <ImageIcon className="h-4 w-4" />
-                  View Gallery
-                </Button>
-              </Link>
             </div>
           </CardContent>
         </Card>
