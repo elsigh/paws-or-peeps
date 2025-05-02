@@ -7,8 +7,7 @@ export type TransformationStyle =
   | "GOTHIC"
   | "DECO"
   | "LEGO"
-  | "KOGAL"
-  | "LOLITA";
+  | "KOGAL";
 
 export type ImageData = {
   id: string;

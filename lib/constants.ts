@@ -15,7 +15,6 @@ export const STYLE_EMOJI_MAP: Record<
   DECO: { emoji: "🎭", label: "Art Deco" },
   LEGO: { emoji: "🧱", label: "Lego" },
   KOGAL: { emoji: "👗", label: "Kogal" },
-  LOLITA: { emoji: "🎀", label: "Lolita" },
 };
 
 export const DEFAULT_RESULT_IMG_SRC = "/images/cat-yawning.png";

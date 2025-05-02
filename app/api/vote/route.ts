@@ -120,8 +120,12 @@ export async function POST(request: Request) {
       );
     }
 
-    if (imageData.user_id !== userId) {
-      throw new Error("You are not the owner of this image.");
+    // Prevent users from voting on their own images
+    if (imageData.user_id === userId) {
+      return NextResponse.json(
+        { error: "You cannot vote on your own image." },
+        { status: 400 },
+      );
     }
 
     // Check if user has already voted on this image

@@ -23,7 +23,6 @@ import {
   ANIMAL_TO_HUMAN_PROMPT_GOTHIC,
   ANIMAL_TO_HUMAN_PROMPT_KOGAL,
   ANIMAL_TO_HUMAN_PROMPT_LEGO,
-  ANIMAL_TO_HUMAN_PROMPT_LOLITA,
   ANIMAL_TO_HUMAN_PROMPT_REALISTIC,
   HUMAN_TO_ANIMAL_PROMPT_ANGELIC,
   HUMAN_TO_ANIMAL_PROMPT_APOCALYPTIC,
@@ -33,7 +32,6 @@ import {
   HUMAN_TO_ANIMAL_PROMPT_GOTHIC,
   HUMAN_TO_ANIMAL_PROMPT_KOGAL,
   HUMAN_TO_ANIMAL_PROMPT_LEGO,
-  HUMAN_TO_ANIMAL_PROMPT_LOLITA,
   HUMAN_TO_ANIMAL_PROMPT_REALISTIC,
   ORIGINAL_IMAGE_PROMPT_ANGELIC,
   ORIGINAL_IMAGE_PROMPT_APOCALYPTIC,
@@ -43,7 +41,6 @@ import {
   ORIGINAL_IMAGE_PROMPT_GOTHIC,
   ORIGINAL_IMAGE_PROMPT_KOGAL,
   ORIGINAL_IMAGE_PROMPT_LEGO,
-  ORIGINAL_IMAGE_PROMPT_LOLITA,
   ORIGINAL_IMAGE_PROMPT_REALISTIC,
 } from "./prompts";
 
@@ -223,8 +220,6 @@ export async function createStylizedVersion(
           `The human subject is ${g}.\n${ORIGINAL_IMAGE_PROMPT_LEGO}`,
         KOGAL: (g: string) =>
           `The human subject is ${g}.\n${ORIGINAL_IMAGE_PROMPT_KOGAL}`,
-        LOLITA: (g: string) =>
-          `The human subject is ${g}.\n${ORIGINAL_IMAGE_PROMPT_LOLITA}`,
       };
       prompt = promptMap[style](gender || "other");
     } else {
@@ -238,7 +233,6 @@ export async function createStylizedVersion(
         DECO: ORIGINAL_IMAGE_PROMPT_DECO,
         LEGO: ORIGINAL_IMAGE_PROMPT_LEGO,
         KOGAL: ORIGINAL_IMAGE_PROMPT_KOGAL,
-        LOLITA: ORIGINAL_IMAGE_PROMPT_LOLITA,
       };
       prompt = promptMap[style];
     }
@@ -373,7 +367,6 @@ export async function createOppositeVersion(
       DECO: HUMAN_TO_ANIMAL_PROMPT_DECO,
       LEGO: HUMAN_TO_ANIMAL_PROMPT_LEGO,
       KOGAL: HUMAN_TO_ANIMAL_PROMPT_KOGAL,
-      LOLITA: HUMAN_TO_ANIMAL_PROMPT_LOLITA,
     };
 
     const animalToHumanPrompts = {
@@ -386,7 +379,6 @@ export async function createOppositeVersion(
       DECO: ANIMAL_TO_HUMAN_PROMPT_DECO,
       LEGO: ANIMAL_TO_HUMAN_PROMPT_LEGO,
       KOGAL: ANIMAL_TO_HUMAN_PROMPT_KOGAL,
-      LOLITA: ANIMAL_TO_HUMAN_PROMPT_LOLITA,
     };
 
     const prompt =

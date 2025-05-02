@@ -121,11 +121,17 @@ export default function FileUpload() {
             LAST_USED_ANIMAL_KEY,
           );
 
-        if (lastStyle) {
+        if (lastStyle && Object.keys(STYLE_EMOJI_MAP).includes(lastStyle)) {
           setTransformStyle(lastStyle);
+        } else if (lastStyle) {
+          // Remove invalid style from localforage
+          await localforage.removeItem(LAST_USED_STYLE_KEY);
         }
-        if (lastAnimal) {
+        if (lastAnimal && ANIMAL_TYPES.includes(lastAnimal)) {
           setSelectedAnimal(lastAnimal);
+        } else if (lastAnimal) {
+          // Remove invalid animal from localforage
+          await localforage.removeItem(LAST_USED_ANIMAL_KEY);
         }
       } catch (error) {
         console.error("Error loading last used settings:", error);

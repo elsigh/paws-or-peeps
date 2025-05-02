@@ -28,7 +28,9 @@ Apply a warm, inviting style reminiscent of high-end animated films, with:
 - Subtle color enhancement to create a warm, welcoming mood
 - Crisp details that make the subject "pop" without looking artificial
 - Preservation of the original composition and emotional expression
-Make it feel like a moment from a beloved animated feature film.`;
+Make it feel like a moment from a beloved animated feature film.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_CHARMING = (
   targetAnimalType: string,
@@ -58,7 +60,9 @@ Character Translation:
 
 3. Emotional Connection:
    - Create an immediate sense of recognition between the original and transformed image
-   - The emotional presence must be identical to the original photo, whether it is warmth, sadness, anger, or any other mood.`;
+   - The emotional presence must be identical to the original photo, whether it is warmth, sadness, anger, or any other mood.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_CHARMING = (type: string, gender: string) =>
   `The human subject is ${gender}.
@@ -93,7 +97,9 @@ Character Translation Rules:
    - Soft, appealing lighting like modern animated films
    - Natural human skin tones and textures in animated style
 
-The final image MUST be a human character in animated style - imagine if this ${type} was cast as a human protagonist in a Disney/Pixar film.`;
+The final image MUST be a human character in animated style - imagine if this ${type} was cast as a human protagonist in a Disney/Pixar film.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 // Realistic style prompts - optimized for natural, photorealistic transformations
 export const ORIGINAL_IMAGE_PROMPT_REALISTIC = `Enhance this image to professional photography quality while maintaining natural appearance:
@@ -103,7 +109,9 @@ export const ORIGINAL_IMAGE_PROMPT_REALISTIC = `Enhance this image to profession
 - Preserve the original subject exactly as is
 - No style changes, just quality enhancement
 
-The final image should look like it was taken by a professional photographer with high-end equipment.`;
+The final image should look like it was taken by a professional photographer with high-end equipment.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_REALISTIC = (
   targetAnimalType: string,
@@ -129,7 +137,9 @@ Example translation:
 - Human's expression → Equivalent ${targetAnimalType} expression, matching the original mood
 - Human's pose → Natural ${targetAnimalType} pose that conveys similar feeling
 
-The final image MUST be a photorealistic ${targetAnimalType} portrait that looks like a professional wildlife photo, while capturing the essence and personality of the original human.`;
+The final image MUST be a photorealistic ${targetAnimalType} portrait that looks like a professional wildlife photo, while capturing the essence and personality of the original human.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_REALISTIC = (
   type: string,
@@ -156,7 +166,9 @@ Example translation:
 - ${type}'s eye color → Similar human eye color
 - ${type}'s expression → Equivalent human facial expression, matching the original mood
 
-The final image MUST be a photorealistic human portrait that looks like a professional headshot, while capturing the essence and personality of the original ${type}.`;
+The final image MUST be a photorealistic human portrait that looks like a professional headshot, while capturing the essence and personality of the original ${type}.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ORIGINAL_IMAGE_PROMPT_APOCALYPTIC = `Transform this image into an epic, hellish fantasy portrait as if it were forged in the depths of the underworld.
 Apply a bold, infernal style inspired by classic depictions of Hell, with:
@@ -166,7 +178,9 @@ Apply a bold, infernal style inspired by classic depictions of Hell, with:
 - Sinister, magical, and otherworldly details: chains, spiked armor, obsidian, and hellfire
 - Preservation of the original composition and emotional expression, but filtered through a lens of demonic fantasy and infernal horror
 The final image should look like a character or creature from a hellish, high-fantasy underworld, with unmistakable devilish and magical elements.
-The result should be unapologetically infernal, fantastical, and visually striking.`;
+The result should be unapologetically infernal, fantastical, and visually striking.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_APOCALYPTIC = (
   targetAnimalType: string,
@@ -181,7 +195,9 @@ Style Guide:
 - Add sinister, magical, and otherworldly details: chains, spiked armor, obsidian, pentagrams, and hellfire
 - The ${targetAnimalType} should look like a powerful demon or hellbeast, but still recognizable as a transformation of the original human
 - Mirror the human's emotional expression, but amplify it with infernal energy and fantasy horror
-The result should be a visually stunning, devilish, and magical ${targetAnimalType} straight out of a hellish fantasy realm.`;
+The result should be a visually stunning, devilish, and magical ${targetAnimalType} straight out of a hellish fantasy realm.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_APOCALYPTIC = (
   type: string,
@@ -196,7 +212,9 @@ Style Guide:
 - Add sinister, magical, and otherworldly details: chains, spiked armor, obsidian, pentagrams, and hellfire
 - The human should look like a powerful demon, warlock, or hell-prince(ss), but still echo the original ${type}'s spirit and expression
 - Mirror the animal's emotional expression, but amplify it with infernal energy and fantasy horror
-The result should be a visually stunning, devilish, and magical human straight out of a hellish fantasy underworld.`;
+The result should be a visually stunning, devilish, and magical human straight out of a hellish fantasy underworld.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ORIGINAL_IMAGE_PROMPT_CHIBI = `Transform this image into a high-quality chibi-style portrait that balances cute aesthetics with realistic details.
 
@@ -214,7 +232,9 @@ Requirements:
 - High-resolution details in hair, skin, and clothing
 - Maintain a cute aesthetic while avoiding oversimplification
 
-The final image should be a high-quality chibi interpretation that combines cute stylization with realistic rendering techniques.`;
+The final image should be a high-quality chibi interpretation that combines cute stylization with realistic rendering techniques.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_CHIBI = (
   targetAnimalType: string,
@@ -243,7 +263,9 @@ Use the human's features as inspiration:
 - Human's expression → Equivalent chibi ${targetAnimalType} expression with anatomical accuracy
 - Human's personality → Reflected in the pose and demeanor
 
-The final image MUST be a high-quality chibi ${targetAnimalType} that combines cute stylization with realistic rendering techniques.`;
+The final image MUST be a high-quality chibi ${targetAnimalType} that combines cute stylization with realistic rendering techniques.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_CHIBI = (type: string, gender: string) =>
   `The human subject is ${gender}.
@@ -269,7 +291,9 @@ Use the ${type}'s features as inspiration:
 - ${type}'s expression → Equivalent chibi human expression with anatomical accuracy
 - ${type}'s personality → Reflected in the pose and demeanor
 
-The final image MUST be a high-quality chibi human that combines cute stylization with realistic rendering techniques.`;
+The final image MUST be a high-quality chibi human that combines cute stylization with realistic rendering techniques.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ORIGINAL_IMAGE_PROMPT_ANGELIC = `Transform this image into a heavenly, ethereal portrait with divine aesthetics.
 
@@ -286,7 +310,9 @@ Requirements:
 - Include delicate, ethereal details like gossamer textures
 - Create a sense of weightlessness and grace
 
-The final image should evoke a sense of divine beauty, peace, and celestial grace while maintaining the subject's core essence.`;
+The final image should evoke a sense of divine beauty, peace, and celestial grace while maintaining the subject's core essence.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_ANGELIC = (
   targetAnimalType: string,
@@ -306,7 +332,9 @@ Requirements:
 - Keep the pose graceful and serene
 - Add delicate, ethereal details
 
-The final image should portray a divine, angelic ${targetAnimalType} that emanates peace and celestial beauty.`;
+The final image should portray a divine, angelic ${targetAnimalType} that emanates peace and celestial beauty.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_ANGELIC = (
   sourceAnimalType: string,
@@ -326,7 +354,9 @@ Requirements:
 - Use a palette of whites, golds, and soft pastels
 - Include delicate, ethereal details
 
-The final image should be a divine human interpretation that captures the ${sourceAnimalType}'s essence in an angelic form.`;
+The final image should be a divine human interpretation that captures the ${sourceAnimalType}'s essence in an angelic form.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ORIGINAL_IMAGE_PROMPT_GOTHIC = `Transform this image into a dark, Victorian Gothic masterpiece.
 
@@ -342,7 +372,9 @@ Requirements:
 - Include period-appropriate details and textures
 - Create a haunting, romantic atmosphere
 
-The final image should evoke the essence of Victorian Gothic art while maintaining the subject's identity.`;
+The final image should evoke the essence of Victorian Gothic art while maintaining the subject's identity.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_GOTHIC = (
   targetAnimalType: string,
@@ -362,7 +394,9 @@ Requirements:
 - Keep the pose elegant and dramatic
 - Add Gothic architectural elements in the background
 
-The final image should be a Gothic ${targetAnimalType} that captures both the Victorian era's darkness and the original subject's essence.`;
+The final image should be a Gothic ${targetAnimalType} that captures both the Victorian era's darkness and the original subject's essence.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_GOTHIC = (
   sourceAnimalType: string,
@@ -382,7 +416,9 @@ Requirements:
 - Keep the pose elegant and dramatic
 - Add Gothic background elements
 
-The final image should be a Gothic Victorian human that captures the ${sourceAnimalType}'s essence in a darkly romantic way.`;
+The final image should be a Gothic Victorian human that captures the ${sourceAnimalType}'s essence in a darkly romantic way.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ORIGINAL_IMAGE_PROMPT_DECO = `Transform this image into an Art Deco masterpiece.
 
@@ -398,7 +434,9 @@ Requirements:
 - Use bold, contrasting colors
 - Create a sense of luxury and sophistication
 
-The final image should embody the glamour and sophistication of the Art Deco period.`;
+The final image should embody the glamour and sophistication of the Art Deco period.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_DECO = (
   targetAnimalType: string,
@@ -418,7 +456,9 @@ Requirements:
 - Keep the pose elegant and refined
 - Add Art Deco architectural elements or frames
 
-The final image should be an elegant ${targetAnimalType} that embodies Art Deco style while maintaining the original subject's character.`;
+The final image should be an elegant ${targetAnimalType} that embodies Art Deco style while maintaining the original subject's character.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_DECO = (
   sourceAnimalType: string,
@@ -438,7 +478,9 @@ Requirements:
 - Keep the pose elegant and refined
 - Add Art Deco architectural elements or frames
 
-The final image should be a sophisticated Art Deco human that captures the ${sourceAnimalType}'s essence in a glamorous way.`;
+The final image should be a sophisticated Art Deco human that captures the ${sourceAnimalType}'s essence in a glamorous way.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ORIGINAL_IMAGE_PROMPT_LEGO = `Transform this image into a LEGO-style creation.
 
@@ -454,7 +496,9 @@ Requirements:
 - Keep the composition clear and well-structured
 - Create a sense of buildable reality
 
-The final image should look like an authentic LEGO creation while maintaining recognizable features of the subject.`;
+The final image should look like an authentic LEGO creation while maintaining recognizable features of the subject.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_LEGO = (
   targetAnimalType: string,
@@ -474,7 +518,9 @@ Requirements:
 - Add characteristic LEGO joints and connections
 - Include LEGO-style background elements
 
-The final image should be a convincing LEGO ${targetAnimalType} that captures the essence of both LEGO and the original subject.`;
+The final image should be a convincing LEGO ${targetAnimalType} that captures the essence of both LEGO and the original subject.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_LEGO = (
   sourceAnimalType: string,
@@ -494,7 +540,9 @@ Requirements:
 - Add characteristic LEGO accessories
 - Include LEGO-style background elements
 
-The final image should be an authentic LEGO minifigure that captures the ${sourceAnimalType}'s personality in LEGO form.`;
+The final image should be an authentic LEGO minifigure that captures the ${sourceAnimalType}'s personality in LEGO form.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ORIGINAL_IMAGE_PROMPT_KOGAL = `Transform this image into a vibrant Kogal fashion style portrait.
 
@@ -510,7 +558,9 @@ Requirements:
 - Create a lively, youthful atmosphere
 - Add contemporary urban background elements
 
-The final image should embody the energetic, fashion-forward Kogal style while maintaining the subject's identity.`;
+The final image should embody the energetic, fashion-forward Kogal style while maintaining the subject's identity.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_KOGAL = (
   targetAnimalType: string,
@@ -530,7 +580,9 @@ Requirements:
 - Use modern, street-style lighting
 - Include playful background elements
 
-The final image should be a fashion-forward ${targetAnimalType} that captures both Kogal style and the original subject's personality.`;
+The final image should be a fashion-forward ${targetAnimalType} that captures both Kogal style and the original subject's personality.
+
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
 
 export const ANIMAL_TO_HUMAN_PROMPT_KOGAL = (
   sourceAnimalType: string,
@@ -550,60 +602,6 @@ Requirements:
 - Use bright, modern lighting
 - Include street fashion elements
 
-The final image should be a Kogal-styled human that captures the ${sourceAnimalType}'s personality in a contemporary fashion context.`;
+The final image should be a Kogal-styled human that captures the ${sourceAnimalType}'s personality in a contemporary fashion context.
 
-export const ORIGINAL_IMAGE_PROMPT_LOLITA = `Transform this image into an elegant Lolita fashion style portrait.
-
-Requirements:
-- Classic Lolita fashion aesthetics with Victorian influences
-- Elaborate dresses with petticoats and frills
-- Delicate lace, ribbons, and bows
-- Elegant hairstyles with decorative accessories
-- Soft, doll-like makeup
-- Maintain core facial features while adding Lolita style
-- Include classic accessories like parasols or tea party elements
-- Create a romantic, fairy-tale atmosphere
-- Use pastel or rich jewel-toned colors
-- Add decorative background elements
-
-The final image should embody the elegant, doll-like Lolita fashion style while maintaining the subject's identity.`;
-
-export const HUMAN_TO_ANIMAL_PROMPT_LOLITA = (
-  targetAnimalType: string,
-  gender: string,
-) =>
-  `Transform this ${gender} human into a Lolita-styled ${targetAnimalType}.
-
-Requirements:
-- Create a ${targetAnimalType} with elegant Lolita fashion elements
-- Add Victorian-inspired accessories and styling
-- Include lace, ribbons, and decorative elements
-- Maintain the emotional expression exactly as in the original
-- Use soft, romantic colors
-- Keep the pose elegant and graceful
-- Add classic Lolita accessories adapted for a ${targetAnimalType}
-- Create a fairy-tale atmosphere
-- Use soft, dreamy lighting
-- Include romantic background elements
-
-The final image should be an elegant ${targetAnimalType} that captures both Lolita fashion and the original subject's essence.`;
-
-export const ANIMAL_TO_HUMAN_PROMPT_LOLITA = (
-  sourceAnimalType: string,
-  gender: string,
-) =>
-  `Transform this ${sourceAnimalType} into a Lolita-styled ${gender} human.
-
-Requirements:
-- Create an elegant Lolita fashion ensemble
-- Include signature elements (petticoats, frills, lace)
-- Add decorative accessories and hair ornaments
-- Maintain the original ${sourceAnimalType}'s expression and personality
-- Use doll-like makeup styling
-- Keep the pose graceful and refined
-- Add classic Lolita accessories
-- Create a romantic atmosphere
-- Use soft, flattering lighting
-- Include Victorian-inspired elements
-
-The final image should be a Lolita-styled human that captures the ${sourceAnimalType}'s personality in an elegant, doll-like fashion context.`;
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;

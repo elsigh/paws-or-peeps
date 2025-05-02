@@ -97,8 +97,17 @@ export function GalleryCard({
             )}
           </div>
           <div className="absolute top-2 right-2 bg-white/80 backdrop-blur-sm rounded-full px-2 py-1 text-xs font-medium flex items-center gap-1">
-            <span className="text-sm">{STYLE_EMOJI_MAP[style].emoji}</span>
-            <span>{STYLE_EMOJI_MAP[style].label}</span>
+            {STYLE_EMOJI_MAP[style] ? (
+              <>
+                <span className="text-sm">{STYLE_EMOJI_MAP[style].emoji}</span>
+                <span>{STYLE_EMOJI_MAP[style].label}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-sm">❓</span>
+                <span>Other</span>
+              </>
+            )}
           </div>
 
           {/* Hover instruction */}
