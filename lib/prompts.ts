@@ -21,8 +21,24 @@
 // Ensure the final image depicts a human with standard human anatomy and facial features, with no ${type} characteristics
 // like fur, feathers, tails, claws, or animal-like features.`;
 
+// CRITICAL EMOTIONAL CONSISTENCY BLOCK
+const EMOTION_CRITICAL_TOP =
+  "CRITICAL: The most important requirement is that the emotional expression, mood, and personality of the output MUST be absolutely identical to the original image. You MUST NOT change the emotion, mood, or expression in any way. If the original is smiling, the output must be smiling in the same way. If the original is concerned, the output must be concerned in the same way. Never make the output happier, sadder, or more neutral than the original.";
+
+const EMOTION_CRITICAL_BOTTOM = `
+Before you finish, double-check:
+- Is the facial expression (smile, frown, concern, etc.) exactly the same as the original?
+- Is the mood and emotional tone identical?
+- Would a human viewer say the two images have the same emotion?
+
+If not, you must revise the output to match the original emotion exactly.
+
+IMPORTANT: Failure to match the emotional expression exactly will be considered a critical error.`;
+
 // Charming style prompts - optimized for delightful, appealing transformations
-export const ORIGINAL_IMAGE_PROMPT_CHARMING = `Transform this image into a charming, storybook-like portrait while maintaining its essence.
+export const ORIGINAL_IMAGE_PROMPT_CHARMING = `${EMOTION_CRITICAL_TOP}
+
+Transform this image into a charming, storybook-like portrait while maintaining its essence.
 Apply a warm, inviting style reminiscent of high-end animated films, with:
 - Enhanced lighting that creates a gentle glow
 - Subtle color enhancement to create a warm, welcoming mood
@@ -30,13 +46,15 @@ Apply a warm, inviting style reminiscent of high-end animated films, with:
 - Preservation of the original composition and emotional expression
 Make it feel like a moment from a beloved animated feature film.
 
-IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.
+${EMOTION_CRITICAL_BOTTOM}`;
 
 export const HUMAN_TO_ANIMAL_PROMPT_CHARMING = (
   targetAnimalType: string,
   gender: string,
-) =>
-  `The human subject is ${gender}.
+) => `${EMOTION_CRITICAL_TOP}
+
+The human subject is ${gender}.
 IMPORTANT: The emotional expression and mood MUST match the original human image exactly. Do NOT make the ${targetAnimalType} appear happier, more cheerful, or more delightful than the original. If the human is sad, angry, or neutral, the ${targetAnimalType} must reflect that same mood.
 
 Create a heartwarming ${targetAnimalType} portrait that captures the human's personality and spirit.
@@ -62,10 +80,15 @@ Character Translation:
    - Create an immediate sense of recognition between the original and transformed image
    - The emotional presence must be identical to the original photo, whether it is warmth, sadness, anger, or any other mood.
 
-IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.
+${EMOTION_CRITICAL_BOTTOM}`;
 
-export const ANIMAL_TO_HUMAN_PROMPT_CHARMING = (type: string, gender: string) =>
-  `The human subject is ${gender}.
+export const ANIMAL_TO_HUMAN_PROMPT_CHARMING = (
+  type: string,
+  gender: string,
+) => `${EMOTION_CRITICAL_TOP}
+
+The human subject is ${gender}.
 IMPORTANT: The emotional expression and mood MUST match the original ${type} image exactly. Do NOT make the human appear happier, more cheerful, or more delightful than the original. If the ${type} is sad, angry, or neutral, the human must reflect that same mood.
 
 Create a delightful animated human character portrait that captures the spirit of this ${type}. 
@@ -99,7 +122,8 @@ Character Translation Rules:
 
 The final image MUST be a human character in animated style - imagine if this ${type} was cast as a human protagonist in a Disney/Pixar film.
 
-IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.`;
+IMPORTANT: The emotional expression, mood, and personality of the transformation MUST be as identical as possible to the original. Carefully analyze the original and match the emotion and expression exactly. The two images should be indistinguishable in emotional tone.
+${EMOTION_CRITICAL_BOTTOM}`;
 
 // Realistic style prompts - optimized for natural, photorealistic transformations
 export const ORIGINAL_IMAGE_PROMPT_REALISTIC = `Enhance this image to professional photography quality while maintaining natural appearance:
