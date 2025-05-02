@@ -157,6 +157,9 @@ export async function POST(request: NextRequest) {
           return;
         }
 
+        // Get target_animal_type from form data
+        const targetAnimalType = formData.get("target_animal_type") as string;
+
         // Generate stylized version
         controller.enqueue(
           encoder.encode(
@@ -166,18 +169,31 @@ export async function POST(request: NextRequest) {
               message: "Creating stylized version...",
               progress: 40,
               style,
-            })}\n`,
+            })}
+`,
           ),
         );
 
         console.log(`Generating stylized ${style} version...`);
         let animatedUrl = "";
         try {
+          // Use correct animal type for stylization
+          let stylizeType = detectionResult.type;
+          let stylizeTarget = targetAnimalType;
+          let gender = detectionResult.gender;
+          if (detectionResult.type !== "human") {
+            stylizeType = detectionResult.type;
+            stylizeTarget = "human";
+            gender = null;
+          } else {
+            stylizeType = "human";
+            stylizeTarget = targetAnimalType;
+          }
           animatedUrl = await createStylizedVersion(
             originalUrl,
             style,
-            detectionResult.gender,
-            detectionResult.type,
+            gender,
+            stylizeType,
           );
           controller.enqueue(
             encoder.encode(
@@ -186,7 +202,8 @@ export async function POST(request: NextRequest) {
                 step: "animated",
                 message: "Stylized version created",
                 progress: 60,
-              })}\n`,
+              })}
+`,
             ),
           );
         } catch (error) {
@@ -207,23 +224,37 @@ export async function POST(request: NextRequest) {
           return;
         }
 
-        const oppositeUrl = null; // Do it in the results page
-        const targetAnimalType =
-          detectionResult.type === "human" ? "cat" : "human";
-
-        // Try to save the image data to the database
-        let imageData = null;
-
+        // Save image data with correct target_animal_type
+        let imageType = detectionResult.type;
+        let saveTargetAnimalType = targetAnimalType;
+        if (detectionResult.type !== "human") {
+          imageType = detectionResult.type;
+          saveTargetAnimalType = "human";
+        }
+        let imageData: Record<string, unknown> | null = null;
         try {
           imageData = await saveImageData(
             originalUrl,
             animatedUrl,
-            oppositeUrl,
-            detectionResult.type,
-            targetAnimalType,
+            null,
+            imageType,
+            saveTargetAnimalType,
             style,
             isPrivate,
+            detectionResult.gender,
           );
+          if (!imageData) {
+            controller.enqueue(
+              encoder.encode(
+                `${JSON.stringify({
+                  status: "error",
+                  message: "Failed to save image data.",
+                })}\n`,
+              ),
+            );
+            controller.close();
+            return;
+          }
 
           controller.enqueue(
             encoder.encode(

@@ -89,18 +89,15 @@ export async function detectImageContent(
             {
               type: "text",
               text: `
-            Analyze the attached image.
-            
-            Determine if the image contains a Human or one of these animals: ${ANIMAL_TYPES.join(", ")}
-            
-            If it contains a human, respond with exactly this format:
-            human,gender
-            Where gender is one of: male, female, other (if unclear or ambiguous, use 'other').
-            
-            If it contains one of the listed animals, respond with an animal type in lowercase (e.g., "cat", "dog", etc.).
-            
-            Respond with ONLY the classification result, no additional text.
-          `,
+                You are an expert at classifying images as either a human or one of these animals: ${ANIMAL_TYPES.join(", ")}.
+                Your job is to always return your best guess, even if you are not 100% certain.
+                If the image is a human, respond with: human,<gender>
+                - Gender must be one of: male, female, other (if unclear or ambiguous, use 'other').
+                If the image is an animal, respond with the animal type in lowercase (e.g., "cat", "dog", etc.).
+                - For animals, you do not need to detect gender; just return the animal type.
+                If you truly cannot make a guess, respond with exactly: error
+                Respond with ONLY the classification result, no additional text, no explanation, no punctuation.
+              `,
             },
             {
               type: "image",
@@ -112,11 +109,23 @@ export async function detectImageContent(
     });
 
     const result = text.trim().toLowerCase();
+    if (result === "error") {
+      throw new Error(
+        "Could not confidently detect the image type. Please try a different image.",
+      );
+    }
     if (result.startsWith("human")) {
       const parts = result.split(",");
-      return { type: "human", gender: parts[1] ? parts[1].trim() : "other" };
+      const gender = parts[1] ? parts[1].trim() : "other";
+      return { type: "human", gender };
     }
-    return { type: result, gender: null };
+    // Check if result is a valid animal type
+    if (ANIMAL_TYPES.includes(result as (typeof ANIMAL_TYPES)[number])) {
+      return { type: result, gender: "other" };
+    }
+    throw new Error(
+      "Could not confidently detect the image type. Please try a different image.",
+    );
   } catch (error) {
     console.error("Classification error:", error);
     if (error instanceof Error) {

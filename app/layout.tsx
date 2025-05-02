@@ -1,11 +1,11 @@
 import "./globals.css";
 
+import { ToasterClient } from "@/components/ToasterClient";
 import { CatLogo } from "@/components/cat-logo";
 import { Footer } from "@/components/footer";
 import { NotificationBell } from "@/components/notification-bell";
 import { HomePageLink } from "@/components/site-header";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
 import { UserMenu } from "@/components/user-menu";
 import { AuthProvider } from "@/lib/auth-context";
 import { Analytics } from "@vercel/analytics/react";
@@ -92,7 +92,7 @@ export default async function RootLayout({
               </main>
               <Footer />
             </div>
-            <Toaster />
+            <ToasterClient />
           </AuthProvider>
         </ThemeProvider>
         <Analytics />

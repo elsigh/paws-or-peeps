@@ -125,7 +125,9 @@ export default function ResultsDisplay({
   const [copied, setCopied] = useState(false);
   const shareUrlRef = useRef<HTMLInputElement>(null);
   const [regenerating, setRegenerating] = useState(false);
-  const [selectedAnimal, setSelectedAnimal] = useState<string | null>(null);
+  const [selectedAnimal, setSelectedAnimal] = useState<string | null>(
+    initialImageData?.target_animal_type ?? null,
+  );
   const [humanImageLoaded, setHumanImageLoaded] = useState(false);
   const [animalImageLoaded, setAnimalImageLoaded] = useState(false);
   const [originalImageLoaded, setOriginalImageLoaded] = useState(false);
@@ -335,6 +337,13 @@ export default function ResultsDisplay({
     generateOpposite();
   }, [imageData.id, imageData.opposite_url]);
 
+  // Keep selectedAnimal in sync with imageData.target_animal_type
+  useEffect(() => {
+    if (imageData?.target_animal_type) {
+      setSelectedAnimal(imageData.target_animal_type);
+    }
+  }, [imageData?.target_animal_type]);
+
   const handleVote = async (vote: UserVote) => {
     if (!vote) return;
     setLoading(true);
@@ -521,6 +530,11 @@ export default function ResultsDisplay({
         // Update the last successful state
         lastSuccessfulPrivateState.current = data.private;
         setPrivacyError(null);
+        toast.success(
+          data.private
+            ? "Your image is now private!"
+            : "Your image is now public!",
+        );
       } catch (err) {
         // Revert to last successful state on error
         setIsPrivate(lastSuccessfulPrivateState.current);
@@ -535,7 +549,7 @@ export default function ResultsDisplay({
   ).current;
 
   const handleTogglePrivacy = () => {
-    if (!imageData.id || privacyLoading) return;
+    if (!imageData.id) return;
 
     const newPrivateState = !isPrivate;
 
@@ -750,9 +764,8 @@ export default function ResultsDisplay({
                       Private 🔒
                     </span>
                     <Switch
-                      checked={isPrivate}
+                      checked={!isPrivate}
                       onCheckedChange={handleTogglePrivacy}
-                      disabled={privacyLoading}
                       className="data-[state=checked]:bg-rose-500 data-[state=unchecked]:bg-rose-500"
                     />
                     <span

@@ -334,8 +334,10 @@ export default function FileUpload() {
         // If detectedType is not human, set animal to 'human' for the upload (but don't store in localStorage)
         if (detectedType && detectedType !== "human") {
           formData.append("animal", "human");
+          formData.append("target_animal_type", String(detectedType));
         } else {
-          formData.append("animal", selectedAnimal);
+          formData.append("animal", String(selectedAnimal));
+          formData.append("target_animal_type", String(selectedAnimal));
         }
 
         console.log("FormData created, sending request...");
@@ -409,7 +411,9 @@ export default function FileUpload() {
                 }
               } else if (data.status === "error") {
                 setError(data.message);
+                if (data.details) setErrorDetails(data.details);
                 setLoading(false);
+                // Optionally, scroll to error or focus error UI
               }
             } catch (e) {
               console.error(
