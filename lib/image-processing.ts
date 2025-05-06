@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase-server";
 import type {
   ImageData,
-  ImageWithVotes,
   TransformationStyle,
   VoteRow,
   VoteStats,
@@ -12,6 +11,7 @@ import { put } from "@vercel/blob";
 import type { GeneratedFile } from "ai";
 import { generateText } from "ai";
 import { nanoid } from "nanoid";
+import { cache } from "react";
 import { ANIMAL_TYPES } from "./constants";
 import getVisitorId from "./get-visitor-id";
 import {
@@ -555,9 +555,9 @@ export async function saveImageData(
 }
 
 // Function to get image data by ID
-export async function getImageById(id: string): Promise<ImageData> {
+export const getImageById = cache(async (id: string): Promise<ImageData> => {
   try {
-    console.log(`Getting image data for ID: ${id}`);
+    console.log(`getImageById ID: ${id}`);
 
     const supabase = await createClient();
     if (!supabase) {
@@ -573,7 +573,7 @@ export async function getImageById(id: string): Promise<ImageData> {
     // Try to get the image data regardless of ID format
     const { data, error } = await supabase
       .from("images")
-      .select("*, votes(*)")
+      .select("*, votes(*), profiles(user_id, display_name, avatar_url)")
       .eq("id", id)
       .single();
 
@@ -587,9 +587,7 @@ export async function getImageById(id: string): Promise<ImageData> {
       throw new Error(`No image found with ID: ${id}`);
     }
 
-    console.log(
-      `Image data retrieved. Uploader ID: ${data.user_id}, Current user ID: ${currentUserId}`,
-    );
+    //console.log("Image data retrieved", { data });
 
     // Check if the current user is the uploader
     const isUploader = data.user_id === currentUserId;
@@ -606,11 +604,25 @@ export async function getImageById(id: string): Promise<ImageData> {
 
     const hasVotes = count !== null && count > 0;
 
-    return {
-      ...data,
+    const imageData: ImageData = {
+      id: data.id,
+      original_url: data.original_url,
+      animated_url: data.animated_url,
+      opposite_url: data.opposite_url,
+      image_type: data.image_type,
+      target_animal_type: data.target_animal_type,
+      style: data.style,
+      created_at: data.created_at,
+      user_id: data.user_id,
+      private: data.private,
       isUploader,
       hasVotes,
-    } as ImageData;
+      gender: data.gender,
+      voteStats: data.voteStats,
+      profile: data.profiles,
+    };
+    console.log("getImageById done", { imageData });
+    return imageData;
   } catch (error) {
     console.error("Error in getImageById:", error);
     throw new Error(
@@ -619,7 +631,7 @@ export async function getImageById(id: string): Promise<ImageData> {
       }`,
     );
   }
-}
+});
 
 // Update the vote function
 export async function recordVote(
@@ -708,7 +720,7 @@ export async function recordVote(
 export async function getRecentTransformations(
   limit = 100,
   uploaderId?: string,
-) {
+): Promise<ImageData[]> {
   try {
     const supabase = await createClient();
     // Base query to get images with uploader profile
@@ -723,8 +735,8 @@ export async function getRecentTransformations(
       created_at,
       user_id,
       private,
-      votes (vote),
-      uploader_profile:profiles!user_id(user_id, display_name, avatar_url)
+      votes(vote),
+      profiles(display_name, avatar_url, user_id)
     `);
 
     if (uploaderId) {
@@ -755,31 +767,30 @@ export async function getRecentTransformations(
     }
 
     // Process and validate each image
-    type ImageWithProfile = ImageWithVotes & {
-      uploader_profile?: {
-        user_id: string;
-        display_name?: string | null;
-        avatar_url?: string | null;
-      }[];
-    };
-    const validImages = (images as ImageWithProfile[]).filter((image) => {
-      // Only include images with both original and opposite URLs
-      return image.original_url && image.opposite_url;
-    });
 
-    return validImages.map((image) => {
-      const votes = image.votes || [];
-      const animalVotes = votes.filter(
-        (v: VoteRow) => v.vote === "animal",
-      ).length;
-      const humanVotes = votes.filter(
-        (v: VoteRow) => v.vote === "human",
-      ).length;
-      const totalVotes = animalVotes + humanVotes;
+    // images may not have voteStats yet, so treat as unknown[] for mapping
+    function hasRequiredImageFields(
+      image: unknown,
+    ): image is Record<string, unknown> {
+      return (
+        typeof image === "object" &&
+        image !== null &&
+        "original_url" in image &&
+        "opposite_url" in image
+      );
+    }
+    const validImages = (images as unknown[]).filter(hasRequiredImageFields);
 
-      return {
-        ...image,
-        voteStats: {
+    return validImages.map((img): ImageData => {
+      const image = img as Record<string, unknown>;
+      // Calculate voteStats from image.votes if present, otherwise default to zeros
+      let voteStats: VoteStats;
+      if (Array.isArray(image.votes)) {
+        const votes = image.votes as VoteRow[];
+        const animalVotes = votes.filter((v) => v.vote === "animal").length;
+        const humanVotes = votes.filter((v) => v.vote === "human").length;
+        const totalVotes = animalVotes + humanVotes;
+        voteStats = {
           animalVotes,
           humanVotes,
           totalVotes,
@@ -787,9 +798,37 @@ export async function getRecentTransformations(
             totalVotes > 0 ? (animalVotes / totalVotes) * 100 : 50,
           humanPercentage:
             totalVotes > 0 ? (humanVotes / totalVotes) * 100 : 50,
-        },
-        uploader_profile: image.uploader_profile?.[0] || null,
+        };
+      } else if (image.voteStats) {
+        voteStats = image.voteStats as VoteStats;
+      } else {
+        voteStats = {
+          animalVotes: 0,
+          humanVotes: 0,
+          totalVotes: 0,
+          animalPercentage: 50,
+          humanPercentage: 50,
+        };
+      }
+      const processedImageData: ImageData = {
+        id: image.id as string,
+        original_url: image.original_url as string,
+        animated_url: image.animated_url as string | undefined,
+        opposite_url: image.opposite_url as string | undefined,
+        image_type: image.image_type as string,
+        target_animal_type: image.target_animal_type as string,
+        style: image.style as TransformationStyle,
+        created_at: image.created_at as string,
+        user_id: image.user_id as string,
+        private: image.private as boolean,
+        isUploader: image.isUploader as boolean | undefined,
+        hasVotes: image.hasVotes as boolean | undefined,
+        gender: image.gender as string | null | undefined,
+        voteStats,
+        profile: image.profiles as ImageData["profile"],
       };
+      //console.debug("Processed image:", processedImageData);
+      return processedImageData;
     });
   } catch (error) {
     console.error("Error in getRecentTransformations:", error);

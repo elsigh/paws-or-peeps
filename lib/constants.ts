@@ -1,6 +1,8 @@
 import type { TransformationStyle } from "./types";
 
-export const OG_HEADLINE = "Which was the original picture?";
+export const OG_HEADLINE = "Which one came from a real photo?";
+
+export const APP_TITLE_WITH_EMOJI = "🐾 PawsOrPeeps 💁";
 
 export const STYLE_EMOJI_MAP: Record<
   TransformationStyle,

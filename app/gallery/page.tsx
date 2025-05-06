@@ -47,14 +47,7 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
   }
 
   // Fetch transformations, passing user_id if present
-  let transformations = await getRecentTransformations(24, effectiveUserId);
-
-  // Apply type filter (except for 'all' and 'mine')
-  if (type && type !== "all" && type !== "mine") {
-    transformations = transformations.filter(
-      (item) => item.image_type === type,
-    );
-  }
+  const transformations = await getRecentTransformations(24, effectiveUserId);
 
   // Apply sorting
   if (sort) {
@@ -89,15 +82,15 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
         <GalleryCard
           key={item.id}
           id={item.id}
-          animatedUrl={item.animated_url || ""}
-          oppositeUrl={item.opposite_url || ""}
+          animatedUrl={item.animated_url as string}
+          oppositeUrl={item.opposite_url as string}
           type={item.image_type as "human" | (typeof ANIMAL_TYPES)[number]}
           style={item.style}
           voteStats={item.voteStats}
           createdAt={item.created_at}
           private={item.private}
           userId={item.user_id}
-          uploader_profile={item.uploader_profile}
+          profile={item.profile}
         />
       ))}
     </div>

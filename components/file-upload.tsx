@@ -851,8 +851,14 @@ export default function FileUpload() {
                   alt="Cropped Preview"
                   className="object-cover w-full h-full"
                 />
+              ) : loading ? (
+                // While loading, show a blank or spinner (never the cropper or original preview)
+                <div className="flex flex-col items-center justify-center w-full h-full min-h-[300px]">
+                  <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-500 border-t-transparent mb-4" />
+                  <p className="font-medium">Processing...</p>
+                </div>
               ) : preview ? (
-                <div className="relative aspect-square w-full max-w-sm mx-auto overflow-hidden rounded-lg">
+                <div className="relative w-full max-w-sm mx-auto overflow-hidden rounded-lg">
                   {isCropping ? (
                     <ReactCrop
                       crop={crop}

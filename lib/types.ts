@@ -23,14 +23,16 @@ export type ImageData = {
   isUploader?: boolean;
   hasVotes?: boolean;
   gender?: string | null;
+  voteStats: VoteStats;
+  profile: {
+    user_id: string;
+    display_name?: string | null;
+    avatar_url?: string | null;
+  };
 };
 
 export type VoteRow = {
   vote: "animal" | "human";
-};
-
-export type ImageWithVotes = ImageData & {
-  votes: VoteRow[];
 };
 
 // Update the vote stats interface

@@ -22,6 +22,7 @@ export async function generateMetadata(
   const { id } = await params;
 
   // Get the image data
+  //console.log("Generating metadata for id:", id);
   const imageData = await getImageById(id);
 
   if (!imageData) {
@@ -39,13 +40,14 @@ export async function generateMetadata(
 
   // Get the base URL for absolute URLs
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://pawsorpeeps.com";
+  const description = `Check out this amazing ${transformationType} transformation and vote on which one you think came from a real photo!`;
 
   return {
     title: `Which was the real ${imageData.image_type}? | PawsOrPeeps`,
-    description: `Check out this amazing ${transformationType} transformation and vote on which one you think is the original!`,
+    description,
     openGraph: {
       title: `Which was the real ${imageData.image_type}? | PawsOrPeeps`,
-      description: `Check out this amazing ${transformationType} transformation and vote on which one you think is the original!`,
+      description,
       images: [
         {
           url: `${baseUrl}/api/og/${id}`,
@@ -59,7 +61,7 @@ export async function generateMetadata(
     twitter: {
       card: "summary_large_image",
       title: `Which was the real ${imageData.image_type}? | PawsOrPeeps`,
-      description: `Check out this amazing ${transformationType} transformation and vote on which one you think is the original!`,
+      description,
       images: [`${baseUrl}/api/og/${id}`],
     },
   };

@@ -1,3 +1,4 @@
+import { APP_TITLE_WITH_EMOJI } from "@/lib/constants";
 import { getImageById } from "@/lib/image-processing";
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
@@ -5,7 +6,7 @@ import type { NextRequest } from "next/server";
 export const runtime = "edge";
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -18,7 +19,7 @@ export async function GET(
       return new Response("Image not found", { status: 404 });
     }
 
-    const { original_url, animated_url, opposite_url, image_type } = imageData;
+    const { animated_url, opposite_url, image_type } = imageData;
 
     // Determine which images to show side by side
     const leftImage = image_type === "human" ? animated_url : opposite_url;
@@ -116,7 +117,7 @@ export async function GET(
             color: "#666",
           }}
         >
-          🐾 PawsOrPeeps 💁 | Vote on the original!
+          {APP_TITLE_WITH_EMOJI}
         </div>
       </div>,
       {

@@ -32,7 +32,7 @@ interface GalleryCardProps {
   createdAt: string;
   private: boolean;
   userId: string;
-  uploader_profile?: {
+  profile?: {
     user_id: string;
     display_name?: string | null;
     avatar_url?: string | null;
@@ -49,7 +49,7 @@ export function GalleryCard({
   createdAt,
   private: isPrivate,
   userId,
-  uploader_profile,
+  profile,
 }: GalleryCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const router = useRouter();
@@ -133,8 +133,8 @@ export function GalleryCard({
                 >
                   <Avatar className="h-6 w-6 border border-gray-200">
                     <AvatarImage
-                      src={uploader_profile?.avatar_url || undefined}
-                      alt={uploader_profile?.display_name || "Uploader"}
+                      src={profile?.avatar_url || undefined}
+                      alt={profile?.display_name || "Uploader"}
                     />
                     <AvatarFallback>?</AvatarFallback>
                   </Avatar>
@@ -146,13 +146,13 @@ export function GalleryCard({
               >
                 <Avatar className="h-12 w-12 border border-gray-200">
                   <AvatarImage
-                    src={uploader_profile?.avatar_url || undefined}
-                    alt={uploader_profile?.display_name || "Uploader"}
+                    src={profile?.avatar_url || undefined}
+                    alt={profile?.display_name || "Uploader"}
                   />
                   <AvatarFallback>?</AvatarFallback>
                 </Avatar>
                 <span className="font-medium text-base">
-                  {uploader_profile?.display_name || "Uploader"}
+                  {profile?.display_name || "Uploader"}
                 </span>
                 <span className="text-xs text-gray-400">See all uploads</span>
               </TooltipContent>

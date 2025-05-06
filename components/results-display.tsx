@@ -38,7 +38,7 @@ import {
   OG_HEADLINE,
 } from "@/lib/constants";
 import { createClient } from "@/lib/supabase-client";
-import type { ImageData, UserProfile, UserVote, VoteStats } from "@/lib/types";
+import type { ImageData, UserVote, VoteStats } from "@/lib/types";
 import { capitalize } from "@/lib/utils";
 import {
   AlertCircle,
@@ -59,7 +59,6 @@ import { StyleBadge } from "./style-badge";
 
 interface ResultsDisplayProps {
   imageData: ImageData;
-  uploaderProfile: UserProfile | null;
   userVote?: UserVote;
   voteStats?: VoteStats;
 }
@@ -104,7 +103,6 @@ function PrivacyBadge({ isPrivate }: { isPrivate: boolean }) {
 
 export default function ResultsDisplay({
   imageData: initialImageData,
-  uploaderProfile,
   userVote: initialVote,
   voteStats: initialVoteStats,
 }: ResultsDisplayProps) {
@@ -496,10 +494,8 @@ export default function ResultsDisplay({
   };
 
   const getDisplayName = () => {
-    if (!uploaderProfile) return "Anonymous";
-
-    if (uploaderProfile.display_name) return uploaderProfile.display_name;
-
+    if (!imageData.profile) return "Anonymous";
+    if (imageData.profile.display_name) return imageData.profile.display_name;
     return "Anonymous";
   };
 
@@ -566,13 +562,12 @@ export default function ResultsDisplay({
     <div className="space-y-8">
       <NotificationModal />
       {/* Add uploader info at the top */}
-      {uploaderProfile && (
+      {imageData.profile && (
         <div className="flex items-center gap-2 text-sm text-gray-500">
-          <span>Uploaded by:</span>
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
               <AvatarImage
-                src={uploaderProfile.avatar_url || undefined}
+                src={imageData.profile.avatar_url || undefined}
                 alt={getDisplayName()}
               />
               <AvatarFallback>
@@ -912,13 +907,12 @@ export default function ResultsDisplay({
               </h3>
 
               {/* Add uploader info here */}
-              {uploaderProfile && !isUploader && (
+              {imageData.profile && !isUploader && (
                 <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
-                  <span>Uploaded by:</span>
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
                       <AvatarImage
-                        src={uploaderProfile.avatar_url || undefined}
+                        src={imageData.profile.avatar_url || undefined}
                         alt={getDisplayName()}
                       />
                       <AvatarFallback>

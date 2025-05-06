@@ -1,4 +1,4 @@
-import { OG_HEADLINE } from "@/lib/constants";
+import { APP_TITLE_WITH_EMOJI, OG_HEADLINE } from "@/lib/constants";
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 
@@ -104,7 +104,7 @@ export async function GET(request: NextRequest) {
             color: "#666",
           }}
         >
-          🐾 PawsOrPeeps 💁 | Vote on the original!
+          {APP_TITLE_WITH_EMOJI}
         </div>
       </div>,
       {
