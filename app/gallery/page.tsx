@@ -37,7 +37,7 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
       return (
         <div className="text-center py-12">
           <h2 className="text-xl font-semibold mb-4">Please sign in</h2>
-          <p className="text-gray-500 mb-6">
+          <p className="text-foreground mb-6">
             You need to be signed in to view your transformations
           </p>
         </div>
@@ -71,7 +71,7 @@ async function GalleryContent({ searchParams }: GalleryContentProps) {
     return (
       <div className="text-center py-12">
         <h2 className="text-xl font-semibold mb-4">No images found</h2>
-        <p className="text-gray-500 mb-6">Try adjusting your filters.</p>
+        <p className="text-foreground mb-6">Try adjusting your filters.</p>
       </div>
     );
   }
@@ -120,7 +120,7 @@ export default async function GalleryPage({
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-center mb-2">Gallery</h1>
-            <p className="text-center text-gray-600 mb-8">
+            <p className="text-center text-foreground mb-8">
               Browse recent public creations
             </p>
 
@@ -130,7 +130,7 @@ export default async function GalleryPage({
               <Suspense
                 fallback={
                   <div className="text-center py-12">
-                    <p className="text-gray-500">Loading ...</p>
+                    <p className="text-foreground">Loading ...</p>
                   </div>
                 }
               >

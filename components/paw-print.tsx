@@ -10,7 +10,7 @@ interface PawPrintProps {
 export function PawPrint({
   className,
   size = "md",
-  color = "text-gray-300",
+  color = "text-foreground",
   rotation = 0,
 }: PawPrintProps) {
   const sizeClasses = {

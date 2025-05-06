@@ -1,8 +1,8 @@
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { CatLogo } from "@/components/cat-logo"
-import { PawPrint } from "@/components/paw-print"
-import { RandomCat } from "@/components/random-cat"
+import { CatLogo } from "@/components/cat-logo";
+import { PawPrint } from "@/components/paw-print";
+import { RandomCat } from "@/components/random-cat";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function NotFound() {
   return (
@@ -46,7 +46,10 @@ export default function NotFound() {
         <div className="mb-6">
           <div className="text-9xl font-bold text-rose-300">404</div>
           <h1 className="text-3xl font-bold mt-4 mb-2">Page Not Found</h1>
-          <p className="text-gray-600">Oops! The transformation you're looking for seems to have wandered off.</p>
+          <p className="text-foreground">
+            Oops! The transformation you're looking for seems to have wandered
+            off.
+          </p>
         </div>
 
         <div className="flex justify-center mb-8">
@@ -54,9 +57,11 @@ export default function NotFound() {
         </div>
 
         <Link href="/">
-          <Button className="bg-rose-500 hover:bg-rose-600">Return Home & Try Again</Button>
+          <Button className="bg-rose-500 hover:bg-rose-600">
+            Return Home & Try Again
+          </Button>
         </Link>
       </div>
     </div>
-  )
+  );
 }

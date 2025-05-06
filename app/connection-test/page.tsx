@@ -1,7 +1,7 @@
-import { createClient } from "@/lib/supabase-server";
-import { checkEnvironmentVariables } from "@/lib/env-checker";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { checkEnvironmentVariables } from "@/lib/env-checker";
+import { createClient } from "@/lib/supabase-server";
 import { AlertCircle, CheckCircle, Info } from "lucide-react";
 
 export default async function ConnectionTestPage() {
@@ -164,7 +164,7 @@ export default async function ConnectionTestPage() {
             <div className="space-y-4">
               <div>
                 <h3 className="font-medium">1. Check Environment Variables</h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-foreground">
                   Make sure all required environment variables are set correctly
                   in your Vercel project settings or .env file.
                 </p>
@@ -174,7 +174,7 @@ export default async function ConnectionTestPage() {
                 <h3 className="font-medium">
                   2. Verify Supabase Service Role Key
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-foreground">
                   Ensure your SUPABASE_SERVICE_ROLE_KEY is correct and has the
                   necessary permissions.
                 </p>
@@ -182,7 +182,7 @@ export default async function ConnectionTestPage() {
 
               <div>
                 <h3 className="font-medium">3. Check Database Schema</h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-foreground">
                   Verify that the "images" table exists in your Supabase
                   database with the correct schema.
                 </p>
@@ -190,7 +190,7 @@ export default async function ConnectionTestPage() {
 
               <div>
                 <h3 className="font-medium">4. Review RLS Policies</h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-foreground">
                   Check Row Level Security (RLS) policies in Supabase to ensure
                   they're not blocking access.
                 </p>

@@ -1,72 +1,72 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useRef } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import { useRef, useState } from "react";
 
 export default function SimpleTestPage() {
-  const [file, setFile] = useState<File | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null
-    setFile(selectedFile)
-    setError(null)
-    setResult(null)
-  }
+    const selectedFile = e.target.files?.[0] || null;
+    setFile(selectedFile);
+    setError(null);
+    setResult(null);
+  };
 
   const handleUpload = async () => {
     if (!file) {
-      setError("Please select a file")
-      return
+      setError("Please select a file");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
-    setResult(null)
+    setLoading(true);
+    setError(null);
+    setResult(null);
 
     try {
-      console.log("Creating FormData...")
-      const formData = new FormData()
-      formData.append("image", file)
+      console.log("Creating FormData...");
+      const formData = new FormData();
+      formData.append("image", file);
 
-      console.log("FormData created, sending request...")
+      console.log("FormData created, sending request...");
       console.log("File details:", {
         name: file.name,
         type: file.type,
         size: file.size,
-      })
+      });
 
       const response = await fetch("/api/simple-upload", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      console.log("Response received:", response.status, response.statusText)
+      console.log("Response received:", response.status, response.statusText);
 
-      const data = await response.json()
-      console.log("Response data:", data)
+      const data = await response.json();
+      console.log("Response data:", data);
 
-      setResult(data)
+      setResult(data);
 
       if (!response.ok) {
-        setError(data.error || "Upload failed")
+        setError(data.error || "Upload failed");
       }
     } catch (err) {
-      console.error("Error in handleUpload:", err)
-      setError(err instanceof Error ? err.message : "Unknown error")
+      console.error("Error in handleUpload:", err);
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="container mx-auto py-10">
@@ -79,11 +79,21 @@ export default function SimpleTestPage() {
         <CardContent>
           <div className="space-y-4">
             <div>
-              <Input type="file" onChange={handleFileChange} ref={fileInputRef} />
-              <p className="text-sm text-gray-500 mt-1">Select any image file</p>
+              <Input
+                type="file"
+                onChange={handleFileChange}
+                ref={fileInputRef}
+              />
+              <p className="text-sm text-foreground mt-1">
+                Select any image file
+              </p>
             </div>
 
-            <Button onClick={handleUpload} disabled={!file || loading} className="w-full">
+            <Button
+              onClick={handleUpload}
+              disabled={!file || loading}
+              className="w-full"
+            >
               {loading ? "Uploading..." : "Test Simple Upload"}
             </Button>
 
@@ -97,10 +107,16 @@ export default function SimpleTestPage() {
 
             {result && (
               <Alert variant={result.success ? "default" : "destructive"}>
-                {result.success ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+                {result.success ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <AlertCircle className="h-4 w-4" />
+                )}
                 <AlertTitle>{result.success ? "Success" : "Error"}</AlertTitle>
                 <AlertDescription>
-                  <pre className="mt-2 text-xs whitespace-pre-wrap">{JSON.stringify(result, null, 2)}</pre>
+                  <pre className="mt-2 text-xs whitespace-pre-wrap">
+                    {JSON.stringify(result, null, 2)}
+                  </pre>
                 </AlertDescription>
               </Alert>
             )}
@@ -108,5 +124,5 @@ export default function SimpleTestPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

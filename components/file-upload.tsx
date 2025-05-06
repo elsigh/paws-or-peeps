@@ -799,7 +799,7 @@ export default function FileUpload() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="note" disabled>
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-foreground">
                     Applies when you upload a human
                   </span>
                 </SelectItem>
@@ -894,7 +894,7 @@ export default function FileUpload() {
                         e.stopPropagation();
                         toggleCrop();
                       }}
-                      className="bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                      className="bg-background/80 hover:bg-background/90 text-foreground rounded-full p-1 transition-colors"
                       aria-label={isCropping ? "Finish cropping" : "Crop image"}
                     >
                       <CropIcon className="h-5 w-5" />
@@ -906,7 +906,7 @@ export default function FileUpload() {
                         clearSelectedFile();
                         setError(null);
                       }}
-                      className="bg-black/60 hover:bg-black/80 text-white rounded-full p-1 transition-colors"
+                      className="bg-background/80 hover:bg-background/90 text-foreground rounded-full p-1 transition-colors"
                       aria-label="Remove image"
                     >
                       <X className="h-5 w-5" />
@@ -915,7 +915,7 @@ export default function FileUpload() {
 
                   {/* Compression loading overlay */}
                   {isCompressing && (
-                    <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 text-center">
+                    <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center text-foreground p-4 text-center">
                       <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-500 border-t-transparent mb-4" />
                       <p className="font-medium">Optimizing image size...</p>
                       <p className="text-sm mt-1">
@@ -926,7 +926,7 @@ export default function FileUpload() {
 
                   {/* File size warning overlay for large files */}
                   {isFileTooLarge && !isCompressing && (
-                    <div className="absolute inset-0 bg-red-500/70 flex flex-col items-center justify-center text-white p-4 text-center">
+                    <div className="absolute inset-0 bg-red-500/70 flex flex-col items-center justify-center text-foreground p-4 text-center">
                       <FileWarning className="h-12 w-12 mb-2" />
                       <p className="font-bold text-lg">File Too Large!</p>
                       <p>Maximum size: 4MB</p>
@@ -944,7 +944,7 @@ export default function FileUpload() {
                     Click to browse, drag & drop, or paste an image of you or
                     your pet.
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-foreground mt-1">
                     Supports: JPG, PNG, GIF, WebP
                   </p>
                 </>
@@ -970,12 +970,12 @@ export default function FileUpload() {
               </div>
             )}
 
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-foreground">
               AI processing may take up to 30 seconds.
             </p>
-            <div className="text-nowrap text-sm text-gray-500">
+            <div className="text-nowrap text-sm text-foreground">
               {detectedType ? (
-                <b className="text-black">
+                <b className="text-foreground">
                   {`Detected: ${detectedType as string}`}
                 </b>
               ) : loading ? (
@@ -1058,7 +1058,7 @@ export default function FileUpload() {
 
           {/* Pet facts during loading with cycling cat images */}
           {loading && (
-            <div className="relative text-center text-sm text-gray-600 mt-2 px-8">
+            <div className="relative text-center text-sm text-foreground mt-2 px-8">
               <div className="flex items-center">
                 <span className="text-lg mr-2">🐾</span>
                 <p className="animate-pulse min-h-[4.5rem] flex items-center justify-center">

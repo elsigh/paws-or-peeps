@@ -12,7 +12,7 @@ export default function GlobalError({
         <h1 className="text-2xl font-bold text-rose-600 mb-2">
           Something went wrong
         </h1>
-        <p className="text-gray-700 mb-4 text-center">
+        <p className="text-foreground mb-4 text-center">
           Sorry, an unexpected error occurred. Please try again or go back home.
         </p>
         {error?.message && (
@@ -24,7 +24,7 @@ export default function GlobalError({
           </div>
         )}
         {error?.stack && (
-          <details className="w-full bg-gray-50 border border-gray-200 rounded-md p-4 mb-4 text-xs text-gray-600">
+          <details className="w-full bg-gray-50 border border-gray-200 rounded-md p-4 mb-4 text-xs text-foreground">
             <summary className="cursor-pointer font-semibold mb-1">
               Show error stack
             </summary>
@@ -33,13 +33,13 @@ export default function GlobalError({
         )}
         <Link
           href="/"
-          className="mt-4 px-6 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-semibold shadow transition-colors"
+          className="mt-4 px-6 py-2 bg-rose-500 hover:bg-rose-600 text-foreground rounded-lg font-semibold shadow transition-colors"
         >
           Go back home
         </Link>
         <button
           onClick={() => reset()}
-          className="mt-2 text-xs text-gray-500 underline hover:text-rose-500"
+          className="mt-2 text-xs text-foreground underline hover:text-rose-500"
           type="button"
         >
           Try again

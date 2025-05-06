@@ -563,7 +563,7 @@ export default function ResultsDisplay({
       <NotificationModal />
       {/* Add uploader info at the top */}
       {imageData.profile && (
-        <div className="flex items-center gap-2 text-sm text-gray-500">
+        <div className="flex items-center gap-2 text-sm text-foreground">
           <div className="flex items-center gap-2">
             <Avatar className="h-6 w-6">
               <AvatarImage
@@ -603,7 +603,7 @@ export default function ResultsDisplay({
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
               {isGeneratingOpposite && type !== "human" ? (
-                <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 text-center">
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center text-foreground p-4 text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-500 border-t-transparent mb-4" />
                   <p className="font-medium">Generating human version...</p>
                   <p className="text-sm mt-1">This will only take a moment</p>
@@ -652,7 +652,7 @@ export default function ResultsDisplay({
           <CardContent className="pt-6">
             <div className="aspect-square w-full overflow-hidden rounded-lg relative">
               {(isGeneratingOpposite && type === "human") || regenerating ? (
-                <div className="absolute inset-0 bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center text-white p-4 text-center">
+                <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center text-foreground p-4 text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-4 border-rose-500 border-t-transparent mb-4" />
                   <p className="font-medium">
                     {regenerating ? "Regenerating" : "Generating"}{" "}
@@ -805,7 +805,7 @@ export default function ResultsDisplay({
                       </TooltipProvider>
                     </div>
 
-                    <p className="text-gray-600 text-sm">
+                    <p className="text-foreground text-sm">
                       Share this link with friends.
                     </p>
                   </div>
@@ -908,7 +908,7 @@ export default function ResultsDisplay({
 
               {/* Add uploader info here */}
               {imageData.profile && !isUploader && (
-                <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+                <div className="flex items-center gap-2 mt-2 text-sm text-foreground">
                   <div className="flex items-center gap-2">
                     <Avatar className="h-6 w-6">
                       <AvatarImage

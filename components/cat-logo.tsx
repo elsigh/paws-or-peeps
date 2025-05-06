@@ -17,13 +17,13 @@ export function CatLogo({ className, size = "md" }: CatLogoProps) {
       className={cn(
         "relative inline-block font-bold",
         sizeClasses[size],
-        className
+        className,
       )}
     >
       {/* Logo text */}
       <span className="relative z-10">
-        <span className="text-black">🐾 Paws</span>
-        <span className="text-gray-500">Or</span>
+        <span className="text-foreground">🐾 Paws</span>
+        <span className="text-foreground">Or</span>
         <span className="text-rose-500">Peeps 💁</span>
       </span>
     </div>

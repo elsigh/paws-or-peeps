@@ -19,7 +19,7 @@ import {
 } from "@/lib/notification-service-client";
 import type { Notification } from "@/lib/types";
 import { showWebNotification } from "@/lib/web-notification-service";
-import { Bell, BellRing, X } from "lucide-react";
+import { Bell, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
 function useIsMobile() {
@@ -39,46 +39,38 @@ export function NotificationBell() {
   const { user } = useAuth();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const isMobile = useIsMobile();
+  const isDisabled = !user;
 
   useEffect(() => {
     if (!user?.id) return;
-
     const fetchNotifications = async () => {
       const [notifications, count] = await Promise.all([
         getUserNotifications(user.id),
         getUnreadNotificationCount(user.id),
       ]);
-
-      // Get the most recent unread notification
       const mostRecentUnread = notifications.find((n) => !n.is_read);
-
-      // console.debug("NotificationBell fetchNotifications:", {
-      //   notifications,
-      //   count,
-      //   mostRecentUnread,
-      // });
-
-      // Show web notification only for the most recent unread notification
       if (mostRecentUnread) {
         showWebNotification(user.id, mostRecentUnread.id, "New Vote!", {
           body: mostRecentUnread.message,
           icon: "/favicon.ico",
         });
       }
-
       setNotifications(notifications);
       setUnreadCount(count);
     };
-
-    // Initial fetch
     fetchNotifications();
-
-    // Set up polling interval
     const intervalId = setInterval(fetchNotifications, 30000);
-
-    // Cleanup interval on unmount
     return () => clearInterval(intervalId);
   }, [user?.id]);
+
+  // Always render the bell, but show skeleton if not signed in
+  if (!user) {
+    return (
+      <span className="relative p-2 rounded-full">
+        <span className="block h-6 w-6 rounded-full bg-gray-200 animate-pulse" />
+      </span>
+    );
+  }
 
   const handleMarkAsRead = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -109,8 +101,6 @@ export function NotificationBell() {
       throw err;
     }
   };
-
-  if (!user) return null;
 
   // Mobile full-screen overlay
   if (isMobile && isMobileOpen) {
@@ -174,23 +164,17 @@ export function NotificationBell() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="relative focus-visible:ring-0"
-          onClick={() => {
-            if (isMobile) setIsMobileOpen(true);
-          }}
+        <button
+          type="button"
+          className={`relative p-2 rounded-full transition-colors ${isDisabled ? "opacity-50 pointer-events-none" : "hover:bg-gray-100"}`}
+          disabled={isDisabled}
+          aria-label="Notifications"
         >
-          {unreadCount > 0 ? (
-            <BellRing className="h-6 w-6 text-yellow-500" />
-          ) : (
-            <Bell className="h-6 w-6" />
-          )}
+          <Bell className="h-6 w-6" />
           {unreadCount > 0 && (
             <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-blue-500" />
           )}
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"

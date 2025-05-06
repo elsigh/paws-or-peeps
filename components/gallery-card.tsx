@@ -112,7 +112,7 @@ export function GalleryCard({
 
           {/* Hover instruction */}
           {isHovered && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-white text-sm font-medium">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 text-foreground text-sm font-medium">
               <span>View Details</span>
               <RandomCat size="tiny" index={type === "human" ? 2 : 0} />
             </div>
@@ -154,11 +154,11 @@ export function GalleryCard({
                 <span className="font-medium text-base">
                   {profile?.display_name || "Uploader"}
                 </span>
-                <span className="text-xs text-gray-400">See all uploads</span>
+                <span className="text-xs text-foreground">See all uploads</span>
               </TooltipContent>
             </Tooltip>
-            <span className="text-xs text-gray-500">{formattedDate}</span>
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-foreground">{formattedDate}</span>
+            <span className="text-xs text-foreground">
               {isPrivate ? "🔐" : ""}
             </span>
           </div>

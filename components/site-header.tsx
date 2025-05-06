@@ -22,7 +22,7 @@ export function HomePageLink() {
         {!isHomePage && (
           <Tooltip delayDuration={200}>
             <TooltipTrigger asChild>
-              <Link href="/" className="text-gray-600 hover:text-gray-900">
+              <Link href="/" className="text-foreground hover:text-rose-500">
                 <PlusIcon className="h-5 w-5" />
               </Link>
             </TooltipTrigger>
@@ -40,7 +40,7 @@ export function HomePageLink() {
             <TooltipTrigger asChild>
               <Link
                 href="/gallery"
-                className="text-gray-600 hover:text-gray-900 flex items-center gap-2"
+                className="text-foreground hover:text-rose-500 flex items-center gap-2"
               >
                 <ImageIcon className="h-5 w-5" />
                 {!isResultsPage && (

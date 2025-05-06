@@ -1,78 +1,78 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle } from "lucide-react"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, CheckCircle } from "lucide-react";
+import { useState } from "react";
 
 export default function TestUploadPage() {
-  const [file, setFile] = useState<File | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState<any>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [blobTestResult, setBlobTestResult] = useState<any>(null)
-  const [blobTestError, setBlobTestError] = useState<string | null>(null)
+  const [file, setFile] = useState<File | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [blobTestResult, setBlobTestResult] = useState<any>(null);
+  const [blobTestError, setBlobTestError] = useState<string | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = e.target.files?.[0] || null
-    setFile(selectedFile)
-    setError(null)
-    setResult(null)
-  }
+    const selectedFile = e.target.files?.[0] || null;
+    setFile(selectedFile);
+    setError(null);
+    setResult(null);
+  };
 
   const handleBlobTest = async () => {
-    setBlobTestResult(null)
-    setBlobTestError(null)
+    setBlobTestResult(null);
+    setBlobTestError(null);
 
     try {
-      const response = await fetch("/api/blob-test")
-      const data = await response.json()
+      const response = await fetch("/api/blob-test");
+      const data = await response.json();
 
       if (data.status === "error") {
-        setBlobTestError(data.message)
+        setBlobTestError(data.message);
       } else {
-        setBlobTestResult(data)
+        setBlobTestResult(data);
       }
     } catch (err) {
-      setBlobTestError(err instanceof Error ? err.message : "Unknown error")
+      setBlobTestError(err instanceof Error ? err.message : "Unknown error");
     }
-  }
+  };
 
   const handleUpload = async () => {
     if (!file) {
-      setError("Please select a file")
-      return
+      setError("Please select a file");
+      return;
     }
 
-    setLoading(true)
-    setError(null)
-    setResult(null)
+    setLoading(true);
+    setError(null);
+    setResult(null);
 
     try {
-      const formData = new FormData()
-      formData.append("file", file)
+      const formData = new FormData();
+      formData.append("file", file);
 
       const response = await fetch("/api/test-upload", {
         method: "POST",
         body: formData,
-      })
+      });
 
-      const data = await response.json()
-      setResult(data)
+      const data = await response.json();
+      setResult(data);
 
       if (!response.ok) {
-        setError(data.error || "Upload failed")
+        setError(data.error || "Upload failed");
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error")
+      setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="container mx-auto py-10">
@@ -87,10 +87,16 @@ export default function TestUploadPage() {
             <div className="space-y-4">
               <div>
                 <Input type="file" onChange={handleFileChange} />
-                <p className="text-sm text-gray-500 mt-1">Select any file to test the upload functionality</p>
+                <p className="text-sm text-foreground mt-1">
+                  Select any file to test the upload functionality
+                </p>
               </div>
 
-              <Button onClick={handleUpload} disabled={!file || loading} className="w-full">
+              <Button
+                onClick={handleUpload}
+                disabled={!file || loading}
+                className="w-full"
+              >
                 {loading ? "Uploading..." : "Test Upload"}
               </Button>
 
@@ -104,10 +110,18 @@ export default function TestUploadPage() {
 
               {result && (
                 <Alert variant={result.success ? "default" : "destructive"}>
-                  {result.success ? <CheckCircle className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
-                  <AlertTitle>{result.success ? "Success" : "Error"}</AlertTitle>
+                  {result.success ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <AlertCircle className="h-4 w-4" />
+                  )}
+                  <AlertTitle>
+                    {result.success ? "Success" : "Error"}
+                  </AlertTitle>
                   <AlertDescription>
-                    <pre className="mt-2 text-xs whitespace-pre-wrap">{JSON.stringify(result, null, 2)}</pre>
+                    <pre className="mt-2 text-xs whitespace-pre-wrap">
+                      {JSON.stringify(result, null, 2)}
+                    </pre>
                   </AlertDescription>
                 </Alert>
               )}
@@ -121,8 +135,9 @@ export default function TestUploadPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <p className="text-sm text-gray-500">
-                This will test if Vercel Blob storage is working correctly by uploading a small text file.
+              <p className="text-sm text-foreground">
+                This will test if Vercel Blob storage is working correctly by
+                uploading a small text file.
               </p>
 
               <Button onClick={handleBlobTest} className="w-full">
@@ -161,5 +176,5 @@ export default function TestUploadPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }
