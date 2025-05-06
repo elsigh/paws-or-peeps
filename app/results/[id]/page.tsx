@@ -2,7 +2,6 @@ import { PawPrint } from "@/components/paw-print";
 import { RandomCat } from "@/components/random-cat";
 import ResultsDisplay from "@/components/results-display";
 import { getImageById, getVoteInfo } from "@/lib/image-processing";
-import { getUserProfile } from "@/lib/user-service";
 import type { Metadata, ResolvingMetadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
@@ -78,12 +77,6 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
     notFound();
   }
 
-  // Fetch uploader profile on the server
-  let uploaderProfile = null;
-  if (imageData.user_id) {
-    uploaderProfile = await getUserProfile(imageData.user_id);
-  }
-
   // Get vote info on the server
   const { userVote, voteStats } = await getVoteInfo(id);
 
@@ -125,7 +118,6 @@ export default async function ResultsPage({ params }: ResultsPageProps) {
         <Suspense fallback={<div>Loading results...</div>}>
           <ResultsDisplay
             imageData={imageData}
-            uploaderProfile={uploaderProfile}
             userVote={userVote}
             voteStats={voteStats}
           />

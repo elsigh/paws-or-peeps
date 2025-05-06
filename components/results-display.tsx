@@ -133,8 +133,8 @@ export default function ResultsDisplay({
   const [isPrivate, setIsPrivate] = useState(
     initialImageData?.private || false,
   );
-  const [privacyLoading, setPrivacyLoading] = useState(false);
-  const [privacyError, setPrivacyError] = useState<string | null>(null);
+  const [_privacyLoading, setPrivacyLoading] = useState(false);
+  const [_privacyError, setPrivacyError] = useState<string | null>(null);
   const [showNotificationModal, setShowNotificationModal] = useState(false);
   const [imageData, setImageData] = useState(initialImageData);
   const [isGeneratingOpposite, setIsGeneratingOpposite] = useState(false);
@@ -501,7 +501,7 @@ export default function ResultsDisplay({
 
   // Create a debounced version of the API call
   const debouncedUpdatePrivacy = useRef(
-    debounce(async (newPrivateState: boolean) => {
+    debounce(async (_newPrivateState: boolean) => {
       try {
         const response = await fetch("/api/toggle-privacy", {
           method: "POST",
