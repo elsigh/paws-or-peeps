@@ -67,7 +67,19 @@ export function NotificationBell() {
   if (!user) {
     return (
       <span className="relative p-2 rounded-full">
-        <span className="block h-6 w-6 rounded-full bg-gray-200 animate-pulse" />
+        <span className="block h-6 w-6 animate-pulse">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            className="w-6 h-6 text-gray-300 dark:text-gray-700"
+          >
+            <title>Notifications</title>
+            <path
+              d="M12 22a2 2 0 0 0 2-2H10a2 2 0 0 0 2 2zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1l-2-2z"
+              fill="currentColor"
+            />
+          </svg>
+        </span>
       </span>
     );
   }

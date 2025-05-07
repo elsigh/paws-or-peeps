@@ -136,7 +136,9 @@ export function GalleryCard({
                       src={profile?.avatar_url || undefined}
                       alt={profile?.display_name || "Uploader"}
                     />
-                    <AvatarFallback>?</AvatarFallback>
+                    <AvatarFallback>
+                      {profile?.display_name?.[0] || null}
+                    </AvatarFallback>
                   </Avatar>
                 </button>
               </TooltipTrigger>
@@ -149,7 +151,9 @@ export function GalleryCard({
                     src={profile?.avatar_url || undefined}
                     alt={profile?.display_name || "Uploader"}
                   />
-                  <AvatarFallback>?</AvatarFallback>
+                  <AvatarFallback>
+                    {profile?.display_name?.[0] || null}
+                  </AvatarFallback>
                 </Avatar>
                 <span className="font-medium text-base">
                   {profile?.display_name || "Uploader"}

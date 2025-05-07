@@ -25,23 +25,36 @@ export function UserMenu() {
       console.log("User authenticated");
     });
   };
-
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <span>
-          <Avatar className="h-8 w-8 border border-gray-200">
+          <Avatar className="h-8 w-8 border border-gray-200 relative">
             {user ? (
               <AvatarImage
                 src={user.user_metadata?.avatar_url || undefined}
                 alt={user.user_metadata?.display_name || "Profile"}
               />
             ) : (
-              // Skeleton avatar
-              <span className="block h-8 w-8 rounded-full bg-gray-200 animate-pulse" />
+              // Skeleton avatar with user icon
+              <span className="absolute inset-0 flex items-center justify-center rounded-full bg-gray-200 animate-pulse">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  className="h-5 w-5 text-gray-400"
+                >
+                  <title>User</title>
+                  <circle cx="12" cy="8" r="4" fill="currentColor" />
+                  <path
+                    d="M4 20c0-2.21 3.582-4 8-4s8 1.79 8 4"
+                    fill="currentColor"
+                  />
+                </svg>
+              </span>
             )}
             <AvatarFallback>
-              {user?.user_metadata?.display_name?.[0] || "?"}
+              {user?.user_metadata?.display_name?.[0] || null}
             </AvatarFallback>
           </Avatar>
         </span>

@@ -49,7 +49,6 @@ import {
   RefreshCw,
   ThumbsUp,
   Trash2,
-  UserIcon,
 } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -571,7 +570,7 @@ export default function ResultsDisplay({
                 alt={getDisplayName()}
               />
               <AvatarFallback>
-                <UserIcon className="h-4 w-4" />
+                {getDisplayName() !== "Anonymous" ? getDisplayName()[0] : null}
               </AvatarFallback>
             </Avatar>
             <span className="font-medium">{getDisplayName()}</span>
@@ -916,7 +915,9 @@ export default function ResultsDisplay({
                         alt={getDisplayName()}
                       />
                       <AvatarFallback>
-                        <UserIcon className="h-4 w-4" />
+                        {getDisplayName() !== "Anonymous"
+                          ? getDisplayName()[0]
+                          : null}
                       </AvatarFallback>
                     </Avatar>
                     <span className="font-medium">{getDisplayName()}</span>
