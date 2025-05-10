@@ -757,63 +757,71 @@ export default function FileUpload() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Split Button for Style and Animal Selection */}
           <div className="flex justify-between gap-4">
-            <Select
-              value={transformStyle}
-              onValueChange={handleStyleChange}
-              disabled={loading}
-            >
-              <SelectTrigger className="w-[140px]" disabled={loading}>
-                <SelectValue placeholder="Select style">
-                  {STYLE_EMOJI_MAP[transformStyle].emoji}{" "}
-                  {STYLE_EMOJI_MAP[transformStyle].label}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(STYLE_EMOJI_MAP).map(
-                  ([style, { emoji, label }]) => (
-                    <SelectItem
-                      key={style}
-                      value={style as TransformationStyle}
-                    >
+            <div className="flex flex-col">
+              <span className="text-xs text-rose-500 mb-1">Style</span>
+              <Select
+                value={transformStyle}
+                onValueChange={handleStyleChange}
+                disabled={loading}
+              >
+                <SelectTrigger className="w-[140px]" disabled={loading}>
+                  <SelectValue placeholder="Select style">
+                    {STYLE_EMOJI_MAP[transformStyle].emoji}{" "}
+                    {STYLE_EMOJI_MAP[transformStyle].label}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(STYLE_EMOJI_MAP).map(
+                    ([style, { emoji, label }]) => (
+                      <SelectItem
+                        key={style}
+                        value={style as TransformationStyle}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium text-left">
+                            {emoji} {label}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ),
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex flex-col">
+              <span className="text-xs text-rose-500 mb-1">
+                If Human, opposite
+              </span>
+              <Select
+                value={selectedAnimal}
+                onValueChange={handleAnimalChange}
+                disabled={loading}
+              >
+                <SelectTrigger className="w-[140px]" disabled={loading}>
+                  <SelectValue placeholder="Select animal">
+                    {ANIMAL_EMOJI_MAP[selectedAnimal]}{" "}
+                    {capitalize(selectedAnimal)}
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="note" disabled>
+                    <span className="text-xs text-foreground">
+                      Applies when you upload a human
+                    </span>
+                  </SelectItem>
+                  {ANIMAL_TYPES.map((animal) => (
+                    <SelectItem key={animal} value={animal}>
                       <div className="flex flex-col">
-                        <span className="font-medium text-left">
-                          {emoji} {label}
+                        <span className="font-medium text-left capitalize">
+                          {ANIMAL_EMOJI_MAP[animal]} {capitalize(animal)}
                         </span>
                       </div>
                     </SelectItem>
-                  ),
-                )}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={selectedAnimal}
-              onValueChange={handleAnimalChange}
-              disabled={loading}
-            >
-              <SelectTrigger className="w-[140px]" disabled={loading}>
-                <SelectValue placeholder="Select animal">
-                  {ANIMAL_EMOJI_MAP[selectedAnimal]}{" "}
-                  {capitalize(selectedAnimal)}
-                </SelectValue>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="note" disabled>
-                  <span className="text-xs text-foreground">
-                    Applies when you upload a human
-                  </span>
-                </SelectItem>
-                {ANIMAL_TYPES.map((animal) => (
-                  <SelectItem key={animal} value={animal}>
-                    <div className="flex flex-col">
-                      <span className="font-medium text-left capitalize">
-                        {ANIMAL_EMOJI_MAP[animal]} {capitalize(animal)}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -970,9 +978,9 @@ export default function FileUpload() {
               </div>
             )}
 
-            <p className="text-sm text-foreground">
+            {/* <p className="text-sm text-foreground">
               AI processing may take up to 30 seconds.
-            </p>
+            </p> */}
             <div className="text-nowrap text-sm text-foreground">
               {detectedType ? (
                 <b className="text-foreground">

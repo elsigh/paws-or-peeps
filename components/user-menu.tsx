@@ -10,21 +10,27 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
-import { BarChart3, Image, LogOut, User } from "lucide-react";
+import { createClient } from "@/lib/supabase-client";
+import { BarChart3, Image, LogOut } from "lucide-react";
+import { default as NextImage } from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { ThemeSelectorInline } from "./theme-selector-inline";
 
 export function UserMenu() {
-  const { user, signOut, requireAuth } = useAuth();
+  const { user, signOut } = useAuth();
   const [open, setOpen] = useState(false);
 
-  const handleSignInClick = () => {
-    requireAuth(() => {
-      // This is just to trigger the auth flow
-      console.log("User authenticated");
+  // Direct Google sign-in
+  const handleGoogleSignIn = async () => {
+    const supabase = createClient();
+    const redirectTo = `${window.location.origin}/auth/callback?next=${window.location.pathname}`;
+    await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo },
     });
   };
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
@@ -106,12 +112,17 @@ export function UserMenu() {
         ) : (
           <DropdownMenuItem asChild>
             <Button
-              onClick={handleSignInClick}
+              onClick={handleGoogleSignIn}
               className="w-full"
               variant="outline"
             >
-              <User className="h-4 w-4" />
-              Sign In
+              <NextImage
+                src="/images/google-logo.png"
+                alt="Google Logo"
+                width={20}
+                height={20}
+              />
+              Sign in with Google
             </Button>
           </DropdownMenuItem>
         )}

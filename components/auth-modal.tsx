@@ -7,15 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { createClient } from "@/lib/supabase-client";
 import type { Provider } from "@supabase/supabase-js";
-import { Github, Mail } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -83,6 +79,7 @@ export function AuthModal({
               />
               Sign in with Google
             </Button>
+            {/*
             <Button
               variant="outline"
               className="w-full"
@@ -106,6 +103,7 @@ export function AuthModal({
               />
               Sign in with X
             </Button>
+            */}
           </div>
         </div>
       </DialogContent>
