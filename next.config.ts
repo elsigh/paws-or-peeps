@@ -9,8 +9,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
     viewTransition: true,
-    ppr: true,
-    clientSegmentCache: true,
   },
 };
 

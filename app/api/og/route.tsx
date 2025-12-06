@@ -2,8 +2,6 @@ import { APP_TITLE_WITH_EMOJI, OG_HEADLINE } from "@/lib/constants";
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 
-export const runtime = "edge";
-
 export async function GET(request: NextRequest) {
   try {
     // Use static images for the homepage OG image

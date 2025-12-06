@@ -24,7 +24,7 @@ export function Footer() {
           </a>
         </div>
         <div className="text-center text-sm text-foreground">
-          © {new Date().getFullYear()} PawsOrPeeps. All rights reserved.
+          © 2025 PawsOrPeeps. All rights reserved.
         </div>
       </div>
     </footer>

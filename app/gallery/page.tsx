@@ -8,9 +8,6 @@ import { getRecentTransformations } from "@/lib/image-processing";
 import { createClient } from "@/lib/supabase-server";
 import { Suspense } from "react";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 type ValidType = "all" | "mine" | "human" | (typeof ANIMAL_TYPES)[number];
 type ValidSort = "newest" | "oldest" | "most_votes";
 
@@ -101,45 +98,49 @@ export default async function GalleryPage({
   searchParams,
 }: GalleryContentProps) {
   return (
-    <GalleryWrapper>
-      <TooltipProvider>
-        <div className="container relative mx-auto px-4 py-12">
-          {/* Decorative paw prints */}
-          <div className="pointer-events-none absolute left-4 top-20 opacity-20">
-            <PawPrint size="lg" rotation={-15} />
-          </div>
-          <div className="pointer-events-none absolute right-10 top-40 opacity-20">
-            <PawPrint size="md" rotation={20} />
-          </div>
-          <div className="pointer-events-none absolute bottom-20 left-1/4 opacity-20">
-            <PawPrint size="lg" rotation={45} />
-          </div>
-          <div className="pointer-events-none absolute bottom-40 right-1/4 opacity-20">
-            <PawPrint size="md" rotation={-30} />
-          </div>
+    <Suspense fallback={null}>
+      <GalleryWrapper>
+        <TooltipProvider>
+          <div className="container relative mx-auto px-4 py-12">
+            {/* Decorative paw prints */}
+            <div className="pointer-events-none absolute left-4 top-20 opacity-20">
+              <PawPrint size="lg" rotation={-15} />
+            </div>
+            <div className="pointer-events-none absolute right-10 top-40 opacity-20">
+              <PawPrint size="md" rotation={20} />
+            </div>
+            <div className="pointer-events-none absolute bottom-20 left-1/4 opacity-20">
+              <PawPrint size="lg" rotation={45} />
+            </div>
+            <div className="pointer-events-none absolute bottom-40 right-1/4 opacity-20">
+              <PawPrint size="md" rotation={-30} />
+            </div>
 
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-center mb-2">Gallery</h1>
-            <p className="text-center text-foreground mb-8">
-              Browse recent public creations
-            </p>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-center mb-2">Gallery</h1>
+              <p className="text-center text-foreground mb-8">
+                Browse recent public creations
+              </p>
 
-            <GalleryFilter />
-
-            <div className="relative">
-              <Suspense
-                fallback={
-                  <div className="text-center py-12">
-                    <p className="text-foreground">Loading ...</p>
-                  </div>
-                }
-              >
-                <GalleryContent searchParams={searchParams} />
+              <Suspense fallback={null}>
+                <GalleryFilter />
               </Suspense>
+
+              <div className="relative">
+                <Suspense
+                  fallback={
+                    <div className="text-center py-12">
+                      <p className="text-foreground">Loading ...</p>
+                    </div>
+                  }
+                >
+                  <GalleryContent searchParams={searchParams} />
+                </Suspense>
+              </div>
             </div>
           </div>
-        </div>
-      </TooltipProvider>
-    </GalleryWrapper>
+        </TooltipProvider>
+      </GalleryWrapper>
+    </Suspense>
   );
 }
